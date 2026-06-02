@@ -30,13 +30,13 @@ The whole app lives in the `<script type="text/babel">` block in `index.html`: d
 
 ### The Sketch layer
 
-A live charcoal drawing fills in *below the typing card* on both Drill and Type-snippets (`LiveSketch`), built from the existing practice hooks — there's nothing new to "play." Each drawing is a connected SVG path in the `SKETCHES` array near the top: `{ name, d, accent }`. The path uses `pathLength="100"` so it reveals a fraction at a time with `stroke-dashoffset` (no length measurement). The ink stroke runs through the `kf-charcoal` SVG filter (a `feTurbulence`/`feDisplacementMap` roughen, defined once in `SketchDefs`) for the pencil texture; `accent` is one or more soft, **muted** color blobs that fade in with the line — Mike's pencil-with-a-touch-of-color style (check his charcoal work at michaelnocito.github.io/art). `STROKES_PER` (≈ a 5-minute session) is how many clean lines/streaks finish a drawing; `addStroke()` fires from the same celebration moments as the audio milestone. Finishing pushes the drawing's index onto `sketch.finished` and rolls to a new **random** one. State lives on `keygarden.v1.sketch` (`{ current, strokes, finished }`); Reset clears it.
+A live drawing sits in the **progress rail** (`LiveSketch`) and unfolds as you type. Each drawing is a connected SVG path in `SKETCHES`: `{ name, d, accent }`, with `pathLength="100"` so `stroke-dashoffset` reveals a fraction (no length measurement). The render style comes from the chosen `PACKS` entry (see Art packs). **Progress is per keystroke:** App's `addProgress(ok)` adds `STEP_OK` when correct / `STEP_MISS` when wrong, so it draws live (faster typing → faster drawing) and finishes at `STROKES_GOAL` (~5 min). Finishing sets `sketch.pending` (which pops a breathing break, then a save/delete choice). State lives on `keygarden.v1.sketch` (`{ current, strokes, finished, pending }`); Reset clears it.
 
 To add a drawing, append `{ name, d, accent:[{cx,cy,r,c}] }` to `SKETCHES` — keep `d` a mostly-continuous path inside the `0 0 120 120` viewBox, and keep accent colors **desaturated** so it reads as art-plus-a-hint. Keep the **hard design rules**: no timers, no grades, no decay, nothing to fail.
 
 **Art packs.** The same drawings render in a chosen style from the `PACKS` array — each pack is a small render config (`bg, ink, w, filter, ghost, accentOp, accentScale, accentSoft, stars`) applied by `SketchArt`. Filters live in `SketchDefs` (`kf-charcoal`, `kf-wet`, `kf-glow`, `kf-soft`). To add a pack, append one config and (if needed) one filter; the picker in settings and `keygarden.v1.pack` pick it up automatically. Packs are chosen for mass appeal + restorative "soft fascination" (charcoal, watercolor, abstract, celestial).
 
-**Save / delete.** When a drawing reaches `STROKES_PER`, `addStroke` sets `sketch.pending` (and pauses) instead of auto-collecting it; `LiveSketch` then shows a Save / Delete choice. Save pushes the index to `finished` and rolls to a new random drawing; Delete just rolls on. (A "color saved sketches later" step is a planned future add.)
+**Save / delete.** Reaching `STROKES_GOAL` sets `sketch.pending` (and pauses progress). An App effect pops a 5-cycle breathing break; once dismissed, `LiveSketch` shows the Save / Delete choice. Save pushes the index to `finished` and rolls to a new random drawing; Delete just rolls on.
 
 ### The return-streak reward
 
@@ -46,7 +46,9 @@ Coming back is rewarded by a gentle day-streak shown on **Progress** (`keygarden
 
 `Welcome` is the first-run orientation (toggled by the **?** nav button, open on first visit, remembered via `welcomeSeen`). It follows the Archaeology kits' North-Star principles — orient first (what you do / next / result / what you get), top-down and scannable, with one clear CTA (`onStart` → the warm-up). The feature list is the `FEATURES` array; keep entries short.
 
-`BreatheOverlay` is the relax prompt: a guided **3-breath** reset with the exhale longer than the inhale (the fastest parasympathetic lever) plus tension cues. It's triggered by `useRelaxCue` (misses/hesitation, never speed) and gated by the module flag `RELAX_ON`. Defaults: **sound off** (`muted` defaults true), **breathing on** (`relaxOn` defaults true, toggle in ⚙). Keep both calm — no timers, no scores.
+`BreatheOverlay` is App-level (`breathe` = cycle count; `triggerBreathe`/`closeBreathe`): a guided breathing reset, exhale longer than inhale (the fastest parasympathetic lever), starting with a small **"prepare"** circle that grows on each inhale. It's triggered two ways: **tension** via `useRelaxCue(onTrigger)` → 3 breaths (misses/hesitation, never speed; gated by `RELAX_ON`), and **finishing a drawing** → 5 breaths. Defaults: **sound off** (`muted` defaults true), **breathing on** (`relaxOn` defaults true, toggle in ⚙).
+
+Also: the drill is a learning-science scheduler (gradual release + massed acquisition + spaced/interleaved review) with a `.kf-term` terminal echo of typed keys; snippets have **no auto-close** (type every character). See the components for details.
 
 ### Add code snippets (most common change)
 

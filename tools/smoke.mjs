@@ -80,8 +80,8 @@ await new Promise((r) => setTimeout(r, 30));
 const big = $(".kf-bigkey")[0];
 ok("Drill renders a target key", !!big && big.textContent.length === 1);
 const firstTarget = big ? big.textContent : null;
-ok("warmup opens on easiest key (=)", firstTarget === "=");
-ok("warmup label shown", /Warm-up/.test(txt()));
+ok("curriculum opens on the easiest key (=)", firstTarget === "=");
+ok("learning-progression label shown", /Building up|All keys in play/.test(txt()));
 
 // 2b. the placement description sits above the symbol (big), with the calming lead line
 ok("drill shows a 'where' description above the key", !!$(".kf-place-where")[0] && $(".kf-place-where")[0].textContent.length > 0);
@@ -91,6 +91,7 @@ ok("drill shows the calming lead line", /let the screen lead/i.test($(".kf-lead"
 try { key("a"); key("a"); key("a"); } catch (e) { console.error("KEYDOWN ERROR:", e.message); }
 await new Promise((r) => setTimeout(r, 30));
 ok("wrong key shows a hint", !!$(".kf-hint")[0]);
+ok("terminal echo shows what you typed", (($(".kf-term")[0] || {}).textContent || "").includes("a"));
 
 // 4. Snippet — type through a pair-heavy line; closers must auto-fill
 ok("Snippet button exists", clickBtn("Type snippets"));
@@ -100,7 +101,7 @@ await new Promise((r) => setTimeout(r, 40));
 const snipText = $(".kf-snip")[0]?.textContent || "";
 ok("Snippet renders a non-empty line", snipText.trim().length > 0);
 
-let sawAuto = false, typedCloser = false, sawCelebrate = false, steps = 0;
+let typedCloser = false, sawCelebrate = false, steps = 0;
 const closers = new Set([")", "]", "}"]);
 while (steps < 60) {
   const cur = $(".kf-snip .cur")[0];
@@ -109,12 +110,10 @@ while (steps < 60) {
   if (closers.has(ch)) typedCloser = true; // should NEVER be asked to type a closer
   key(ch);
   await new Promise((r) => setTimeout(r, 8));
-  if ($(".kf-snip .auto")[0]) sawAuto = true;
   if ($(".kf-celebrate")[0]) sawCelebrate = true;
   steps++;
 }
-ok("closers auto-fill (marked .auto)", sawAuto);
-ok("user never asked to type a closer", !typedCloser);
+ok("no auto-fill — the user types the closers themselves", typedCloser && !$(".kf-snip .auto")[0]);
 ok("clean line triggers celebration", sawCelebrate);
 
 // 5. settings: gear opens a sensitivity slider
@@ -217,18 +216,21 @@ ok("chosen art pack persists to keygarden.v1", packSaved);
 // 9d. finishing a drawing offers Save / Delete; Save adds it to the collection
 clickBtn("Type snippets");
 await new Promise((r) => setTimeout(r, 40));
-for (let ln = 0; ln < 18 && !$(".kf-save")[0]; ln++) {
+for (let ln = 0; ln < 45 && !$(".kf-save")[0] && !$(".kf-relax")[0]; ln++) {
   for (let g = 0; g < 60; g++) {
     const cur = $(".kf-snip .cur")[0];
-    if (!cur) break;
+    if (!cur || $(".kf-relax")[0]) break;
     key(cur.textContent === " " ? " " : cur.textContent);
     await new Promise((r) => setTimeout(r, 5));
   }
   await new Promise((r) => setTimeout(r, 70));
-  if ($(".kf-save")[0]) break;
-  await new Promise((r) => setTimeout(r, 440)); // wait for the next line to load
+  if ($(".kf-save")[0] || $(".kf-relax")[0]) break;
+  await new Promise((r) => setTimeout(r, 430)); // wait for the next line to load
 }
-ok("finishing a drawing offers Save / Delete", !!$(".kf-save")[0]);
+ok("a finished drawing pops a breathing break", !!$(".kf-relax")[0]);
+if ($(".kf-relax")[0]) $(".kf-relax")[0].dispatchEvent(new window.MouseEvent("click", { bubbles: true })); // dismiss breathing → reveal save/delete
+await new Promise((r) => setTimeout(r, 80));
+ok("finished drawing then offers Save / Delete", !!$(".kf-save")[0]);
 $(".kf-save")[0] && $(".kf-save")[0].dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
 await new Promise((r) => setTimeout(r, 60));
 let collected = false;

@@ -71,6 +71,14 @@
   .kf-particle{position:absolute;width:9px;height:9px;border-radius:50%;animation:burst .85s cubic-bezier(.25,.6,.3,1) forwards;}
   @keyframes burst{0%{transform:translate(0,0) scale(1);opacity:1;}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0;}}
   .kf-center{text-align:center;}
+  /* terminal echo: see what you actually typed, like a console */
+  .kf-term{font-family:var(--mono);font-size:1.5rem;line-height:1.6;background:#10161f;color:#dfe7f2;border:1px solid #2a3442;border-radius:10px;padding:.7rem 1rem;margin:1.2rem auto 0;max-width:560px;text-align:left;min-height:3rem;word-break:break-all;box-shadow:inset 0 1px 6px rgba(0,0,0,.3);}
+  .kf-term-prompt{color:#5fb98b;margin-right:.5rem;user-select:none;}
+  .kf-term .ok{color:#9fe0b6;}
+  .kf-term .bad{color:#ff8a8a;text-decoration:underline wavy rgba(255,120,120,.6);}
+  .kf-term-caret{display:inline-block;width:.6ch;background:#dfe7f2;color:#dfe7f2;margin-left:1px;animation:caret 1.05s step-end infinite;}
+  @keyframes caret{0%,55%{opacity:1;}56%,100%{opacity:0;}}
+  .kf-newkey{display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--good);border-radius:999px;padding:.2rem .6rem;margin-bottom:.6rem;animation:fade .3s ease;}
   .kf-fade{animation:fade .4s ease;}
   @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
   .kf-dim{color:var(--dim);font-size:.85rem;}
@@ -398,11 +406,13 @@ const weakness=st=>{const acc=st.attempts?st.errors/st.attempts:0;const slow=Mat
 const pick=stats=>{const w=SYMBOLS.map(s=>weakness(stats[s.ch]));const tot=w.reduce((p,q)=>p+q,0);let r=Math.random()*tot;
   for(let i=0;i<SYMBOLS.length;i++){r-=w[i];if(r<=0)return SYMBOLS[i];}return SYMBOLS[SYMBOLS.length-1];};
 
-/* ── Sketch: clean typing draws a single continuous line, stroke by stroke.
-   Calm, no scores/timers — completing one drawing simply starts the next.
-   Each drawing is one connected path; `pathLength="100"` normalizes it so we
-   reveal a fraction with stroke-dashoffset regardless of the path's real length. */
-const STROKES_PER=12; // clean lines / clean streaks to finish one drawing — about a 5-minute session
+/* ── Sketch: every keystroke unfolds a single continuous line a little — MORE when correct,
+   a little when you miss — so it draws live as you type. Faster typing → faster drawing.
+   One drawing fills over ~STROKES_GOAL key-units (≈ a 5-minute session). pathLength="100"
+   normalizes each path so stroke-dashoffset reveals the right fraction. */
+const STROKES_GOAL=200;   // key-units to finish a drawing (~5 min of typing)
+const STEP_OK=1;          // a correct key unfolds this much
+const STEP_MISS=0.34;     // a miss still nudges it forward a little
 // Each is a single connected path (pathLength=100 → reveal a fraction with stroke-dashoffset),
 // drawn in a charcoal stroke with one small, muted color accent — Mike's pencil-with-a-touch-of-color style.
 const SKETCHES=[
@@ -436,7 +446,7 @@ const loadSketch=()=>{
   const s=store.load().sketch;if(!s||typeof s!=="object")return blankSketch();
   const okIdx=i=>Number.isInteger(i)&&i>=0&&i<SKETCHES.length;
   return {current:okIdx(s.current)?s.current:Math.floor(Math.random()*SKETCHES.length),
-    strokes:Math.max(0,s.strokes|0),
+    strokes:Math.max(0,Math.min(STROKES_GOAL,Number(s.strokes)||0)),
     finished:Array.isArray(s.finished)?s.finished.filter(okIdx).slice(-24):[],
     pending:okIdx(s.pending)?s.pending:null};
 };
@@ -460,6 +470,7 @@ function App(){
   const [streak,setStreak]=useState(loadStreak);
   const [pack,setPack]=useState(()=>{const p=store.load().pack;return PACK_BY_ID[p]?p:DEFAULT_PACK;});
   const [focusKeys,setFocusKeys]=useState(null); // when set, Drill practices only these (the most-missed) keys
+  const [breathe,setBreathe]=useState(0);        // >0 = breathing overlay open with this many cycles
   useEffect(()=>{RELAX_SENS=sens;store.save({sens});},[sens]);
   useEffect(()=>{RELAX_ON=relaxOn;store.save({relaxOn});},[relaxOn]);
   useEffect(()=>{audio.setMuted(muted);store.save({muted});},[muted]);
@@ -487,14 +498,19 @@ function App(){
       return next;
     });
   },[]);
-  // clean lines / clean streaks (the existing celebration moments) add a stroke to the drawing;
-  // a finished drawing simply rolls over to the next — no scores, nothing to lose
-  const addStroke=useCallback(n=>{if(n)setSketch(s=>{
+  // EVERY keystroke unfolds the drawing a little (more when correct), so it draws live as you type
+  const addProgress=useCallback(ok=>setSketch(s=>{
     if(s.pending!=null)return s;                  // finished drawing waiting on a save/delete choice — pause
-    const t=s.strokes+n;
-    if(t<STROKES_PER)return {...s,strokes:t};
-    return {...s,strokes:STROKES_PER,pending:s.current}; // fully drawn; ask the player to keep or delete it
-  });},[]);
+    const t=s.strokes+(ok?STEP_OK:STEP_MISS);
+    if(t<STROKES_GOAL)return {...s,strokes:t};
+    return {...s,strokes:STROKES_GOAL,pending:s.current}; // finished: pause on it (save/delete)
+  }),[]);
+  const triggerBreathe=useCallback(n=>setBreathe(prev=>prev>0?prev:n),[]);
+  const closeBreathe=useCallback(()=>setBreathe(0),[]);
+  useEffect(()=>{audio.duck(breathe>0);},[breathe]);
+  // when a drawing finishes (~5 min in), a breathing break pops up for 5 cycles
+  const justFinished=useRef(false);
+  useEffect(()=>{ if(sketch.pending!=null){ if(!justFinished.current){justFinished.current=true;setBreathe(5);} } else justFinished.current=false; },[sketch.pending]);
   const saveSketch=useCallback(()=>setSketch(s=>s.pending==null?s:({current:randomSketch(s.current),strokes:0,finished:[...s.finished,s.pending].slice(-24),pending:null})),[]);
   const discardSketch=useCallback(()=>setSketch(s=>s.pending==null?s:({current:randomSketch(s.current),strokes:0,finished:s.finished,pending:null})),[]);
   const startFocus=useCallback(keys=>{setFocusKeys(keys&&keys.length?keys:null);setMode("drill");},[]);
@@ -502,7 +518,7 @@ function App(){
   const toggleWelcome=useCallback(()=>setWelcome(w=>{const nx=!w;if(!nx)store.save({welcomeSeen:true});return nx;}),[]);
   const startApp=useCallback(()=>{store.save({welcomeSeen:true});setWelcome(false);setMode("drill");},[]);
   const toggleMute=()=>setMuted(m=>!m);
-  const resetAll=()=>{store.clear();setStats(blankStats());setSketch(blankSketch());setStreak(blankStreak());setPack(DEFAULT_PACK);setSens(0.4);setRelaxOn(true);setMuted(true);setWelcome(true);setShowSet(false);};
+  const resetAll=()=>{store.clear();setStats(blankStats());setSketch(blankSketch());setStreak(blankStreak());setPack(DEFAULT_PACK);setSens(0.4);setRelaxOn(true);setMuted(true);setWelcome(true);setBreathe(0);setShowSet(false);};
   const sensLabel=sens<0.25?"Rarely":sens<0.55?"Calm":sens<0.8?"Attentive":"Eager";
   const total=useMemo(()=>Object.values(stats).reduce((s,x)=>s+x.attempts,0),[stats]);
   return (
@@ -521,6 +537,7 @@ function App(){
         </div>
       </header>
       {welcome&&<Welcome onStart={startApp} onClose={toggleWelcome} muted={muted}/>}
+      {breathe>0&&<BreatheOverlay cycles={breathe} onClose={closeBreathe}/>}
       {showSet&&(
         <div className="kf-settings-wrap" onClick={e=>{if(e.target===e.currentTarget)setShowSet(false);}}>
           <div className="kf-settings kf-fade">
@@ -547,8 +564,8 @@ function App(){
         </aside>
         <main className="kf-work">
           {mode==="snippet"
-            ? <Snippet record={record} addStroke={addStroke}/>
-            : <Drill stats={stats} record={record} addStroke={addStroke} focusKeys={focusKeys} clearFocus={clearFocus}/>}
+            ? <Snippet record={record} addProgress={addProgress} onBreathe={triggerBreathe}/>
+            : <Drill stats={stats} record={record} addProgress={addProgress} onBreathe={triggerBreathe} focusKeys={focusKeys} clearFocus={clearFocus}/>}
         </main>
       </div>
     </div>
@@ -630,30 +647,40 @@ function Heatmap({stats}){
   );
 }
 
-function Drill({stats,record,addStroke,focusKeys,clearFocus}){
+function Drill({stats,record,addProgress,onBreathe,focusKeys,clearFocus}){
   const statsRef=useRef(stats);statsRef.current=stats;
-  // focus mode: practice ONLY the chosen (most-missed) keys — no warm-up, weighted toward the weaker ones
+  // focus mode: practice ONLY the chosen (most-missed) keys — weighted toward the weaker ones
   const focus=useMemo(()=>{const set=Array.isArray(focusKeys)?focusKeys:[];const pool=SYMBOLS.filter(s=>set.includes(s.ch));return pool.length?pool:null;},[focusKeys]);
-  const warm=useRef(focus?SYMBOLS.length:0); // index into SYMBOLS during the one-pass warm-up (skipped when focusing)
-  const pickNext=useCallback(()=>{
-    if(focus){const w=focus.map(s=>weakness(statsRef.current[s.ch]));const tot=w.reduce((p,q)=>p+q,0)||1;let r=Math.random()*tot;
-      for(let i=0;i<focus.length;i++){r-=w[i];if(r<=0)return focus[i];}return focus[focus.length-1];}
-    return pick(statsRef.current);
+  // ── learning-science scheduler (SYMBOLS is the easy→hard, chunked-by-finger pedagogical order):
+  //    layered release — introduce keys gradually, give each a little massed acquisition, then SPACED +
+  //    INTERLEAVED review weighted by weakness (and no back-to-back repeats). Not random. ──
+  const intro=useRef(0); const seen=useRef({}); const sinceIntro=useRef(0); const last=useRef(null);
+  const schedule=useCallback(()=>{
+    const weightedPick=poolN=>{const w=poolN.map(s=>weakness(statsRef.current[s.ch]));const tot=w.reduce((p,q)=>p+q,0)||1;let r=Math.random()*tot;
+      for(let i=0;i<poolN.length;i++){r-=w[i];if(r<=0)return poolN[i];}return poolN[poolN.length-1];};
+    if(focus) return {sym:weightedPick(focus),isNew:false};
+    if(intro.current===0){intro.current=1;sinceIntro.current=0;return {sym:SYMBOLS[0],isNew:true};}
+    const newest=SYMBOLS[intro.current-1];
+    const review=()=>{let p=SYMBOLS.slice(0,intro.current).filter(s=>s.ch!==last.current);return weightedPick(p.length?p:SYMBOLS.slice(0,intro.current));};
+    // 1) acquire the newest key (massed, but lightly interleaved so it isn't rote)
+    if((seen.current[newest.ch]||0)<4 && (intro.current===1||Math.random()<0.6)) return {sym:newest,isNew:false};
+    // 2) introduce the next key once the newest is warm and a few reps have passed
+    if(intro.current<SYMBOLS.length && (seen.current[newest.ch]||0)>=3 && sinceIntro.current>=3){intro.current++;sinceIntro.current=0;return {sym:SYMBOLS[intro.current-1],isNew:true};}
+    // 3) spaced + interleaved review across everything introduced
+    return {sym:review(),isNew:false};
   },[focus]);
-  const [target,setTarget]=useState(()=>focus?focus[0]:SYMBOLS[0]); // begin on the easiest key (or first focus key)
+  const advance=useCallback(()=>{const l=schedule();seen.current[l.sym.ch]=(seen.current[l.sym.ch]||0)+1;if(!l.isNew)sinceIntro.current++;last.current=l.sym.ch;return l;},[schedule]);
+  const [lesson,setLesson]=useState(advance);   // { sym, isNew }
+  const target=lesson.sym, isNew=lesson.isNew;
   const [flash,setFlash]=useState(null);
   const [hint,setHint]=useState(null);
+  const [typed,setTyped]=useState([]);          // terminal echo of what you actually pressed
   const [cel,setCel]=useState(0);
   const [celLvl,setCelLvl]=useState(1);
   const shownAt=useRef(performance.now());
   const streak=useRef(0);
-  const relax=useRelaxCue();
-  useEffect(()=>{audio.duck(relax.show);},[relax.show]);
-  const next=useCallback(()=>{
-    warm.current++;
-    setTarget(!focus&&warm.current<SYMBOLS.length?SYMBOLS[warm.current]:pickNext());
-    shownAt.current=performance.now();
-  },[focus,pickNext]);
+  const report=useRelaxCue(useCallback(()=>onBreathe(3),[onBreathe]));
+  const next=useCallback(()=>{setLesson(advance());shownAt.current=performance.now();},[advance]);
   useEffect(()=>{
     shownAt.current=performance.now();
     const onKey=e=>{
@@ -662,12 +689,12 @@ function Drill({stats,record,addStroke,focusKeys,clearFocus}){
       e.preventDefault();
       const lat=performance.now()-shownAt.current;
       const ok=e.key===target.ch;
-      record(target.ch,ok,lat);relax.report(ok,lat);audio.playKey(ok);
+      record(target.ch,ok,lat);report(ok,lat);audio.playKey(ok);addProgress(ok);
+      setTyped(p=>[...p,{ch:e.key,ok}].slice(-36)); // echo it into the terminal line
       if(ok){
         setHint(null);
-        const finishedWarmup=!focus&&warm.current===SYMBOLS.length-1; // last warm-up key just cleared
         streak.current+=1;
-        if(finishedWarmup||streak.current%12===0){audio.milestone();setCelLvl(finishedWarmup?2:Math.min(Math.floor(streak.current/12),4));setCel(c=>c+1);addStroke(1);}
+        if(streak.current%12===0){audio.milestone();setCelLvl(Math.min(Math.floor(streak.current/12),4));setCel(c=>c+1);}
       }
       else{setHint(diagnose(target.ch,e.key));streak.current=0;}
       setFlash(ok?"ok":"miss");setTimeout(()=>setFlash(null),180);
@@ -675,15 +702,15 @@ function Drill({stats,record,addStroke,focusKeys,clearFocus}){
     };
     window.addEventListener("keydown",onKey);
     return ()=>window.removeEventListener("keydown",onKey);
-  },[target,record,next,relax,addStroke,focus]);
+  },[target,record,next,report,addProgress]);
   return (
     <section className="kf-card kf-fade kf-center">
-      {relax.show&&<BreatheOverlay onClose={relax.dismiss}/>}
       <Celebrate trigger={cel} level={celLvl}/>
       {focus
         ? <p className="kf-focusbar">Focusing on your missed keys {focus.map(s=><code key={s.ch}>{s.ch}</code>)} <button className="kf-linkbtn" onClick={clearFocus}>drill all keys</button></p>
-        : <p className="kf-dim">{warm.current<SYMBOLS.length?`Warm-up · ${warm.current+1}/${SYMBOLS.length}`:"Adaptive practice"} — no timer, no penalty.</p>}
+        : <p className="kf-dim">{intro.current>=SYMBOLS.length?"All keys in play":`Building up · ${intro.current} of ${SYMBOLS.length} keys`} — no timer, no penalty.</p>}
       <p className="kf-lead">Take a breath — let the screen lead your finger.</p>
+      {isNew&&!focus&&<span className="kf-newkey">New key — take it slow</span>}
       <div className="kf-place">
         <p className="kf-place-where">{target.where}</p>
         <p className="kf-place-finger">{target.finger}</p>
@@ -691,26 +718,24 @@ function Drill({stats,record,addStroke,focusKeys,clearFocus}){
       <div className={"kf-bigkey "+(flash||"")}>{target.ch}</div>
       <p className="kf-name">{target.name}</p>
       {hint&&<p className="kf-hint" key={hint}>{hint}</p>}
+      <div className="kf-term"><span className="kf-term-prompt">&gt;</span>{typed.map((t,i)=><span key={i} className={t.ok?"ok":"bad"}>{t.ch===" "?" ":t.ch}</span>)}<span className="kf-term-caret">&nbsp;</span></div>
     </section>
   );
 }
 
-function Snippet({record,addStroke}){
+function Snippet({record,addProgress,onBreathe}){
   const [track,setTrack]=useState("Mixed");
   const pool=useMemo(()=>track==="Mixed"?SNIPPETS:SNIPPETS.filter(s=>s.track===track),[track]);
   const [snip,setSnip]=useState(()=>pool[0]);
   const [pos,setPos]=useState(0);
   const [wrong,setWrong]=useState(false);
   const [hint,setHint]=useState(null);
-  const [auto,setAuto]=useState(()=>new Set()); // indices the "editor" auto-filled
   const [cel,setCel]=useState(0);
   const [celLvl,setCelLvl]=useState(1);
-  const stack=useRef([]);
   const lastAt=useRef(performance.now());
   const errs=useRef(0);
-  const relax=useRelaxCue();
-  useEffect(()=>{audio.duck(relax.show);},[relax.show]);
-  const loadNext=useCallback(p=>{const list=p||pool;setSnip(list[Math.floor(Math.random()*list.length)]);setPos(0);setWrong(false);setHint(null);setAuto(new Set());stack.current=[];errs.current=0;lastAt.current=performance.now();},[pool]);
+  const report=useRelaxCue(useCallback(()=>onBreathe(3),[onBreathe]));
+  const loadNext=useCallback(p=>{const list=p||pool;setSnip(list[Math.floor(Math.random()*list.length)]);setPos(0);setWrong(false);setHint(null);errs.current=0;lastAt.current=performance.now();},[pool]);
   useEffect(()=>{loadNext(pool);},[track]); // eslint-disable-line
   useEffect(()=>{
     const onKey=e=>{
@@ -721,35 +746,25 @@ function Snippet({record,addStroke}){
       const lat=performance.now()-lastAt.current;
       const ok=e.key===want;
       if(SYMBOL_SET.has(want))record(want,ok,lat);
-      relax.report(ok,lat);audio.playKey(ok);
+      report(ok,lat);audio.playKey(ok);addProgress(ok);
       if(ok){
         setWrong(false);setHint(null);lastAt.current=performance.now();
-        const top=stack.current[stack.current.length-1];
-        const closingQuote=(want==='"'||want==="'")&&top===want;
-        if(PAIRS[want]&&!closingQuote)stack.current.push(PAIRS[want]); // opener owes a closer
-        else if(closingQuote)stack.current.pop();                      // manual closing quote
-        let np=pos+1;const skipped=[];
-        while(np<snip.text.length&&stack.current.length&&snip.text[np]===stack.current[stack.current.length-1]){
-          stack.current.pop();skipped.push(np);np++; // closer auto-fills; you don't type it
-        }
-        if(skipped.length)setAuto(prev=>{const s=new Set(prev);skipped.forEach(i=>s.add(i));return s;});
-        setPos(np); // always advance, even off the end, so the line closes cleanly
-        if(np>=snip.text.length){if(errs.current===0){audio.milestone();setCelLvl(snip.text.length>=24?3:snip.text.length>=16?2:1);setCel(c=>c+1);addStroke(1);}setTimeout(()=>loadNext(),380);}
+        const np=pos+1; setPos(np); // you type every character — closers included
+        if(np>=snip.text.length){if(errs.current===0){audio.milestone();setCelLvl(snip.text.length>=24?3:snip.text.length>=16?2:1);setCel(c=>c+1);}setTimeout(()=>loadNext(),420);}
       }else{errs.current+=1;setWrong(true);setHint(diagnose(want,e.key));setTimeout(()=>setWrong(false),200);}
     };
     window.addEventListener("keydown",onKey);
     return ()=>window.removeEventListener("keydown",onKey);
-  },[snip,pos,record,loadNext,relax,addStroke]);
+  },[snip,pos,record,loadNext,report,addProgress]);
   return (
     <section className="kf-card kf-fade">
-      {relax.show&&<BreatheOverlay onClose={relax.dismiss}/>}
       <Celebrate trigger={cel} level={celLvl}/>
       <div className="kf-tracks">
         {TRACKS.map(t=><button key={t} className={t===track?"on":""} onClick={()=>setTrack(t)}>{t}</button>)}
       </div>
-      <p className="kf-dim">Closers auto-fill, like your editor — just type the openers. <code>{snip.track}</code></p>
+      <p className="kf-dim">Type the line exactly — every symbol and closer, like a real terminal. <code>{snip.track}</code></p>
       <div className={"kf-snip "+(wrong?"wrong":"")}>
-        {snip.text.split("").map((c,i)=><span key={i} className={(i<pos?"done":i===pos?"cur":"pending")+(auto.has(i)?" auto":"")}>{c===" "?"\u00A0":c}</span>)}
+        {snip.text.split("").map((c,i)=><span key={i} className={i<pos?"done":i===pos?"cur":"pending"}>{c===" "?"\u00A0":c}</span>)}
       </div>
       {hint&&<p className="kf-hint" key={hint}>{hint}</p>}
     </section>
@@ -759,10 +774,10 @@ function Snippet({record,addStroke}){
 // shared sensitivity, 0 (rarely) .. 1 (eager); default calm. RELAX_ON gates the breathing prompt entirely.
 let RELAX_SENS = 0.4;
 let RELAX_ON = true;
-function useRelaxCue(){
-  const [show,setShow]=useState(false);
+// returns a report(ok,lat) fn; on detected tension it calls onTrigger() (App opens a 3-breath break)
+function useRelaxCue(onTrigger){
   const recent=useRef([]);const cooldown=useRef(0);const spikes=useRef(0);
-  const report=useCallback((ok,lat)=>{
+  return useCallback((ok,lat)=>{
     if(!RELAX_ON)return;                              // breathing breaks switched off
     const r=recent.current;r.push({ok,lat});if(r.length>16)r.shift();
     if(performance.now()<cooldown.current)return;
@@ -774,11 +789,9 @@ function useRelaxCue(){
     if(med>0 && lat>med*spikeMult && lat>450) spikes.current++; else spikes.current=Math.max(0,spikes.current-1);
     const errCount=r.filter(x=>!x.ok).length;
     if(r.length>=12 && (errCount>=errNeeded || spikes.current>=spikesNeeded)){
-      setShow(true);recent.current=[];spikes.current=0;cooldown.current=performance.now()+60000;
+      recent.current=[];spikes.current=0;cooldown.current=performance.now()+60000;onTrigger();
     }
-  },[]);
-  const dismiss=useCallback(()=>setShow(false),[]);
-  return {show,report,dismiss};
+  },[onTrigger]);
 }
 const PRAISE=["Clean","Nice flow","Smooth","Locked in","Effortless","No misses","Flowing","Crisp"];
 const PRAISE_HI=["On fire","Unstoppable","Flawless run","In the zone","Masterful"];
@@ -811,12 +824,12 @@ function Celebrate({trigger,level=1}){
   );
 }
 
-/* Guided breathing reset: 3 slow breaths, exhale longer than inhale (the lever that
-   flips on the calming "rest" response fastest), with a breath counter + tension cues. */
-const BREATHE_IN=4000, BREATHE_OUT=6000, BREATHE_N=3;
-function BreatheOverlay({onClose}){
-  const [phase,setPhase]=useState("in");   // in | out | done
-  const [count,setCount]=useState(1);
+/* Guided breathing reset: N slow breaths, exhale longer than inhale (the lever that flips on the
+   calming "rest" response fastest). Starts with a small "prepare" circle, then grows on each in-breath. */
+const BREATHE_IN=4000, BREATHE_OUT=6000, BREATHE_PREP=2200;
+function BreatheOverlay({onClose,cycles=3}){
+  const [phase,setPhase]=useState("prep"); // prep | in | out | done
+  const [count,setCount]=useState(0);
   useEffect(()=>{
     let alive=true; const timers=[]; let n=1;
     const after=(ms,fn)=>timers.push(setTimeout(()=>{if(alive)fn();},ms));
@@ -824,22 +837,23 @@ function BreatheOverlay({onClose}){
       setPhase("in"); setCount(n);
       after(BREATHE_IN,()=>{ setPhase("out");
         after(BREATHE_OUT,()=>{
-          if(n>=BREATHE_N){ setPhase("done"); after(2800,onClose); }
+          if(n>=cycles){ setPhase("done"); after(2800,onClose); }
           else { n+=1; cycle(); }
         });
       });
     };
-    cycle();
+    setPhase("prep"); after(BREATHE_PREP,cycle); // small circle first: "prepare to breathe in"
     return ()=>{ alive=false; timers.forEach(clearTimeout); };
-  },[onClose]);
+  },[onClose,cycles]);
   const done=phase==="done";
-  const scale=phase==="in"?1.15:done?0.95:0.55;
-  const dur=phase==="in"?BREATHE_IN:BREATHE_OUT;
+  const scale=phase==="in"?1.15:phase==="prep"?0.42:done?0.95:0.55;
+  const dur=phase==="in"?BREATHE_IN:phase==="prep"?BREATHE_PREP:BREATHE_OUT;
   return (
     <div className="kf-relax" onClick={onClose}>
-      {!done&&<p className="kf-bcount">Breath {count} of {BREATHE_N}</p>}
+      {phase==="prep"&&<p className="kf-bcount">Get ready · {cycles} slow breaths</p>}
+      {(phase==="in"||phase==="out")&&<p className="kf-bcount">Breath {count} of {cycles}</p>}
       <div className="kf-borb" style={{transform:`scale(${scale})`,transitionDuration:dur+"ms"}}/>
-      <p>{done?"Nice.":phase==="in"?"Deep breath in…":"…and slowly out"}</p>
+      <p>{done?"Nice.":phase==="prep"?"Prepare to breathe in…":phase==="in"?"Deep breath in…":"…and slowly out"}</p>
       <p className="kf-dim">{done
         ? "Shoulders down, wrists floating. Carry on whenever you're ready."
         : "Let your shoulders drop and your wrists float. Follow the circle — slow and easy."}</p>
@@ -923,7 +937,7 @@ function SketchArt({sketch,frac,pack}){
 function LiveSketch({sketch,pack,onSave,onDiscard}){
   const pending=sketch.pending!=null;
   const cur=SKETCHES[pending?sketch.pending:sketch.current]||SKETCHES[0];
-  const frac=pending?1:Math.max(0,Math.min(1,sketch.strokes/STROKES_PER));
+  const frac=pending?1:Math.max(0,Math.min(1,sketch.strokes/STROKES_GOAL));
   const near=frac>=0.75;
   const n=sketch.finished?sketch.finished.length:0;
   const title=cur.name.charAt(0).toUpperCase()+cur.name.slice(1);
