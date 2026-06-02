@@ -172,20 +172,30 @@ try {
 } catch (e) {}
 ok("saved state available for rehydration", rehydrated);
 
-// 8. Sketch layer: tab renders the self-drawing line
-ok("Sketch tab exists", clickBtn("Sketch"));
-await new Promise((r) => setTimeout(r, 40));
-ok("Sketch renders the line drawing", !!$(".kf-sketch-svg path.ink")[0]);
+// 8. Sketch layer: the live charcoal drawing renders ON the typing screens (not a separate tab)
+clickBtn("Type snippets");
+await new Promise((r) => setTimeout(r, 30));
+ok("live sketch renders on the Type-snippets screen", !!$(".kf-live .kf-art .ink")[0]);
+clickBtn("Drill keys");
+await new Promise((r) => setTimeout(r, 30));
+ok("live sketch persists onto the Drill screen", !!$(".kf-live .kf-art .ink")[0]);
 
-// 9. a clean line added a stroke, persisted into keygarden.v1.sketch
-let sketchPersist = false, sketchGrew = false;
+// 9. a clean line added a stroke, persisted into keygarden.v1.sketch; a returning streak is tracked
+let sketchPersist = false, sketchGrew = false, streakTracked = false;
 try {
   const saved = JSON.parse(window.localStorage.getItem("keygarden.v1") || "{}");
   sketchPersist = !!saved.sketch && typeof saved.sketch === "object";
-  sketchGrew = sketchPersist && (((saved.sketch.strokes | 0) > 0) || ((saved.sketch.completed | 0) > 0));
+  sketchGrew = sketchPersist && (((saved.sketch.strokes | 0) > 0) || (Array.isArray(saved.sketch.finished) && saved.sketch.finished.length > 0));
+  streakTracked = !!saved.streak && (saved.streak.sessions | 0) >= 1 && (saved.streak.streak | 0) >= 1;
 } catch (e) {}
 ok("sketch state persists to keygarden.v1", sketchPersist);
 ok("a clean line advances the sketch (a stroke is saved)", sketchGrew);
+ok("returning streak/session is tracked", streakTracked);
+
+// 9b. Progress greets you with the return-streak banner
+clickBtn("Progress");
+await new Promise((r) => setTimeout(r, 30));
+ok("Progress shows the return-streak banner", !!$(".kf-streak")[0]);
 
 // 9b. the collapsible "How it works" guide toggles from the nav (open on first visit)
 const helpBtn = $("button").find((b) => b.textContent.trim() === "?");

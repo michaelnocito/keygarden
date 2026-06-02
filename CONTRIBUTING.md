@@ -24,9 +24,13 @@ The whole app lives in the `<script type="text/babel">` block in `index.html`: d
 
 ### The Sketch layer
 
-The **Sketch** tab is a calm reward built from the existing practice hooks — there's nothing new to "play." Each drawing is a single connected SVG path in the `SKETCHES` array near the top: `{ name, d }`. The path uses `pathLength="100"` so it can be revealed a fraction at a time with `stroke-dashoffset`, no length measurement needed. `STROKES_PER` is how many clean lines/streaks complete one drawing; `addStroke()` is fired from the same celebration moments as the audio milestone. Sketch state lives on the `keygarden.v1` localStorage object under `sketch` (`{ strokes, completed }`), and Reset clears it.
+A live charcoal drawing fills in *below the typing card* on both Drill and Type-snippets (`LiveSketch`), built from the existing practice hooks — there's nothing new to "play." Each drawing is a connected SVG path in the `SKETCHES` array near the top: `{ name, d, accent }`. The path uses `pathLength="100"` so it reveals a fraction at a time with `stroke-dashoffset` (no length measurement). The ink stroke runs through the `kf-charcoal` SVG filter (a `feTurbulence`/`feDisplacementMap` roughen, defined once in `SketchDefs`) for the pencil texture; `accent` is one or more soft, **muted** color blobs that fade in with the line — Mike's pencil-with-a-touch-of-color style (check his charcoal work at michaelnocito.github.io/art). `STROKES_PER` (≈ a 5-minute session) is how many clean lines/streaks finish a drawing; `addStroke()` fires from the same celebration moments as the audio milestone. Finishing pushes the drawing's index onto `sketch.finished` and rolls to a new **random** one. State lives on `keygarden.v1.sketch` (`{ current, strokes, finished }`); Reset clears it.
 
-To add a drawing, append one `{ name, d }` to `SKETCHES` — keep `d` a **single continuous path** (one `M`, then curves) inside the `0 0 120 120` viewBox so it reveals as one unbroken line. Keep the **hard design rules**: no timers, no scores, no decay, nothing to fail — finishing a drawing simply rolls over to the next.
+To add a drawing, append `{ name, d, accent:[{cx,cy,r,c}] }` to `SKETCHES` — keep `d` a mostly-continuous path inside the `0 0 120 120` viewBox, and keep accent colors **desaturated** so it reads as charcoal-plus-a-hint. Keep the **hard design rules**: no timers, no grades, no decay, nothing to fail.
+
+### The return-streak reward
+
+Coming back is rewarded by a gentle day-streak shown on **Progress** (`keygarden.v1.streak` = `{ lastVisit, streak, days, sessions }`). It grows on consecutive days, **restarts (never scolds) after a gap**, counts every session, and is never a timer or a leaderboard. Finished sketches also collect on Progress. Keep both calm — they reward *showing up*, not performance.
 
 ### The "How it works" guide
 

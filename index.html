@@ -108,25 +108,35 @@
   .kf-g-item p+p{margin-top:.4rem;}
   .kf-g-item code{font-family:var(--mono);color:var(--accent-d);background:var(--accent-bg);border:1px solid var(--accent-bd);padding:.02rem .3rem;border-radius:5px;font-size:.82em;}
 
-  /* ── Self-drawing sketch (typing builds a line drawing) ── */
-  .kf-sketch-stage{display:flex;justify-content:center;align-items:center;background:var(--sheet-head);border:1px solid var(--line);border-radius:12px;padding:1.4rem;margin:.4rem 0 1rem;min-height:240px;}
-  .kf-sketch-svg{width:100%;max-width:280px;height:auto;display:block;}
-  .kf-sketch-svg path{fill:none;stroke-linecap:round;stroke-linejoin:round;}
-  .kf-sketch-svg path.ink{stroke:var(--ink);stroke-width:2.6;transition:stroke-dashoffset .9s ease;}
-  .kf-sketch-svg path.ghost{stroke:var(--line);stroke-width:2;}
-  .kf-sketch-cap{font-size:.86rem;color:var(--dim);margin:0 0 .4rem;text-align:center;line-height:1.5;}
-  .kf-sketch-cap b{color:var(--ink);}
-  .kf-sketch-done{color:var(--good);font-weight:700;}
-  .kf-gallery-label{margin:1.5rem 0 .6rem;}
-  .kf-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:.5rem;}
-  .kf-gframe{aspect-ratio:1;background:var(--panel);border:1px solid var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;padding:.45rem;}
-  .kf-gframe.empty{border-style:dashed;}
-  .kf-gframe svg{width:100%;height:100%;}
-  .kf-gframe svg path{fill:none;stroke:var(--dim);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;}
-  .kf-gframe.empty span{font-size:1.1rem;color:var(--line);}
+  /* ── Charcoal drawing: soft graphite stroke on paper, one muted color accent ── */
+  .kf-art{display:block;width:100%;height:100%;}
+  .kf-art .accent{filter:url(#kf-soft);}
+  .kf-art .ghost{fill:none;stroke:#cdccc7;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+  .kf-art .ink{fill:none;stroke:#34322e;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;filter:url(#kf-charcoal);transition:stroke-dashoffset .85s ease;}
+
+  /* live sketch panel — sits under the typing card on Drill + Type snippets */
+  .kf-live{display:flex;align-items:center;gap:1rem;width:100%;max-width:620px;margin:1rem auto 0;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:.8rem 1rem;animation:fade .4s ease;}
+  .kf-live-paper{flex:0 0 auto;width:118px;height:94px;background:linear-gradient(160deg,#f4f3ef,#e7e8ea);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .kf-live-meta{flex:1 1 auto;min-width:0;}
+  .kf-live-eyebrow{font-size:.64rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-d);margin:0 0 .15rem;}
+  .kf-live-title{font-weight:700;font-size:.95rem;color:var(--ink);margin:0 0 .4rem;}
+  .kf-live-bar{height:6px;border-radius:999px;background:var(--sheet-head);border:1px solid var(--line);overflow:hidden;}
+  .kf-live-bar i{display:block;height:100%;background:linear-gradient(90deg,#9aa0a6,#46443f);border-radius:999px;transition:width .8s ease;}
+  .kf-live-note{font-size:.74rem;color:var(--dim);margin:.4rem 0 0;}
+  .kf-live-note b{color:var(--ink);}
+
+  /* Progress: returning-streak banner + finished-sketch collection */
+  .kf-streak{display:flex;align-items:center;gap:.85rem;flex-wrap:wrap;background:var(--accent-bg);border:1px solid var(--accent-bd);border-radius:12px;padding:.8rem 1rem;margin:0 0 1.3rem;}
+  .kf-streak-num{font-size:1.6rem;font-weight:800;color:var(--accent-d);line-height:1;}
+  .kf-streak-txt{flex:1 1 180px;font-size:.86rem;color:#2b3240;line-height:1.45;}
+  .kf-streak-txt b{color:var(--accent-d);}
+  .kf-collection-label{margin:1.5rem 0 .6rem;}
+  .kf-collection{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:.5rem;}
+  .kf-frame{aspect-ratio:1;background:linear-gradient(160deg,#f4f3ef,#e7e8ea);border:1px solid var(--line);border-radius:10px;padding:.4rem;}
+  .kf-frame.empty{border-style:dashed;display:flex;align-items:center;justify-content:center;color:var(--line);font-size:1.2rem;}
   @media (prefers-reduced-motion:reduce){
     .kf-breath{animation:none!important;}
-    .kf-sketch-svg path.ink{transition:none!important;}
+    .kf-art .ink{transition:none!important;}
   }
 </style>
 </head>
@@ -329,18 +339,34 @@ const pick=stats=>{const w=SYMBOLS.map(s=>weakness(stats[s.ch]));const tot=w.red
    Calm, no scores/timers — completing one drawing simply starts the next.
    Each drawing is one connected path; `pathLength="100"` normalizes it so we
    reveal a fraction with stroke-dashoffset regardless of the path's real length. */
-const STROKES_PER=20; // clean lines / clean streaks to complete one drawing
+const STROKES_PER=12; // clean lines / clean streaks to finish one drawing — about a 5-minute session
+// Each is a single connected path (pathLength=100 → reveal a fraction with stroke-dashoffset),
+// drawn in a charcoal stroke with one small, muted color accent — Mike's pencil-with-a-touch-of-color style.
 const SKETCHES=[
-  { name:"a leaf",     d:"M60,112 C60,92 59,82 60,72 C40,68 26,50 32,28 C50,34 58,48 60,62 C62,48 70,34 88,28 C94,50 80,68 60,72" },
-  { name:"a wave",     d:"M12,64 C24,46 36,46 48,64 C60,82 72,82 84,64 C96,46 104,50 110,58" },
-  { name:"birds",      d:"M16,68 C30,52 42,52 54,66 C58,58 64,58 68,66 C80,52 92,52 106,68" },
-  { name:"a hillside", d:"M10,94 Q22,94 30,66 Q40,42 50,64 Q60,82 70,60 Q80,38 90,66 Q100,92 110,94" },
-  { name:"a bloom",    d:"M60,60 C50,44 70,44 60,60 C76,50 76,70 60,60 C70,76 50,76 60,60 C44,70 44,50 60,60" },
+  { name:"a leaf",        d:"M60,112 C60,92 59,82 60,72 C40,68 26,50 32,28 C50,34 58,48 60,62 C62,48 70,34 88,28 C94,50 80,68 60,72", accent:[{cx:46,cy:46,r:20,c:"#8a9c6e"},{cx:76,cy:46,r:18,c:"#9aac7e"}] },
+  { name:"a wave",        d:"M12,64 C24,46 36,46 48,64 C60,82 72,82 84,64 C96,46 104,50 110,58", accent:[{cx:60,cy:66,r:26,c:"#7d9bb0"}] },
+  { name:"birds at dawn", d:"M16,68 C30,52 42,52 54,66 C58,58 64,58 68,66 C80,52 92,52 106,68", accent:[{cx:60,cy:44,r:13,c:"#d8a24e"}] },
+  { name:"a hillside",    d:"M10,94 Q22,94 30,66 Q40,42 50,64 Q60,82 70,60 Q80,38 90,66 Q100,92 110,94", accent:[{cx:55,cy:74,r:26,c:"#8a9c6e"}] },
+  { name:"a bloom",       d:"M60,60 C50,44 70,44 60,60 C76,50 76,70 60,60 C70,76 50,76 60,60 C44,70 44,50 60,60", accent:[{cx:60,cy:60,r:16,c:"#c98a86"}] },
+  { name:"a coffee cup",  d:"M40,44 C40,44 44,86 60,86 C76,86 80,44 80,44 M80,54 C94,50 95,72 80,70", accent:[{cx:60,cy:68,r:22,c:"#b98b5e"}] },
+  { name:"a paper plane", d:"M104,42 L22,68 L58,80 L104,42 M58,80 L60,98", accent:[{cx:58,cy:62,r:24,c:"#7d9bb0"}] },
+  { name:"a key",         d:"M29,46 a13,13 0 1,0 26,0 a13,13 0 1,0 -26,0 M55,46 L98,46 M90,46 L90,56 M98,46 L98,58", accent:[{cx:42,cy:46,r:18,c:"#cdaa5e"}] },
+  { name:"a sailboat",    d:"M28,84 C42,98 78,98 92,84 M60,84 L60,42 L86,84 Z", accent:[{cx:67,cy:60,r:16,c:"#c98a86"},{cx:60,cy:92,r:22,c:"#7d9bb0"}] },
 ];
-const blankSketch=()=>({strokes:0,completed:0});
+const randomSketch=cur=>{ if(SKETCHES.length<2)return 0; let i; do{ i=Math.floor(Math.random()*SKETCHES.length); }while(i===cur); return i; };
+const blankSketch=()=>({current:Math.floor(Math.random()*SKETCHES.length),strokes:0,finished:[]});
 const loadSketch=()=>{
   const s=store.load().sketch;if(!s||typeof s!=="object")return blankSketch();
-  return {strokes:Math.max(0,s.strokes|0),completed:Math.max(0,s.completed|0)};
+  const okIdx=i=>Number.isInteger(i)&&i>=0&&i<SKETCHES.length;
+  return {current:okIdx(s.current)?s.current:Math.floor(Math.random()*SKETCHES.length),
+    strokes:Math.max(0,s.strokes|0),
+    finished:Array.isArray(s.finished)?s.finished.filter(okIdx).slice(-24):[]};
+};
+// returning reward: a gentle day-streak that grows when you come back — never punished, never a timer
+const blankStreak=()=>({lastVisit:null,streak:0,days:0,sessions:0});
+const loadStreak=()=>{
+  const s=store.load().streak;if(!s||typeof s!=="object")return blankStreak();
+  return {lastVisit:typeof s.lastVisit==="string"?s.lastVisit:null,streak:s.streak|0,days:s.days|0,sessions:s.sessions|0};
 };
 
 /* ── App ── */
@@ -352,9 +378,21 @@ function App(){
   const [sens,setSens]=useState(()=>{const s=store.load().sens;return typeof s==="number"?s:0.4;});
   const [showSet,setShowSet]=useState(false);
   const [guide,setGuide]=useState(()=>!store.load().guideSeen); // open on first visit, collapsible after
+  const [streak,setStreak]=useState(loadStreak);
   useEffect(()=>{RELAX_SENS=sens;store.save({sens});},[sens]);
   useEffect(()=>{audio.setMuted(muted);store.save({muted});},[muted]);
-  useEffect(()=>{store.save({sketch});},[sketch]); // sketch progress persists on every change
+  useEffect(()=>{store.save({sketch});},[sketch]);   // sketch progress persists on every change
+  useEffect(()=>{store.save({streak});},[streak]);   // returning streak persists
+  // count this visit; the day-streak grows when you come back (consecutive days), never punished on a gap
+  useEffect(()=>{
+    const today=new Date().toISOString().slice(0,10);
+    const yest=new Date(Date.now()-864e5).toISOString().slice(0,10);
+    setStreak(s=>{
+      if(s.lastVisit===today)return {...s,sessions:s.sessions+1};   // another session, same day
+      const streak=s.lastVisit===yest?s.streak+1:1;                 // consecutive day grows it; a gap simply restarts at 1
+      return {lastVisit:today,streak,days:s.days+1,sessions:s.sessions+1};
+    });
+  },[]);
   const saveTimer=useRef(0);
   const record=useCallback((ch,ok,lat)=>{
     if(!SYMBOL_SET.has(ch))return;
@@ -370,15 +408,18 @@ function App(){
   // a finished drawing simply rolls over to the next — no scores, nothing to lose
   const addStroke=useCallback(n=>{if(n)setSketch(s=>{
     const t=s.strokes+n;
-    return t>=STROKES_PER?{strokes:0,completed:s.completed+1}:{...s,strokes:t};
+    if(t<STROKES_PER)return {...s,strokes:t};
+    // drawing finished: add it to the collection, roll to a fresh (different) one
+    return {current:randomSketch(s.current),strokes:0,finished:[...s.finished,s.current].slice(-24)};
   });},[]);
   const toggleGuide=useCallback(()=>setGuide(g=>{const nx=!g;if(!nx)store.save({guideSeen:true});return nx;}),[]);
   const toggleMute=()=>setMuted(m=>!m);
-  const resetAll=()=>{store.clear();setStats(blankStats());setSketch(blankSketch());setSens(0.4);setMuted(false);setShowSet(false);};
+  const resetAll=()=>{store.clear();setStats(blankStats());setSketch(blankSketch());setStreak(blankStreak());setSens(0.4);setMuted(false);setShowSet(false);};
   const sensLabel=sens<0.25?"Rarely":sens<0.55?"Calm":sens<0.8?"Attentive":"Eager";
   const total=useMemo(()=>Object.values(stats).reduce((s,x)=>s+x.attempts,0),[stats]);
   return (
     <div className="kf-root">
+      <SketchDefs/>
       <header className="kf-head">
         <div className="kf-brand"><span className="kf-glyph">{"{ }"}</span><h1>Keygarden</h1></div>
         <p className="kf-tag">the symbols data work runs on — slow, relaxed, repeated</p>
@@ -387,7 +428,6 @@ function App(){
         <button className={mode==="drill"?"on":""} onClick={()=>setMode("drill")}>Drill keys</button>
         <button className={mode==="snippet"?"on":""} onClick={()=>setMode("snippet")}>Type snippets</button>
         <button className={mode==="home"?"on":""} onClick={()=>setMode("home")}>Progress</button>
-        <button className={mode==="sketch"?"on":""} onClick={()=>setMode("sketch")}>Sketch</button>
         <button className={"kf-mute"+(guide?" on":"")} onClick={toggleGuide} title="how it works">?</button>
         <button className={"kf-mute"+(muted?" off":"")} onClick={toggleMute} title={muted?"sound off":"sound on"}>♪</button>
         <button className="kf-mute" onClick={()=>setShowSet(s=>!s)} title="settings">⚙</button>
@@ -403,20 +443,32 @@ function App(){
         </div>
       )}
       <main className="kf-main">
-        {mode==="home"&&<Home stats={stats} attempts={total}/>}
+        {mode==="home"&&<Home stats={stats} attempts={total} sketch={sketch} streak={streak}/>}
         {mode==="drill"&&<Drill stats={stats} record={record} addStroke={addStroke}/>}
         {mode==="snippet"&&<Snippet record={record} addStroke={addStroke}/>}
-        {mode==="sketch"&&<Sketch sketch={sketch}/>}
+        {(mode==="drill"||mode==="snippet")&&<LiveSketch sketch={sketch}/>}
       </main>
     </div>
   );
 }
 
-function Home({stats,attempts}){
+function Home({stats,attempts,sketch,streak}){
   const ranked=SYMBOLS.map(s=>({...s,st:stats[s.ch]})).filter(s=>s.st.attempts>0).sort((a,b)=>weakness(b.st)-weakness(a.st));
   const targets=ranked.slice(0,2);
+  const finished=sketch?sketch.finished:[];
+  const recent=[...finished].reverse().slice(0,12);
+  const streakWord=streak&&streak.streak>1?`${streak.streak} days in a row`:"a fresh start";
   return (
     <section className="kf-card kf-fade">
+      {streak&&streak.sessions>0&&(
+        <div className="kf-streak">
+          <span className="kf-streak-num">{streak.streak||1}</span>
+          <span className="kf-streak-txt">
+            {streak.streak>1 ? <>Welcome back — that's <b>{streakWord}</b>.</> : <>Good to see you. Showing up is the whole game.</>}
+            {streak.days>1 && <> {streak.days} days, {streak.sessions} sessions in. {finished.length>0?`${finished.length} ${finished.length===1?"sketch":"sketches"} finished.`:""}</>}
+          </span>
+        </div>
+      )}
       {attempts===0?(
         <div className="kf-empty">
           <p>No keystrokes yet.</p>
@@ -427,6 +479,14 @@ function Home({stats,attempts}){
           <h2>Where you are</h2>
           {targets.length>0&&<p className="kf-focus">Focus next: {targets.map(t=><code key={t.ch}>{t.ch}</code>)}</p>}
           <Heatmap stats={stats}/>
+        </>
+      )}
+      {recent.length>0&&(
+        <>
+          <p className="kf-eyebrow kf-collection-label">Your finished sketches</p>
+          <div className="kf-collection">
+            {recent.map((idx,i)=><div key={i} className="kf-frame"><SketchArt sketch={SKETCHES[idx]} frac={1}/></div>)}
+          </div>
         </>
       )}
     </section>
@@ -633,11 +693,11 @@ function Guide({onClose}){
         <h3>How Keygarden works</h3>
         <button className="kf-guide-close" onClick={onClose}>Got it ✕</button>
       </div>
-      <p className="kf-guide-lead">A calm way to drill the symbols that slow you down — no timer, no score, nothing to fail. A few quiet minutes most days beats one long grind.</p>
+      <p className="kf-guide-lead">A calm way to drill the symbols that slow you down — no timer, no grades, nothing to fail. A few quiet minutes most days beats one long grind.</p>
       <div className="kf-guide-grid">
         <div className="kf-g-item">
           <h4>Drill, then snippets</h4>
-          <p><b>Drill keys</b> warms up one symbol at a time, easiest first, and quietly resurfaces the ones you fumble. <b>Type snippets</b> drills real lines of code — closers auto-fill, so you only type the openers. <b>Progress</b> is a heatmap of every key.</p>
+          <p><b>Drill keys</b> warms up one symbol at a time, easiest first, and quietly resurfaces the ones you fumble. <b>Type snippets</b> drills real lines of code — closers auto-fill, so you only type the openers. <b>Progress</b> shows a heatmap of every key, your finished sketches, and your return streak.</p>
         </div>
         <div className="kf-g-item">
           <h4>Why it sometimes pauses you</h4>
@@ -649,52 +709,54 @@ function Guide({onClose}){
         </div>
         <div className="kf-g-item">
           <h4>Your typing draws something</h4>
-          <p>Every clean line — and every clean streak in the drill — adds a stroke to a line drawing on the <b>Sketch</b> tab. Finish one and a fresh page begins. No goal but the quiet satisfaction of watching your effort become something.</p>
+          <p>As you practice, a little charcoal drawing fills in below the keys — every clean line, and every clean streak in the drill, adds a stroke. Most finish in about five minutes, and the next one's a surprise. They collect on <b>Progress</b>, which greets you with your return streak — coming back is the whole reward.</p>
         </div>
       </div>
     </div>
   );
 }
 
-/* ── Sketch: one continuous line, revealed a fraction at a time as you type ──
-   pathLength="100" normalizes the path so stroke-dashoffset reveals `frac` of it. */
-function SketchLine({d,frac}){
+/* ── Charcoal sketch ──
+   One connected path with pathLength="100", revealed a fraction at a time via stroke-dashoffset.
+   The ink stroke runs through a charcoal roughen filter; one muted color accent fades in with the line. */
+function SketchDefs(){
   return (
-    <svg className="kf-sketch-svg" viewBox="0 0 120 120" aria-hidden="true">
-      <path className="ghost" d={d} pathLength="100"/>
-      <path className="ink" d={d} pathLength="100" style={{strokeDasharray:100,strokeDashoffset:100*(1-Math.max(0,Math.min(1,frac)))}}/>
+    <svg width="0" height="0" style={{position:"absolute"}} aria-hidden="true"><defs>
+      <filter id="kf-charcoal" x="-20%" y="-20%" width="140%" height="140%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/>
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="2.2" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+      <filter id="kf-soft" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="6"/></filter>
+    </defs></svg>
+  );
+}
+function SketchArt({sketch,frac}){
+  const f=Math.max(0,Math.min(1,frac));
+  return (
+    <svg className="kf-art" viewBox="0 0 120 120" aria-hidden="true">
+      {(sketch.accent||[]).map((a,i)=><circle key={i} className="accent" cx={a.cx} cy={a.cy} r={a.r} fill={a.c} opacity={(0.5*f).toFixed(3)}/>)}
+      <path className="ghost" d={sketch.d} pathLength="100"/>
+      <path className="ink" d={sketch.d} pathLength="100" style={{strokeDasharray:100,strokeDashoffset:100*(1-f)}}/>
     </svg>
   );
 }
-function Sketch({sketch}){
-  const cur=SKETCHES[sketch.completed%SKETCHES.length];
+// the live drawing that fills in beneath the keys, on both Drill and Type-snippets
+function LiveSketch({sketch}){
+  const cur=SKETCHES[sketch.current]||SKETCHES[0];
   const frac=Math.max(0,Math.min(1,sketch.strokes/STROKES_PER));
-  const near=frac>=0.8;
-  const done=sketch.completed;
-  // a small gallery of the drawings you've finished, newest first, fully drawn
-  const gallery=[];
-  for(let k=done-1;k>=0&&gallery.length<12;k--) gallery.push(SKETCHES[k%SKETCHES.length]);
+  const near=frac>=0.75;
+  const n=sketch.finished?sketch.finished.length:0;
+  const title=cur.name.charAt(0).toUpperCase()+cur.name.slice(1);
   return (
-    <section className="kf-card kf-fade">
-      <p className="kf-eyebrow">Your sketch</p>
-      <div className="kf-sketch-stage"><SketchLine d={cur.d} frac={frac}/></div>
-      <p className="kf-sketch-cap">
-        {near
-          ? <>Almost there — a few more clean lines complete <b>{cur.name}</b>.</>
-          : <>This drawing fills in as you type. Each clean line — and each clean streak in the drill — adds a stroke to <b>{cur.name}</b>.</>}
-      </p>
-      <p className="kf-dim" style={{textAlign:"center",margin:0}}>
-        {done>0 ? `You've finished ${done} ${done===1?"drawing":"drawings"} so far — no timer, no score.` : "No timer, no score — just type clean lines and watch it come to life."}
-      </p>
-      {done>0&&(
-        <>
-          <p className="kf-eyebrow kf-gallery-label">Finished</p>
-          <div className="kf-gallery">
-            {gallery.map((g,i)=><div key={i} className="kf-gframe"><svg viewBox="0 0 120 120" aria-hidden="true"><path d={g.d}/></svg></div>)}
-          </div>
-        </>
-      )}
-    </section>
+    <div className="kf-live">
+      <div className="kf-live-paper"><SketchArt sketch={cur} frac={frac}/></div>
+      <div className="kf-live-meta">
+        <p className="kf-live-eyebrow">Sketching · charcoal</p>
+        <p className="kf-live-title">{title}</p>
+        <div className="kf-live-bar"><i style={{width:Math.round(frac*100)+"%"}}/></div>
+        <p className="kf-live-note">{near ? <>Almost there — a few more clean lines finish it.</> : <>Every clean line adds a stroke{n>0?<> · <b>{n}</b> finished</>:""}.</>}</p>
+      </div>
+    </div>
   );
 }
 
