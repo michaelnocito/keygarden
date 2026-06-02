@@ -61,8 +61,9 @@ const $ = (sel) => [...root.querySelectorAll(sel)];
 
 await new Promise((r) => setTimeout(r, 50));
 
-// 1. initial screen
-ok("opens on Progress empty-state", /No keystrokes yet/.test(txt()));
+// 1. initial screen — desktop shell (top bar + progress rail + work area) with the empty-state in the rail
+ok("desktop shell: top bar, rail, and work area render", !!$(".kf-topbar")[0] && !!$(".kf-rail")[0] && !!$(".kf-work")[0]);
+ok("rail shows the empty-state until there are keystrokes", /No keystrokes yet/.test(txt()));
 
 // helper to click a nav button by label
 const clickBtn = (label) => {
@@ -196,10 +197,8 @@ ok("sketch state persists to keygarden.v1", sketchPersist);
 ok("a clean line advances the sketch (a stroke is saved)", sketchGrew);
 ok("returning streak/session is tracked", streakTracked);
 
-// 9b. Progress greets you with the return-streak banner
-clickBtn("Progress");
-await new Promise((r) => setTimeout(r, 30));
-ok("Progress shows the return-streak banner", !!$(".kf-streak")[0]);
+// 9b. the always-visible progress rail greets you with the return-streak banner
+ok("rail shows the return-streak banner", !!$(".kf-streak")[0]);
 
 // 9c. art-style packs: the picker offers the styles and the choice persists
 const gear9 = $("button").find((b) => b.textContent.trim() === "⚙");
@@ -252,10 +251,8 @@ ok("sound is off by default", soundOff);
 if (!$(".kf-toggle")[0]) { const g = $("button").find((b) => b.textContent.trim() === "⚙"); g && g.dispatchEvent(new window.MouseEvent("click", { bubbles: true })); await new Promise((r) => setTimeout(r, 20)); }
 ok("breathing-break on/off toggle exists in settings", !!$(".kf-toggle input")[0]);
 
-// 9g. Progress reports the most-missed keys, and "Drill just these" starts a focused drill
-clickBtn("Progress");
-await new Promise((r) => setTimeout(r, 30));
-ok("Progress reports most-missed keys", !!$(".kf-missed-row")[0]);
+// 9g. the rail reports the most-missed keys, and "Drill just these" starts a focused drill
+ok("rail reports most-missed keys", !!$(".kf-missed-row")[0]);
 const drillThese = $(".kf-drillthese")[0];
 ok("a 'Drill just these' button is offered", !!drillThese);
 drillThese && drillThese.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));

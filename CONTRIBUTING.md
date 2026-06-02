@@ -24,6 +24,10 @@ LICENSE
 
 The whole app lives in the `<script type="text/babel">` block in `index.html`: data (symbols + snippets + the `SKETCHES`) at the top, then the audio engine, then the React components. No framework, no build step needed to *run* it — just open the file.
 
+### Layout (desktop shell)
+
+`App` renders a sticky **top bar** (brand · mode nav · `? ♪ ⚙` controls) over a two-column **`.kf-stage`**: a sticky **`.kf-rail`** (the always-visible `ProgressRail` — streak, most-missed report, live sketch, heatmap, collection) on the left, and the **`.kf-work`** area (the active `Drill`/`Snippet`) on the right. Below ~880px it collapses to one column with the rail on top. The **welcome** is a first-run overlay (`.kf-welcome-backdrop`) that minimizes to the `?` button; **settings** is a top-right dropdown overlay. Avoid `backdrop-filter` (it stalls some renderers — the top bar uses a solid background).
+
 ### The Sketch layer
 
 A live charcoal drawing fills in *below the typing card* on both Drill and Type-snippets (`LiveSketch`), built from the existing practice hooks — there's nothing new to "play." Each drawing is a connected SVG path in the `SKETCHES` array near the top: `{ name, d, accent }`. The path uses `pathLength="100"` so it reveals a fraction at a time with `stroke-dashoffset` (no length measurement). The ink stroke runs through the `kf-charcoal` SVG filter (a `feTurbulence`/`feDisplacementMap` roughen, defined once in `SketchDefs`) for the pencil texture; `accent` is one or more soft, **muted** color blobs that fade in with the line — Mike's pencil-with-a-touch-of-color style (check his charcoal work at michaelnocito.github.io/art). `STROKES_PER` (≈ a 5-minute session) is how many clean lines/streaks finish a drawing; `addStroke()` fires from the same celebration moments as the audio milestone. Finishing pushes the drawing's index onto `sketch.finished` and rolls to a new **random** one. State lives on `keygarden.v1.sketch` (`{ current, strokes, finished }`); Reset clears it.

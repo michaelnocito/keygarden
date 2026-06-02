@@ -21,19 +21,35 @@
     --mono:"Consolas",ui-monospace,SFMono-Regular,Menlo,monospace;
     min-height:100vh;background:radial-gradient(120% 120% at 50% 0%,#f6f8fb 0%,#eef1f5 62%);
     color:var(--ink);font:15px/1.55 -apple-system,"Segoe UI",Roboto,system-ui,sans-serif;-webkit-font-smoothing:antialiased;
-    padding:2rem 1.25rem 4rem;display:flex;flex-direction:column;align-items:center;}
-  .kf-head{text-align:center;margin-bottom:1.75rem;}
-  .kf-brand{display:flex;align-items:center;justify-content:center;gap:.6rem;}
-  .kf-glyph{font-family:var(--mono);color:var(--accent);font-size:1.3rem;letter-spacing:-2px;background:linear-gradient(135deg,#eaf1ff,#dbe7ff);padding:.25rem .45rem;border-radius:9px;}
-  .kf-head h1{font-weight:700;font-size:2.2rem;margin:0;letter-spacing:-.5px;color:var(--ink);}
-  .kf-tag{color:var(--dim);font-size:.82rem;margin:.4rem 0 0;}
-  .kf-nav{display:flex;gap:.4rem;margin-bottom:1.5rem;flex-wrap:wrap;justify-content:center;align-items:center;}
-  .kf-nav button{font-family:inherit;font-size:.8rem;font-weight:600;color:var(--dim);background:var(--panel);border:1px solid var(--line);padding:.5rem .9rem;border-radius:999px;cursor:pointer;transition:.18s;}
+    padding:0;display:block;}
+  /* ── Desktop shell: sticky top bar + two-column stage (progress rail + work area) ── */
+  .kf-topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:.8rem;padding:.65rem 1.5rem;background:rgba(255,255,255,.86);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);}
+  .kf-brand{display:flex;align-items:center;gap:.5rem;}
+  .kf-glyph{font-family:var(--mono);color:var(--accent);font-size:1.1rem;letter-spacing:-2px;background:linear-gradient(135deg,#eaf1ff,#dbe7ff);padding:.2rem .4rem;border-radius:8px;}
+  .kf-brandname{font-weight:700;font-size:1.15rem;letter-spacing:-.4px;color:var(--ink);}
+  .kf-nav{display:flex;gap:.4rem;margin-left:.8rem;align-items:center;}
+  .kf-nav button{font-family:inherit;font-size:.85rem;font-weight:600;color:var(--dim);background:var(--sheet-head);border:1px solid var(--line);padding:.5rem 1rem;border-radius:999px;cursor:pointer;transition:.18s;}
   .kf-nav button:hover{color:var(--accent-d);border-color:var(--accent-bd);}
   .kf-nav button.on{color:#fff;background:var(--accent);border-color:var(--accent);box-shadow:0 2px 8px rgba(47,109,240,.3);}
-  .kf-mute{width:2.2rem;height:2.2rem;padding:0!important;border-radius:50%!important;font-size:1rem;}
+  .kf-controls{margin-left:auto;display:flex;gap:.4rem;align-items:center;}
+  .kf-mute{width:2.2rem;height:2.2rem;padding:0!important;border-radius:50%!important;font-size:1rem;font-family:inherit;font-weight:700;color:var(--dim);background:var(--sheet-head);border:1px solid var(--line);cursor:pointer;transition:.18s;}
+  .kf-mute:hover{color:var(--accent-d);border-color:var(--accent-bd);}
+  .kf-mute.on{color:#fff;background:var(--accent);border-color:var(--accent);}
   .kf-mute.off{opacity:.4;text-decoration:line-through;}
-  .kf-settings{width:100%;max-width:620px;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:1.1rem 1.3rem;margin-bottom:1.2rem;}
+  .kf-stage{max-width:1240px;margin:1.4rem auto;padding:0 1.5rem 3rem;display:grid;grid-template-columns:340px 1fr;gap:1.4rem;align-items:start;}
+  .kf-rail{position:sticky;top:74px;align-self:start;max-height:calc(100vh - 92px);overflow-y:auto;display:flex;flex-direction:column;gap:1rem;padding-bottom:.5rem;}
+  .kf-work{min-width:0;}
+  .kf-railcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:1rem 1.1rem;}
+  @media (max-width:880px){
+    .kf-stage{grid-template-columns:1fr;gap:1rem;margin-top:1rem;}
+    .kf-rail{position:static;max-height:none;overflow:visible;order:1;}
+    .kf-work{order:2;}
+    .kf-nav{margin-left:0;}
+    .kf-topbar{flex-wrap:wrap;}
+  }
+  /* settings as a dropdown panel from the top-right */
+  .kf-settings-wrap{position:fixed;inset:0;z-index:30;display:flex;justify-content:flex-end;padding:3.6rem 1.5rem 1rem;background:rgba(20,30,50,.12);}
+  .kf-settings{width:100%;max-width:380px;align-self:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 50px -18px rgba(20,30,50,.45);padding:1.1rem 1.3rem;max-height:82vh;overflow:auto;}
   .kf-settings label{font-size:.9rem;color:var(--ink);}
   .kf-settings label strong{color:var(--accent-d);}
   .kf-settings input[type=range]{width:100%;margin:.7rem 0 .2rem;accent-color:var(--accent);cursor:pointer;}
@@ -41,7 +57,7 @@
   .kf-settings .kf-dim{margin:.6rem 0 0;}
   .kf-reset{margin-top:.9rem;font-family:inherit;font-size:.72rem;font-weight:600;color:var(--bad);background:transparent;border:1px solid rgba(207,34,46,.3);padding:.4rem .8rem;border-radius:8px;cursor:pointer;transition:.15s;}
   .kf-reset:hover{background:var(--bad-bg);}
-  .kf-main{width:100%;max-width:620px;}
+  .kf-main{width:100%;}
   .kf-card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:2.2rem 1.8rem;box-shadow:var(--shadow);}
   .kf-eyebrow{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--accent-d);margin:0 0 .5rem;}
   .kf-celebrate{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:6;}
@@ -105,7 +121,8 @@
   @media (prefers-reduced-motion:reduce){ .kf-borb{transition:opacity .4s ease!important;transform:scale(.9)!important;} }
 
   /* ── Welcome / orientation screen (first visit; reopen via ?) ── */
-  .kf-welcome{width:100%;max-width:620px;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:1.5rem 1.6rem 1.6rem;margin-bottom:1.3rem;animation:fade .4s ease;}
+  .kf-welcome-backdrop{position:fixed;inset:0;z-index:40;background:rgba(20,30,50,.45);display:flex;align-items:flex-start;justify-content:center;padding:3rem 1.25rem;overflow:auto;animation:fade .3s ease;}
+  .kf-welcome{width:100%;max-width:640px;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 24px 60px -24px rgba(20,30,50,.5);padding:1.5rem 1.6rem 1.6rem;animation:fade .4s ease;}
   .kf-welcome-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;}
   .kf-welcome h2{font-weight:700;font-size:1.45rem;margin:0;color:var(--ink);}
   .kf-welcome-sub{color:var(--dim);font-size:.88rem;margin:.25rem 0 0;}
@@ -135,7 +152,7 @@
   .kf-art .ink{fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke-dashoffset .85s ease;}
 
   /* live sketch panel — sits under the typing card on Drill + Type snippets */
-  .kf-live{display:flex;align-items:center;gap:1rem;width:100%;max-width:620px;margin:1rem auto 0;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:.8rem 1rem;animation:fade .4s ease;}
+  .kf-live{display:flex;align-items:center;gap:1rem;width:100%;margin:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:.8rem 1rem;animation:fade .4s ease;}
   .kf-live-paper{flex:0 0 auto;width:118px;height:94px;background:linear-gradient(160deg,#f4f3ef,#e7e8ea);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
   .kf-live-meta{flex:1 1 auto;min-width:0;}
   .kf-live-eyebrow{font-size:.64rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-d);margin:0 0 .15rem;}
@@ -1193,7 +1210,7 @@ const loadStreak = () => {
 
 /* ── App ── */
 function App() {
-  const [mode, setMode] = useState("home");
+  const [mode, setMode] = useState("drill");
   const [stats, setStats] = useState(loadStats);
   const [sketch, setSketch] = useState(loadSketch);
   const [muted, setMuted] = useState(() => {
@@ -1353,14 +1370,14 @@ function App() {
   return /*#__PURE__*/React.createElement("div", {
     className: "kf-root"
   }, /*#__PURE__*/React.createElement(SketchDefs, null), /*#__PURE__*/React.createElement("header", {
-    className: "kf-head"
+    className: "kf-topbar"
   }, /*#__PURE__*/React.createElement("div", {
     className: "kf-brand"
   }, /*#__PURE__*/React.createElement("span", {
     className: "kf-glyph"
-  }, "{ }"), /*#__PURE__*/React.createElement("h1", null, "Keygarden")), /*#__PURE__*/React.createElement("p", {
-    className: "kf-tag"
-  }, "the symbols data work runs on \u2014 slow, relaxed, repeated")), /*#__PURE__*/React.createElement("nav", {
+  }, "{ }"), /*#__PURE__*/React.createElement("span", {
+    className: "kf-brandname"
+  }, "Keygarden")), /*#__PURE__*/React.createElement("nav", {
     className: "kf-nav"
   }, /*#__PURE__*/React.createElement("button", {
     className: mode === "drill" ? "on" : "",
@@ -1368,10 +1385,9 @@ function App() {
   }, "Drill keys"), /*#__PURE__*/React.createElement("button", {
     className: mode === "snippet" ? "on" : "",
     onClick: () => setMode("snippet")
-  }, "Type snippets"), /*#__PURE__*/React.createElement("button", {
-    className: mode === "home" ? "on" : "",
-    onClick: () => setMode("home")
-  }, "Progress"), /*#__PURE__*/React.createElement("button", {
+  }, "Type snippets")), /*#__PURE__*/React.createElement("div", {
+    className: "kf-controls"
+  }, /*#__PURE__*/React.createElement("button", {
     className: "kf-mute" + (welcome ? " on" : ""),
     onClick: toggleWelcome,
     title: "welcome & how it works"
@@ -1383,11 +1399,16 @@ function App() {
     className: "kf-mute",
     onClick: () => setShowSet(s => !s),
     title: "settings"
-  }, "\u2699")), welcome && /*#__PURE__*/React.createElement(Welcome, {
+  }, "\u2699"))), welcome && /*#__PURE__*/React.createElement(Welcome, {
     onStart: startApp,
     onClose: toggleWelcome,
     muted: muted
   }), showSet && /*#__PURE__*/React.createElement("div", {
+    className: "kf-settings-wrap",
+    onClick: e => {
+      if (e.target === e.currentTarget) setShowSet(false);
+    }
+  }, /*#__PURE__*/React.createElement("div", {
     className: "kf-settings kf-fade"
   }, /*#__PURE__*/React.createElement("label", {
     className: "kf-toggle"
@@ -1427,41 +1448,46 @@ function App() {
   }, p.label)))), /*#__PURE__*/React.createElement("button", {
     className: "kf-reset",
     onClick: resetAll
-  }, "Reset progress & settings")), /*#__PURE__*/React.createElement("main", {
-    className: "kf-main"
-  }, mode === "home" && /*#__PURE__*/React.createElement(Home, {
+  }, "Reset progress & settings"))), /*#__PURE__*/React.createElement("div", {
+    className: "kf-stage"
+  }, /*#__PURE__*/React.createElement("aside", {
+    className: "kf-rail"
+  }, /*#__PURE__*/React.createElement(ProgressRail, {
     stats: stats,
     attempts: total,
     sketch: sketch,
     streak: streak,
     pack: PACK_BY_ID[pack],
-    onFocus: startFocus
-  }), mode === "drill" && /*#__PURE__*/React.createElement(Drill, {
+    onFocus: startFocus,
+    onSave: saveSketch,
+    onDiscard: discardSketch
+  })), /*#__PURE__*/React.createElement("main", {
+    className: "kf-work"
+  }, mode === "snippet" ? /*#__PURE__*/React.createElement(Snippet, {
+    record: record,
+    addStroke: addStroke
+  }) : /*#__PURE__*/React.createElement(Drill, {
     stats: stats,
     record: record,
     addStroke: addStroke,
     focusKeys: focusKeys,
     clearFocus: clearFocus
-  }), mode === "snippet" && /*#__PURE__*/React.createElement(Snippet, {
-    record: record,
-    addStroke: addStroke
-  }), (mode === "drill" || mode === "snippet") && /*#__PURE__*/React.createElement(LiveSketch, {
-    sketch: sketch,
-    pack: PACK_BY_ID[pack],
-    onSave: saveSketch,
-    onDiscard: discardSketch
-  })));
+  }))));
 }
-function Home({
+
+// The always-visible progress rail: streak, most-missed report, the live sketch, accuracy, collection.
+function ProgressRail({
   stats,
   attempts,
   sketch,
   streak,
   pack,
-  onFocus
+  onFocus,
+  onSave,
+  onDiscard
 }) {
   const finished = sketch ? sketch.finished : [];
-  const recent = [...finished].reverse().slice(0, 12);
+  const recent = [...finished].reverse().slice(0, 9);
   const streakWord = streak && streak.streak > 1 ? `${streak.streak} days in a row` : "a fresh start";
   // status report: the keys you miss most (need a few tries before it counts)
   const missed = SYMBOLS.map(s => ({
@@ -1472,23 +1498,22 @@ function Home({
     miss: s.st.errors / s.st.attempts
   })).sort((a, b) => b.miss - a.miss).slice(0, 5);
   const focusSet = missed.map(s => s.ch);
-  return /*#__PURE__*/React.createElement("section", {
-    className: "kf-card kf-fade"
-  }, streak && streak.sessions > 0 && /*#__PURE__*/React.createElement("div", {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, streak && streak.sessions > 0 && /*#__PURE__*/React.createElement("div", {
     className: "kf-streak"
   }, /*#__PURE__*/React.createElement("span", {
     className: "kf-streak-num"
   }, streak.streak || 1), /*#__PURE__*/React.createElement("span", {
     className: "kf-streak-txt"
-  }, streak.streak > 1 ? /*#__PURE__*/React.createElement(React.Fragment, null, "Welcome back \u2014 that's ", /*#__PURE__*/React.createElement("b", null, streakWord), ".") : /*#__PURE__*/React.createElement(React.Fragment, null, "Good to see you. Showing up is the whole game."), streak.days > 1 && /*#__PURE__*/React.createElement(React.Fragment, null, " ", streak.days, " days, ", streak.sessions, " sessions in. ", finished.length > 0 ? `${finished.length} ${finished.length === 1 ? "sketch" : "sketches"} finished.` : ""))), attempts === 0 ? /*#__PURE__*/React.createElement("div", {
-    className: "kf-empty"
-  }, /*#__PURE__*/React.createElement("p", null, "No keystrokes yet."), /*#__PURE__*/React.createElement("p", {
-    className: "kf-dim"
-  }, "Don't worry about understanding the SQL or Python \u2014 just get the typing down. The patterns start to feel familiar on their own. Sound's off to start; tap \u266A for gentle audio.")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", null, "Where you are"), missed.length > 0 ? /*#__PURE__*/React.createElement("div", {
-    className: "kf-report"
+  }, streak.streak > 1 ? /*#__PURE__*/React.createElement(React.Fragment, null, "Welcome back \u2014 ", /*#__PURE__*/React.createElement("b", null, streakWord), ".") : /*#__PURE__*/React.createElement(React.Fragment, null, "Good to see you. Showing up is the whole game."), streak.days > 1 && /*#__PURE__*/React.createElement(React.Fragment, null, " ", streak.days, " days \xB7 ", streak.sessions, " sessions", finished.length > 0 ? ` · ${finished.length} ${finished.length === 1 ? "sketch" : "sketches"}` : "", "."))), /*#__PURE__*/React.createElement("div", {
+    className: "kf-railcard"
   }, /*#__PURE__*/React.createElement("p", {
     className: "kf-eyebrow"
-  }, "Your most-missed keys"), /*#__PURE__*/React.createElement("div", {
+  }, "Your most-missed keys"), attempts === 0 ? /*#__PURE__*/React.createElement("p", {
+    className: "kf-dim",
+    style: {
+      margin: 0
+    }
+  }, "No keystrokes yet. Start the warm-up \u2014 the keys you fumble surface here, with a button to drill just those.") : missed.length > 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "kf-missed"
   }, missed.map(m => /*#__PURE__*/React.createElement("div", {
     key: m.ch,
@@ -1510,12 +1535,26 @@ function Home({
   }, "Drill just these ", focusSet.map(c => /*#__PURE__*/React.createElement("code", {
     key: c
   }, c)), " \u2192")) : /*#__PURE__*/React.createElement("p", {
-    className: "kf-focus"
-  }, "Clean so far \u2014 nothing's tripping you up. Keep going."), /*#__PURE__*/React.createElement(Heatmap, {
+    className: "kf-dim",
+    style: {
+      margin: 0
+    }
+  }, "Clean so far \u2014 nothing's tripping you up. Keep going.")), /*#__PURE__*/React.createElement(LiveSketch, {
+    sketch: sketch,
+    pack: pack,
+    onSave: onSave,
+    onDiscard: onDiscard
+  }), attempts > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "kf-railcard"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "kf-eyebrow"
+  }, "Accuracy per key"), /*#__PURE__*/React.createElement(Heatmap, {
     stats: stats
-  })), recent.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
-    className: "kf-eyebrow kf-collection-label"
-  }, "Your finished sketches"), /*#__PURE__*/React.createElement("div", {
+  })), recent.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "kf-railcard"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "kf-eyebrow"
+  }, "Finished sketches"), /*#__PURE__*/React.createElement("div", {
     className: "kf-collection"
   }, recent.map((idx, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
@@ -1971,6 +2010,11 @@ function Welcome({
   muted
 }) {
   return /*#__PURE__*/React.createElement("div", {
+    className: "kf-welcome-backdrop",
+    onClick: e => {
+      if (e.target === e.currentTarget) onClose();
+    }
+  }, /*#__PURE__*/React.createElement("div", {
     className: "kf-welcome"
   }, /*#__PURE__*/React.createElement("div", {
     className: "kf-welcome-head"
@@ -1995,7 +2039,7 @@ function Welcome({
   }, /*#__PURE__*/React.createElement("button", {
     className: "kf-start",
     onClick: onStart
-  }, "Start the warm-up \u2192"), /*#__PURE__*/React.createElement("span", null, "New here? The warm-up is the gentlest way in.", muted ? " Sound is off — tap ♪ to add it." : "")));
+  }, "Start the warm-up \u2192"), /*#__PURE__*/React.createElement("span", null, "New here? The warm-up is the gentlest way in.", muted ? " Sound is off — tap ♪ to add it." : ""))));
 }
 
 /* ── Charcoal sketch ──

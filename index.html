@@ -21,19 +21,35 @@
     --mono:"Consolas",ui-monospace,SFMono-Regular,Menlo,monospace;
     min-height:100vh;background:radial-gradient(120% 120% at 50% 0%,#f6f8fb 0%,#eef1f5 62%);
     color:var(--ink);font:15px/1.55 -apple-system,"Segoe UI",Roboto,system-ui,sans-serif;-webkit-font-smoothing:antialiased;
-    padding:2rem 1.25rem 4rem;display:flex;flex-direction:column;align-items:center;}
-  .kf-head{text-align:center;margin-bottom:1.75rem;}
-  .kf-brand{display:flex;align-items:center;justify-content:center;gap:.6rem;}
-  .kf-glyph{font-family:var(--mono);color:var(--accent);font-size:1.3rem;letter-spacing:-2px;background:linear-gradient(135deg,#eaf1ff,#dbe7ff);padding:.25rem .45rem;border-radius:9px;}
-  .kf-head h1{font-weight:700;font-size:2.2rem;margin:0;letter-spacing:-.5px;color:var(--ink);}
-  .kf-tag{color:var(--dim);font-size:.82rem;margin:.4rem 0 0;}
-  .kf-nav{display:flex;gap:.4rem;margin-bottom:1.5rem;flex-wrap:wrap;justify-content:center;align-items:center;}
-  .kf-nav button{font-family:inherit;font-size:.8rem;font-weight:600;color:var(--dim);background:var(--panel);border:1px solid var(--line);padding:.5rem .9rem;border-radius:999px;cursor:pointer;transition:.18s;}
+    padding:0;display:block;}
+  /* ── Desktop shell: sticky top bar + two-column stage (progress rail + work area) ── */
+  .kf-topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:.8rem;padding:.65rem 1.5rem;background:var(--panel);border-bottom:1px solid var(--line);box-shadow:0 1px 0 rgba(20,30,50,.03);}
+  .kf-brand{display:flex;align-items:center;gap:.5rem;}
+  .kf-glyph{font-family:var(--mono);color:var(--accent);font-size:1.1rem;letter-spacing:-2px;background:linear-gradient(135deg,#eaf1ff,#dbe7ff);padding:.2rem .4rem;border-radius:8px;}
+  .kf-brandname{font-weight:700;font-size:1.15rem;letter-spacing:-.4px;color:var(--ink);}
+  .kf-nav{display:flex;gap:.4rem;margin-left:.8rem;align-items:center;}
+  .kf-nav button{font-family:inherit;font-size:.85rem;font-weight:600;color:var(--dim);background:var(--sheet-head);border:1px solid var(--line);padding:.5rem 1rem;border-radius:999px;cursor:pointer;transition:.18s;}
   .kf-nav button:hover{color:var(--accent-d);border-color:var(--accent-bd);}
   .kf-nav button.on{color:#fff;background:var(--accent);border-color:var(--accent);box-shadow:0 2px 8px rgba(47,109,240,.3);}
-  .kf-mute{width:2.2rem;height:2.2rem;padding:0!important;border-radius:50%!important;font-size:1rem;}
+  .kf-controls{margin-left:auto;display:flex;gap:.4rem;align-items:center;}
+  .kf-mute{width:2.2rem;height:2.2rem;padding:0!important;border-radius:50%!important;font-size:1rem;font-family:inherit;font-weight:700;color:var(--dim);background:var(--sheet-head);border:1px solid var(--line);cursor:pointer;transition:.18s;}
+  .kf-mute:hover{color:var(--accent-d);border-color:var(--accent-bd);}
+  .kf-mute.on{color:#fff;background:var(--accent);border-color:var(--accent);}
   .kf-mute.off{opacity:.4;text-decoration:line-through;}
-  .kf-settings{width:100%;max-width:620px;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:1.1rem 1.3rem;margin-bottom:1.2rem;}
+  .kf-stage{max-width:1240px;margin:1.4rem auto;padding:0 1.5rem 3rem;display:grid;grid-template-columns:340px 1fr;gap:1.4rem;align-items:start;}
+  .kf-rail{position:sticky;top:74px;align-self:start;max-height:calc(100vh - 92px);overflow-y:auto;display:flex;flex-direction:column;gap:1rem;padding-bottom:.5rem;}
+  .kf-work{min-width:0;}
+  .kf-railcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:1rem 1.1rem;}
+  @media (max-width:880px){
+    .kf-stage{grid-template-columns:1fr;gap:1rem;margin-top:1rem;}
+    .kf-rail{position:static;max-height:none;overflow:visible;order:1;}
+    .kf-work{order:2;}
+    .kf-nav{margin-left:0;}
+    .kf-topbar{flex-wrap:wrap;}
+  }
+  /* settings as a dropdown panel from the top-right */
+  .kf-settings-wrap{position:fixed;inset:0;z-index:30;display:flex;justify-content:flex-end;padding:3.6rem 1.5rem 1rem;background:rgba(20,30,50,.12);}
+  .kf-settings{width:100%;max-width:380px;align-self:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 50px -18px rgba(20,30,50,.45);padding:1.1rem 1.3rem;max-height:82vh;overflow:auto;}
   .kf-settings label{font-size:.9rem;color:var(--ink);}
   .kf-settings label strong{color:var(--accent-d);}
   .kf-settings input[type=range]{width:100%;margin:.7rem 0 .2rem;accent-color:var(--accent);cursor:pointer;}
@@ -41,7 +57,7 @@
   .kf-settings .kf-dim{margin:.6rem 0 0;}
   .kf-reset{margin-top:.9rem;font-family:inherit;font-size:.72rem;font-weight:600;color:var(--bad);background:transparent;border:1px solid rgba(207,34,46,.3);padding:.4rem .8rem;border-radius:8px;cursor:pointer;transition:.15s;}
   .kf-reset:hover{background:var(--bad-bg);}
-  .kf-main{width:100%;max-width:620px;}
+  .kf-main{width:100%;}
   .kf-card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:2.2rem 1.8rem;box-shadow:var(--shadow);}
   .kf-eyebrow{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--accent-d);margin:0 0 .5rem;}
   .kf-celebrate{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:6;}
@@ -105,7 +121,8 @@
   @media (prefers-reduced-motion:reduce){ .kf-borb{transition:opacity .4s ease!important;transform:scale(.9)!important;} }
 
   /* ── Welcome / orientation screen (first visit; reopen via ?) ── */
-  .kf-welcome{width:100%;max-width:620px;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:1.5rem 1.6rem 1.6rem;margin-bottom:1.3rem;animation:fade .4s ease;}
+  .kf-welcome-backdrop{position:fixed;inset:0;z-index:40;background:rgba(20,30,50,.45);display:flex;align-items:flex-start;justify-content:center;padding:3rem 1.25rem;overflow:auto;animation:fade .3s ease;}
+  .kf-welcome{width:100%;max-width:640px;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 24px 60px -24px rgba(20,30,50,.5);padding:1.5rem 1.6rem 1.6rem;animation:fade .4s ease;}
   .kf-welcome-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;}
   .kf-welcome h2{font-weight:700;font-size:1.45rem;margin:0;color:var(--ink);}
   .kf-welcome-sub{color:var(--dim);font-size:.88rem;margin:.25rem 0 0;}
@@ -135,7 +152,7 @@
   .kf-art .ink{fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke-dashoffset .85s ease;}
 
   /* live sketch panel — sits under the typing card on Drill + Type snippets */
-  .kf-live{display:flex;align-items:center;gap:1rem;width:100%;max-width:620px;margin:1rem auto 0;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:.8rem 1rem;animation:fade .4s ease;}
+  .kf-live{display:flex;align-items:center;gap:1rem;width:100%;margin:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:.8rem 1rem;animation:fade .4s ease;}
   .kf-live-paper{flex:0 0 auto;width:118px;height:94px;background:linear-gradient(160deg,#f4f3ef,#e7e8ea);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
   .kf-live-meta{flex:1 1 auto;min-width:0;}
   .kf-live-eyebrow{font-size:.64rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-d);margin:0 0 .15rem;}
@@ -432,7 +449,7 @@ const loadStreak=()=>{
 
 /* ── App ── */
 function App(){
-  const [mode,setMode]=useState("home");
+  const [mode,setMode]=useState("drill");
   const [stats,setStats]=useState(loadStats);
   const [sketch,setSketch]=useState(loadSketch);
   const [muted,setMuted]=useState(()=>{const m=store.load().muted;return typeof m==="boolean"?m:true;}); // sound OFF by default
@@ -491,50 +508,57 @@ function App(){
   return (
     <div className="kf-root">
       <SketchDefs/>
-      <header className="kf-head">
-        <div className="kf-brand"><span className="kf-glyph">{"{ }"}</span><h1>Keygarden</h1></div>
-        <p className="kf-tag">the symbols data work runs on — slow, relaxed, repeated</p>
+      <header className="kf-topbar">
+        <div className="kf-brand"><span className="kf-glyph">{"{ }"}</span><span className="kf-brandname">Keygarden</span></div>
+        <nav className="kf-nav">
+          <button className={mode==="drill"?"on":""} onClick={()=>setMode("drill")}>Drill keys</button>
+          <button className={mode==="snippet"?"on":""} onClick={()=>setMode("snippet")}>Type snippets</button>
+        </nav>
+        <div className="kf-controls">
+          <button className={"kf-mute"+(welcome?" on":"")} onClick={toggleWelcome} title="welcome &amp; how it works">?</button>
+          <button className={"kf-mute"+(muted?" off":"")} onClick={toggleMute} title={muted?"sound off":"sound on"}>♪</button>
+          <button className="kf-mute" onClick={()=>setShowSet(s=>!s)} title="settings">⚙</button>
+        </div>
       </header>
-      <nav className="kf-nav">
-        <button className={mode==="drill"?"on":""} onClick={()=>setMode("drill")}>Drill keys</button>
-        <button className={mode==="snippet"?"on":""} onClick={()=>setMode("snippet")}>Type snippets</button>
-        <button className={mode==="home"?"on":""} onClick={()=>setMode("home")}>Progress</button>
-        <button className={"kf-mute"+(welcome?" on":"")} onClick={toggleWelcome} title="welcome &amp; how it works">?</button>
-        <button className={"kf-mute"+(muted?" off":"")} onClick={toggleMute} title={muted?"sound off":"sound on"}>♪</button>
-        <button className="kf-mute" onClick={()=>setShowSet(s=>!s)} title="settings">⚙</button>
-      </nav>
       {welcome&&<Welcome onStart={startApp} onClose={toggleWelcome} muted={muted}/>}
       {showSet&&(
-        <div className="kf-settings kf-fade">
-          <label className="kf-toggle"><input type="checkbox" checked={relaxOn} onChange={e=>setRelaxOn(e.target.checked)}/> Breathing breaks <strong>{relaxOn?"on":"off"}</strong></label>
-          <p className="kf-dim">A gentle 3-breath reset when it senses tension or hesitation — never from typing fast. Visual only; turn it off to never be interrupted.</p>
-          {relaxOn&&<>
-            <label style={{fontSize:".85rem"}}>How often: <strong style={{color:"var(--accent-d)"}}>{sensLabel}</strong></label>
-            <input type="range" min="0" max="1" step="0.05" value={sens} onChange={e=>setSens(parseFloat(e.target.value))}/>
-            <div className="kf-slabels"><span>rarely</span><span>eager</span></div>
-          </>}
-          <div className="kf-artpick">
-            <span className="kf-artpick-label">Art style</span>
-            <div className="kf-artpick-row">
-              {PACKS.map(p=><button key={p.id} className={p.id===pack?"on":""} onClick={()=>setPack(p.id)}>{p.label}</button>)}
+        <div className="kf-settings-wrap" onClick={e=>{if(e.target===e.currentTarget)setShowSet(false);}}>
+          <div className="kf-settings kf-fade">
+            <label className="kf-toggle"><input type="checkbox" checked={relaxOn} onChange={e=>setRelaxOn(e.target.checked)}/> Breathing breaks <strong>{relaxOn?"on":"off"}</strong></label>
+            <p className="kf-dim">A gentle 3-breath reset when it senses tension or hesitation — never from typing fast. Visual only; turn it off to never be interrupted.</p>
+            {relaxOn&&<>
+              <label style={{fontSize:".85rem"}}>How often: <strong style={{color:"var(--accent-d)"}}>{sensLabel}</strong></label>
+              <input type="range" min="0" max="1" step="0.05" value={sens} onChange={e=>setSens(parseFloat(e.target.value))}/>
+              <div className="kf-slabels"><span>rarely</span><span>eager</span></div>
+            </>}
+            <div className="kf-artpick">
+              <span className="kf-artpick-label">Art style</span>
+              <div className="kf-artpick-row">
+                {PACKS.map(p=><button key={p.id} className={p.id===pack?"on":""} onClick={()=>setPack(p.id)}>{p.label}</button>)}
+              </div>
             </div>
+            <button className="kf-reset" onClick={resetAll}>Reset progress &amp; settings</button>
           </div>
-          <button className="kf-reset" onClick={resetAll}>Reset progress &amp; settings</button>
         </div>
       )}
-      <main className="kf-main">
-        {mode==="home"&&<Home stats={stats} attempts={total} sketch={sketch} streak={streak} pack={PACK_BY_ID[pack]} onFocus={startFocus}/>}
-        {mode==="drill"&&<Drill stats={stats} record={record} addStroke={addStroke} focusKeys={focusKeys} clearFocus={clearFocus}/>}
-        {mode==="snippet"&&<Snippet record={record} addStroke={addStroke}/>}
-        {(mode==="drill"||mode==="snippet")&&<LiveSketch sketch={sketch} pack={PACK_BY_ID[pack]} onSave={saveSketch} onDiscard={discardSketch}/>}
-      </main>
+      <div className="kf-stage">
+        <aside className="kf-rail">
+          <ProgressRail stats={stats} attempts={total} sketch={sketch} streak={streak} pack={PACK_BY_ID[pack]} onFocus={startFocus} onSave={saveSketch} onDiscard={discardSketch}/>
+        </aside>
+        <main className="kf-work">
+          {mode==="snippet"
+            ? <Snippet record={record} addStroke={addStroke}/>
+            : <Drill stats={stats} record={record} addStroke={addStroke} focusKeys={focusKeys} clearFocus={clearFocus}/>}
+        </main>
+      </div>
     </div>
   );
 }
 
-function Home({stats,attempts,sketch,streak,pack,onFocus}){
+// The always-visible progress rail: streak, most-missed report, the live sketch, accuracy, collection.
+function ProgressRail({stats,attempts,sketch,streak,pack,onFocus,onSave,onDiscard}){
   const finished=sketch?sketch.finished:[];
-  const recent=[...finished].reverse().slice(0,12);
+  const recent=[...finished].reverse().slice(0,9);
   const streakWord=streak&&streak.streak>1?`${streak.streak} days in a row`:"a fresh start";
   // status report: the keys you miss most (need a few tries before it counts)
   const missed=SYMBOLS.map(s=>({...s,st:stats[s.ch]}))
@@ -543,51 +567,51 @@ function Home({stats,attempts,sketch,streak,pack,onFocus}){
     .sort((a,b)=>b.miss-a.miss).slice(0,5);
   const focusSet=missed.map(s=>s.ch);
   return (
-    <section className="kf-card kf-fade">
+    <>
       {streak&&streak.sessions>0&&(
         <div className="kf-streak">
           <span className="kf-streak-num">{streak.streak||1}</span>
           <span className="kf-streak-txt">
-            {streak.streak>1 ? <>Welcome back — that's <b>{streakWord}</b>.</> : <>Good to see you. Showing up is the whole game.</>}
-            {streak.days>1 && <> {streak.days} days, {streak.sessions} sessions in. {finished.length>0?`${finished.length} ${finished.length===1?"sketch":"sketches"} finished.`:""}</>}
+            {streak.streak>1 ? <>Welcome back — <b>{streakWord}</b>.</> : <>Good to see you. Showing up is the whole game.</>}
+            {streak.days>1 && <> {streak.days} days · {streak.sessions} sessions{finished.length>0?` · ${finished.length} ${finished.length===1?"sketch":"sketches"}`:""}.</>}
           </span>
         </div>
       )}
-      {attempts===0?(
-        <div className="kf-empty">
-          <p>No keystrokes yet.</p>
-          <p className="kf-dim">Don't worry about understanding the SQL or Python — just get the typing down. The patterns start to feel familiar on their own. Sound's off to start; tap ♪ for gentle audio.</p>
-        </div>
-      ):(
-        <>
-          <h2>Where you are</h2>
-          {missed.length>0?(
-            <div className="kf-report">
-              <p className="kf-eyebrow">Your most-missed keys</p>
-              <div className="kf-missed">
-                {missed.map(m=>(
-                  <div key={m.ch} className="kf-missed-row" title={`${m.st.errors} misses in ${m.st.attempts} tries — ${m.where}`}>
-                    <code className="kf-missed-ch">{m.ch}</code>
-                    <span className="kf-missed-bar"><i style={{width:Math.max(6,Math.round(m.miss*100))+"%"}}/></span>
-                    <span className="kf-missed-pct">{Math.round(m.miss*100)}%</span>
-                  </div>
-                ))}
-              </div>
-              <button className="kf-drillthese" onClick={()=>onFocus(focusSet)}>Drill just these {focusSet.map(c=><code key={c}>{c}</code>)} →</button>
-            </div>
-          ):<p className="kf-focus">Clean so far — nothing's tripping you up. Keep going.</p>}
+      <div className="kf-railcard">
+        <p className="kf-eyebrow">Your most-missed keys</p>
+        {attempts===0
+          ? <p className="kf-dim" style={{margin:0}}>No keystrokes yet. Start the warm-up — the keys you fumble surface here, with a button to drill just those.</p>
+          : missed.length>0
+            ? <>
+                <div className="kf-missed">
+                  {missed.map(m=>(
+                    <div key={m.ch} className="kf-missed-row" title={`${m.st.errors} misses in ${m.st.attempts} tries — ${m.where}`}>
+                      <code className="kf-missed-ch">{m.ch}</code>
+                      <span className="kf-missed-bar"><i style={{width:Math.max(6,Math.round(m.miss*100))+"%"}}/></span>
+                      <span className="kf-missed-pct">{Math.round(m.miss*100)}%</span>
+                    </div>
+                  ))}
+                </div>
+                <button className="kf-drillthese" onClick={()=>onFocus(focusSet)}>Drill just these {focusSet.map(c=><code key={c}>{c}</code>)} →</button>
+              </>
+            : <p className="kf-dim" style={{margin:0}}>Clean so far — nothing's tripping you up. Keep going.</p>}
+      </div>
+      <LiveSketch sketch={sketch} pack={pack} onSave={onSave} onDiscard={onDiscard}/>
+      {attempts>0&&(
+        <div className="kf-railcard">
+          <p className="kf-eyebrow">Accuracy per key</p>
           <Heatmap stats={stats}/>
-        </>
+        </div>
       )}
       {recent.length>0&&(
-        <>
-          <p className="kf-eyebrow kf-collection-label">Your finished sketches</p>
+        <div className="kf-railcard">
+          <p className="kf-eyebrow">Finished sketches</p>
           <div className="kf-collection">
             {recent.map((idx,i)=><div key={i} className="kf-frame" style={{background:pack.bg}}><SketchArt sketch={SKETCHES[idx]} frac={1} pack={pack}/></div>)}
           </div>
-        </>
+        </div>
       )}
-    </section>
+    </>
   );
 }
 function Heatmap({stats}){
@@ -836,6 +860,7 @@ const FEATURES=[
 ];
 function Welcome({onStart,onClose,muted}){
   return (
+    <div className="kf-welcome-backdrop" onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
     <div className="kf-welcome">
       <div className="kf-welcome-head">
         <div>
@@ -857,6 +882,7 @@ function Welcome({onStart,onClose,muted}){
         <button className="kf-start" onClick={onStart}>Start the warm-up →</button>
         <span>New here? The warm-up is the gentlest way in.{muted?" Sound is off — tap ♪ to add it.":""}</span>
       </div>
+    </div>
     </div>
   );
 }

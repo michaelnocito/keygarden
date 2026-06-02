@@ -12,7 +12,7 @@ Most typing tutors drill prose. But if you write queries and scripts all day, th
 
 - **Drill keys** — one symbol at a time, easiest to hardest. A big **placement description sits above the key** ("Top number row, above the 3 — with Shift") so you can find it by orientation, plus the finger to use. The order adapts to *you*: the keys you miss or hesitate on come back more often.
 - **Type snippets** — short, real lines of code tagged by track (SQL / Python / Excel / Tableau / Stats / Power BI). Closing brackets auto-fill the way your editor does, so you practice the keys you actually press, not phantom closers.
-- **Progress** — a status report of your **most-missed keys** (ranked by miss rate), a **"Drill just these →"** button that starts a focused session on only those symbols, a heatmap of accuracy and speed per symbol, your finished sketches, and your return streak.
+- **Progress rail** — always alongside your practice (a left rail on desktop, up top on a narrow window): your **return streak**, a status report of your **most-missed keys** (ranked by miss rate) with a **"Drill just these →"** button for a focused session, the live sketch, an accuracy heatmap, and your finished sketches.
 - **A live sketch** — as you practice, a little hand-drawn sketch fills in *right below the keys*. Every clean line (and every clean streak in the drill) adds a stroke; most drawings finish in about a five-minute session. When one's done you **save it to your collection or delete it**, then a new, random drawing begins. Choose an **art style** in settings — **Charcoal, Watercolor, Abstract, or Celestial**. Finished sketches collect on **Progress**, which also greets you with a gentle **return streak** — coming back is the whole reward. No timers, no grades, nothing to fail.
 
 A built-in **How it works** card (the **?** in the nav, open on your first visit) explains all of this in the app, including how to tune or silence the relax prompt.
@@ -21,10 +21,10 @@ It also gives gentle, non-punishing feedback: a soft sound and a small visual on
 
 ## How to use it (60 seconds)
 
-1. Open the link on a computer with a **physical keyboard** (it's a typing app — phones won't work). A short **welcome screen** introduces the features the first time; reopen it anytime with **?**.
-2. Start with **Drill keys**. Let it walk you through the warm-up once — easiest keys first. Don't rush; there's no timer and no score.
+1. Open the link on a computer with a **physical keyboard** (it's a typing app — phones won't work). A **welcome splash** introduces the features the first time; it minimizes to the **?** button, which reopens it anytime.
+2. Start with **Drill keys** (the warm-up runs easiest keys first). The big card is your work area; your **progress rail** sits alongside it the whole time. Don't rush; there's no timer and no score.
 3. Switch to **Type snippets**, pick a track (or leave it on Mixed), and type the lines through. Closers fill themselves — just type the openers and content.
-4. Watch the **sketch** fill in below the keys as you go, and check **Progress** for your finished sketches, return streak, and which keys are still slow.
+4. Glance at the **progress rail** for the keys you miss most (with a **"Drill just these"** button), your sketch filling in, your return streak, and an accuracy heatmap.
 5. **Sound is off to start** — tap **♪** for gentle audio. In **⚙** you can switch the breathing breaks on/off and set how often they appear, and pick an art style.
 
 If it senses tension (a run of misses, or a long hesitation — never typing fast), it offers a **guided breathing break**: three slow breaths, exhale longer than inhale, to loosen your shoulders. It's visual-only, on by default, and you can turn it off in **⚙**.
