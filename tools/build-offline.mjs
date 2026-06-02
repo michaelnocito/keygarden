@@ -16,7 +16,7 @@ const out = `<!DOCTYPE html>
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>keyform — symbol typing trainer (offline)</title>
+<title>Keygarden — symbol typing trainer (offline)</title>
 <style>${css}</style>
 </head>
 <body>
@@ -27,8 +27,8 @@ const out = `<!DOCTYPE html>
 </body>
 </html>
 `;
-fs.writeFileSync("../keyform-offline.html", out);
-console.log("built keyform-offline.html");
+fs.writeFileSync("../keygarden-offline.html", out);
+console.log("built keygarden-offline.html");
 console.log("react umd bytes:", react.length, "| react-dom umd bytes:", reactDom.length);
 console.log("compiled app bytes:", compiled.length);
 console.log("total file KB:", Math.round(out.length / 1024));

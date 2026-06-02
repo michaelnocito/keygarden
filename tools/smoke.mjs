@@ -11,7 +11,7 @@ let code = m[1];
 
 const dom = new JSDOM(`<!DOCTYPE html><html><body><div id="root"></div></body></html>`, {
   pretendToBeVisual: true,
-  url: "https://keyform.local/",
+  url: "https://keygarden.local/",
 });
 const { window } = dom;
 global.window = window;
@@ -145,7 +145,7 @@ ok("clean typing at low sensitivity does NOT nag", !relaxFired);
 // 7. persistence: stats + sens written to localStorage, restored on remount
 let persistOk = false, sensPersist = false;
 try {
-  const raw = window.localStorage.getItem("keyform.v1");
+  const raw = window.localStorage.getItem("keygarden.v1");
   const saved = raw ? JSON.parse(raw) : {};
   const totalSaved = saved.stats ? Object.values(saved.stats).reduce((s, x) => s + (x.attempts || 0), 0) : 0;
   persistOk = totalSaved > 0;            // we typed during the run, so attempts should be saved
@@ -153,7 +153,7 @@ try {
 } catch (e) {}
 await new Promise((r) => setTimeout(r, 450)); // let debounced save flush
 try {
-  const saved = JSON.parse(window.localStorage.getItem("keyform.v1") || "{}");
+  const saved = JSON.parse(window.localStorage.getItem("keygarden.v1") || "{}");
   const totalSaved = saved.stats ? Object.values(saved.stats).reduce((s, x) => s + (x.attempts || 0), 0) : 0;
   persistOk = totalSaved > 0;
   sensPersist = typeof saved.sens === "number";
@@ -167,7 +167,7 @@ window.document.body.appendChild(root2);
 let rehydrated = false;
 try {
   // App reads loadStats() on init; verify saved stats are non-empty so a fresh mount restores them
-  const saved = JSON.parse(window.localStorage.getItem("keyform.v1") || "{}");
+  const saved = JSON.parse(window.localStorage.getItem("keygarden.v1") || "{}");
   rehydrated = !!saved.stats && Object.values(saved.stats).some((x) => (x.attempts || 0) > 0);
 } catch (e) {}
 ok("saved state available for rehydration", rehydrated);
@@ -178,14 +178,14 @@ await new Promise((r) => setTimeout(r, 40));
 ok("Garden renders the biodiversity ladder", !!$(".kf-ladder")[0] && $(".kf-eco").length === 8);
 ok("Garden shows the ambient sky scene", !!$(".kf-sky")[0]);
 
-// 9. a clean line earned garden growth, persisted into keyform.v1.garden
+// 9. a clean line earned garden growth, persisted into keygarden.v1.garden
 let gardenPersist = false, gardenGrew = false;
 try {
-  const saved = JSON.parse(window.localStorage.getItem("keyform.v1") || "{}");
+  const saved = JSON.parse(window.localStorage.getItem("keygarden.v1") || "{}");
   gardenPersist = !!saved.garden && typeof saved.garden === "object";
   gardenGrew = gardenPersist && (saved.garden.growth | 0) > 0;
 } catch (e) {}
-ok("garden state persists to keyform.v1", gardenPersist);
+ok("garden state persists to keygarden.v1", gardenPersist);
 ok("a clean line grows the garden (growth > 0)", gardenGrew);
 
 // 10. typing with audio muted must never throw

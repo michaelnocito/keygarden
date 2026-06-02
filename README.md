@@ -1,10 +1,10 @@
-# keyform
+# Keygarden
 
 **A calm typing trainer for the symbols data work actually runs on** — the brackets, braces, operators, colons, and quotes that slow you down in SQL, Python, Excel, Tableau, and Power BI.
 
-Most typing tutors drill prose. But if you write queries and scripts all day, the keys that trip you up aren't letters — they're `( ) [ ] { } : = _ * # | < >`. keyform focuses only on those, in a way that's meant to lower tension rather than add it.
+Most typing tutors drill prose. But if you write queries and scripts all day, the keys that trip you up aren't letters — they're `( ) [ ] { } : = _ * # | < >`. Keygarden focuses only on those, in a way that's meant to lower tension rather than add it.
 
-→ **[Open keyform](https://michaelnocito.github.io/keyform/)** (no install, runs in your browser)
+→ **[Open Keygarden](https://michaelnocito.github.io/keygarden/)** (no install, runs in your browser)
 
 ---
 
@@ -35,7 +35,7 @@ This is a practice tool, not a course. Typing the snippets will make SQL and Pyt
 
 ## Getting the most out of it (the learning-science part)
 
-keyform is built around two well-supported ideas: **spaced, short repetition** and **chunking**. To work with them, not against them:
+Keygarden is built around two well-supported ideas: **spaced, short repetition** and **chunking**. To work with them, not against them:
 
 - **Short and often beats long and rare.** Two focused 5–10 minute sessions on different days build more durable motor memory than one 40-minute grind. Fatigue creates tension, and tension is what you're trying to *unlearn* here. Stop while it still feels easy.
 - **Let the adaptive drill do its job.** It resurfaces your weak keys on purpose (this is *spaced retrieval* — recalling a struggling key after a gap is what strengthens it). Don't skip the repeats; they're the mechanism.
@@ -60,7 +60,7 @@ Garden progress is saved alongside everything else in your browser.
 Two builds are included:
 
 - **`index.html`** — the published version. Loads React from a CDN (needs internet once to load), and saves your progress reliably because it runs from a real web origin.
-- **`keyform-offline.html`** — fully self-contained (React inlined, no network at all). Double-click to run anywhere, even with WiFi off.
+- **`keygarden-offline.html`** — fully self-contained (React inlined, no network at all). Double-click to run anywhere, even with WiFi off.
 
 > **Note on the offline file:** some browsers block local storage for files opened directly from disk (`file://`), so the offline build may not *save* your progress between reloads even though it runs perfectly. For progress that sticks, use the hosted `index.html`. The app fails safe either way — it never errors, it just forgets.
 

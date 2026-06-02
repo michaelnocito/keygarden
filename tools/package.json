@@ -1,9 +1,9 @@
 {
-  "name": "keyform-tools",
+  "name": "keygarden-tools",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Build + headless test tooling for keyform",
+  "description": "Build + headless test tooling for Keygarden",
   "scripts": {
     "build": "node build-offline.mjs",
     "test": "node smoke.mjs && node smoke-offline.mjs"

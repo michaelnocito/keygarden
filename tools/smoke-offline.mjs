@@ -1,7 +1,7 @@
 import fs from "fs";
 import { JSDOM, VirtualConsole } from "jsdom";
 
-const html = fs.readFileSync("../keyform-offline.html", "utf8");
+const html = fs.readFileSync("../keygarden-offline.html", "utf8");
 
 const vc = new VirtualConsole();
 vc.on("jsdomError", (e) => console.error("JSDOM ERROR:", e.message));

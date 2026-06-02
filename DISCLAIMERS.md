@@ -1,10 +1,10 @@
 # Disclaimers
 
-**Please read before using or sharing keyform.**
+**Please read before using or sharing Keygarden.**
 
 ## Not medical or therapeutic advice
 
-keyform is a practice and learning tool. It is **not** a medical device and does not diagnose, treat, prevent, or cure any condition. The "relax" prompts and the emphasis on calm typing are about comfort and motor learning — they are **not** physical therapy, occupational therapy, or treatment for repetitive strain injury (RSI), carpal tunnel syndrome, tendinitis, or any other condition.
+Keygarden is a practice and learning tool. It is **not** a medical device and does not diagnose, treat, prevent, or cure any condition. The "relax" prompts and the emphasis on calm typing are about comfort and motor learning — they are **not** physical therapy, occupational therapy, or treatment for repetitive strain injury (RSI), carpal tunnel syndrome, tendinitis, or any other condition.
 
 If you have hand, wrist, arm, or neck pain, numbness, tingling, or any injury — **stop and consult a qualified medical professional.** Do not use this app to "push through" discomfort.
 
@@ -14,7 +14,7 @@ Improvement depends on many factors (how often you practice, your starting point
 
 ## The learning-science claims are general, not clinical
 
-keyform is informed by widely accepted ideas in skill acquisition — spaced repetition, retrieval practice, chunking, and the effect of low-distraction audio on focus. These are described in plain terms to help you use the tool well. They are **not** citations to a specific clinical study about this app, and nothing here has been independently validated. Treat them as a sensible framework, not proven outcomes.
+Keygarden is informed by widely accepted ideas in skill acquisition — spaced repetition, retrieval practice, chunking, and the effect of low-distraction audio on focus. These are described in plain terms to help you use the tool well. They are **not** citations to a specific clinical study about this app, and nothing here has been independently validated. Treat them as a sensible framework, not proven outcomes.
 
 ## It does not teach SQL, Python, or any concept
 
@@ -30,7 +30,7 @@ The on-screen finger hints and the "you hit X, the target is to the right" coach
 
 ## Privacy
 
-keyform collects nothing and sends nothing. There are no accounts, no analytics, and no network calls except loading the app itself (the hosted version loads React from a public CDN; the offline build loads nothing). What the app calls your "progress" is a single value stored in **your own browser's local storage** on **your** device. Clearing your browser data, or using the in-app **Reset**, erases it. No one else can see it, including the author.
+Keygarden collects nothing and sends nothing. There are no accounts, no analytics, and no network calls except loading the app itself (the hosted version loads React from a public CDN; the offline build loads nothing). What the app calls your "progress" is a single value stored in **your own browser's local storage** on **your** device. Clearing your browser data, or using the in-app **Reset**, erases it. No one else can see it, including the author.
 
 ## Provided "as is"
 

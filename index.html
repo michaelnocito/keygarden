@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>keyform — symbol typing trainer</title>
+<title>Keygarden — symbol typing trainer</title>
 <style>
   /* ── Nocito calm-analyst design system (canonical: spreadsheet-archaeology/DESIGN_SYSTEM.md) ──
      Light theme, soft shadows, restrained color. System-ui for chrome; monospace only for code/keys. */
@@ -138,6 +138,12 @@
   .kf-eco.locked .kf-eco-wild{color:var(--dim);}
   .kf-eco-fact{font-size:.84rem;line-height:1.5;color:#2b3240;margin:0;}
   .kf-eco-fact .kf-locktag{color:var(--dim);font-style:italic;}
+  .kf-devtoggle{display:flex;align-items:center;gap:.5rem;margin-top:1rem;padding-top:.8rem;border-top:1px dashed var(--line);font-size:.8rem;color:var(--dim);cursor:pointer;}
+  .kf-devtoggle input{accent-color:var(--accent);cursor:pointer;}
+  .kf-dev{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;background:repeating-linear-gradient(45deg,#fff7e6,#fff7e6 9px,#fcefd2 9px,#fcefd2 18px);border:1px dashed var(--warm-bd);border-radius:10px;padding:.6rem .8rem;margin-bottom:1.3rem;}
+  .kf-dev b{font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--warm);}
+  .kf-dev button{font-family:inherit;font-size:.74rem;font-weight:600;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:7px;padding:.35rem .7rem;cursor:pointer;transition:.15s;}
+  .kf-dev button:hover{border-color:var(--warm);color:var(--warm);}
   @media (prefers-reduced-motion:reduce){
     .kf-orb,.kf-star,.kf-plant,.kf-drift,.kf-flit,.kf-hover,.kf-firefly,.kf-breath{animation:none!important;}
   }
@@ -318,7 +324,7 @@ function diagnose(targetCh,actualCh){
 }
 
 /* ── persistence (localStorage; safe-fails on file:// or private mode) ── */
-const KEY="keyform.v1";
+const KEY="keygarden.v1";
 const store={
   load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}},
   save(patch){try{const cur=this.load();localStorage.setItem(KEY,JSON.stringify({...cur,...patch}));}catch(e){}},
@@ -383,12 +389,15 @@ function App(){
   const [stats,setStats]=useState(loadStats);
   const [garden,setGarden]=useState(loadGarden);
   const [justReturned,setJustReturned]=useState(false);
+  const [dev,setDev]=useState(()=>!!store.load().dev);   // developer/testing tools
+  const [devPhase,setDevPhase]=useState(null);           // null = auto; else forces day/dusk/night
   const [muted,setMuted]=useState(()=>!!store.load().muted);
   const [sens,setSens]=useState(()=>{const s=store.load().sens;return typeof s==="number"?s:0.4;});
   const [showSet,setShowSet]=useState(false);
   useEffect(()=>{RELAX_SENS=sens;store.save({sens});},[sens]);
   useEffect(()=>{audio.setMuted(muted);store.save({muted});},[muted]);
   useEffect(()=>{store.save({garden});},[garden]); // garden persists on every change
+  useEffect(()=>{store.save({dev});},[dev]);
   // the garden waited for you: on a new day, the streak grows — it never resets, nothing wilts
   useEffect(()=>{
     const today=new Date().toISOString().slice(0,10);
@@ -422,6 +431,10 @@ function App(){
     const i=g.unlocked.length;
     return {...g,unlocked:[...g.unlocked,ready.id],placements:[...g.placements,{id:ready.id,x:12+i*11}]};
   }),[]);
+  // dev/testing tools: see every tier, creature, and sky at will
+  const unlockAllGarden=useCallback(()=>setGarden(g=>({...g,growth:LADDER[LADDER.length-1].cost,unlocked:LADDER.map(e=>e.id),placements:LADDER.map((e,i)=>({id:e.id,x:12+i*11}))})),[]);
+  const resetGarden=useCallback(()=>{setDevPhase(null);setGarden(blankGarden());},[]);
+  const cyclePhase=useCallback(()=>setDevPhase(p=>p==="day"?"dusk":p==="dusk"?"night":p==="night"?null:"day"),[]);
   const toggleMute=()=>setMuted(m=>!m);
   const resetAll=()=>{store.clear();setStats(blankStats());setGarden(blankGarden());setSens(0.4);setMuted(false);setShowSet(false);};
   const sensLabel=sens<0.25?"Rarely":sens<0.55?"Calm":sens<0.8?"Attentive":"Eager";
@@ -429,7 +442,7 @@ function App(){
   return (
     <div className="kf-root">
       <header className="kf-head">
-        <div className="kf-brand"><span className="kf-glyph">{"{ }"}</span><h1>keyform</h1></div>
+        <div className="kf-brand"><span className="kf-glyph">{"{ }"}</span><h1>Keygarden</h1></div>
         <p className="kf-tag">the symbols data work runs on — slow, relaxed, repeated</p>
       </header>
       <nav className="kf-nav">
@@ -447,13 +460,15 @@ function App(){
           <div className="kf-slabels"><span>rarely</span><span>eager</span></div>
           <p className="kf-dim">Triggered by mistakes or long hesitation pauses — never by typing fast. Lower = leaves you alone more.</p>
           <button className="kf-reset" onClick={resetAll}>Reset progress &amp; settings</button>
+          <label className="kf-devtoggle"><input type="checkbox" checked={dev} onChange={e=>setDev(e.target.checked)}/> Developer mode — testing tools in the Garden</label>
         </div>
       )}
       <main className="kf-main">
         {mode==="home"&&<Home stats={stats} attempts={total}/>}
         {mode==="drill"&&<Drill stats={stats} record={record} addGrowth={addGrowth}/>}
         {mode==="snippet"&&<Snippet record={record} addGrowth={addGrowth}/>}
-        {mode==="garden"&&<Garden garden={garden} plantNext={plantNext} justReturned={justReturned}/>}
+        {mode==="garden"&&<Garden garden={garden} plantNext={plantNext} justReturned={justReturned}
+          dev={dev} devPhase={devPhase} unlockAllGarden={unlockAllGarden} resetGarden={resetGarden} cyclePhase={cyclePhase}/>}
       </main>
     </div>
   );
@@ -704,17 +719,17 @@ function Critter({type,i}){
     </span>
   );
 }
-function Garden({garden,plantNext,justReturned}){
+function Garden({garden,plantNext,justReturned,dev,devPhase,unlockAllGarden,resetGarden,cyclePhase}){
   const unlocked=garden.unlocked;
   const planted=new Set(unlocked);
   const ready=nextReady(garden);
   const nightUnlocked=planted.has("bathouse")||planted.has("certified");
-  const phase=planted.has("certified")?"night":nightUnlocked?"dusk":"day";
+  const phase=devPhase||(planted.has("certified")?"night":nightUnlocked?"dusk":"day");
   const skyClass="kf-sky"+(phase==="night"?" night":phase==="dusk"?" dusk":"");
   const NIGHT_ONLY=new Set(["bat","firefly"]);
   const critters=[];
   unlocked.forEach(id=>LADDER_BY_ID[id].critters.forEach(c=>{if(!critters.includes(c))critters.push(c);}));
-  const shown=critters.filter(c=>!NIGHT_ONLY.has(c)||nightUnlocked).slice(0,7);
+  const shown=critters.filter(c=>!NIGHT_ONLY.has(c)||nightUnlocked).slice(0,dev?12:7);
   const stars=useMemo(()=>Array.from({length:16},(_,i)=>({left:(i*61)%100,top:(i*37)%70,delay:-(i%5)})),[]);
   // gentle, non-numeric progress sprig toward the next planting (never a score)
   const nextTier=LADDER.find(e=>!planted.has(e.id));
@@ -731,6 +746,15 @@ function Garden({garden,plantNext,justReturned}){
         {shown.map((c,i)=><Critter key={c+i} type={c} i={i}/>)}
       </div>
       <div className="kf-garden-body">
+        {dev&&(
+          <div className="kf-dev">
+            <b>Dev</b>
+            <button onClick={unlockAllGarden}>Unlock everything</button>
+            <button onClick={plantNext}>Plant next</button>
+            <button onClick={cyclePhase}>Sky: {devPhase||"auto"}</button>
+            <button onClick={resetGarden}>Reset garden</button>
+          </div>
+        )}
         <p className="kf-eyebrow">Your garden</p>
         {justReturned&&<div className="kf-welcome-back">🌿 Welcome back — the garden waited for you{garden.dayStreak>1?` · day ${garden.dayStreak}`:""}. Nothing wilts here.</div>}
         {ready?(

@@ -1,22 +1,22 @@
 # Contributing
 
-Thanks for your interest in keyform. It's a deliberately small, single-file app — easy to read, easy to change.
+Thanks for your interest in Keygarden. It's a deliberately small, single-file app — easy to read, easy to change.
 
 ## Repo layout
 
 ```
 index.html             # published app (React via CDN; persists progress)
-keyform-offline.html    # generated — React inlined, fully offline (do not hand-edit)
+keygarden-offline.html    # generated — React inlined, fully offline (do not hand-edit)
 README.md
 DISCLAIMERS.md
 LICENSE
 /tools                 # build + test scripts (Node)
-  build-offline.mjs    # regenerates keyform-offline.html from index.html
+  build-offline.mjs    # regenerates keygarden-offline.html from index.html
   smoke.mjs            # headless test of the source (CDN) build
   smoke-offline.mjs    # headless test of the generated offline build
 ```
 
-**Edit `index.html` only.** `keyform-offline.html` is built from it — never edit the offline file by hand, or your change will be lost on the next build.
+**Edit `index.html` only.** `keygarden-offline.html` is built from it — never edit the offline file by hand, or your change will be lost on the next build.
 
 ## Make a change
 
@@ -24,7 +24,7 @@ The whole app lives in the `<script type="text/babel">` block in `index.html`: d
 
 ### The Garden layer
 
-The **Garden** tab is an ambient, calm reward built from the existing practice hooks — there's nothing new to "play." The biodiversity ladder is the `LADDER` array near the top of the script: each entry is `{ id, icon, name, wild, cost, fact, critters }`, in real ecological unlock order. `cost` is cumulative **growth** (clean lines, clean streaks, and newly-mastered weak keys all add growth). Garden state lives on the existing `keyform.v1` localStorage object under `garden`, and Reset clears it.
+The **Garden** tab is an ambient, calm reward built from the existing practice hooks — there's nothing new to "play." The biodiversity ladder is the `LADDER` array near the top of the script: each entry is `{ id, icon, name, wild, cost, fact, critters }`, in real ecological unlock order. `cost` is cumulative **growth** (clean lines, clean streaks, and newly-mastered weak keys all add growth). Garden state lives on the existing `keygarden.v1` localStorage object under `garden`, and Reset clears it.
 
 If you add or edit a tier, keep the **hard design rules**: no timers, no scores, no decay, nothing wilts, wildlife is ambient-only, and every `fact` must be **true** (cite a real source — don't invent ecology). Wildlife is inline SVG in `critterArt()`; keep counts modest so the scene stays calm.
 
@@ -48,14 +48,14 @@ npm install        # one-time: react, react-dom, @babel/standalone, jsdom
 node build-offline.mjs
 ```
 
-This transpiles the app, inlines React, and writes `keyform-offline.html`.
+This transpiles the app, inlines React, and writes `keygarden-offline.html`.
 
 ## Run the tests (headless, no browser)
 
 ```bash
 cd tools
 node smoke.mjs           # tests index.html
-node smoke-offline.mjs   # tests keyform-offline.html
+node smoke-offline.mjs   # tests keygarden-offline.html
 ```
 
 Both should report all checks passing. The smoke tests mount the app in jsdom, mock the Web Audio API, drive real keystroke events, and assert behavior: the warm-up starts on the easiest key, closers auto-fill, a clean line celebrates, the relax prompt doesn't fire on clean typing, progress persists, etc. **Run both before opening a PR.**
