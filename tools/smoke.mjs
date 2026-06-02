@@ -172,21 +172,28 @@ try {
 } catch (e) {}
 ok("saved state available for rehydration", rehydrated);
 
-// 8. Garden layer: tab renders the biodiversity ladder + ambient scene
-ok("Garden tab exists", clickBtn("Garden"));
+// 8. Sketch layer: tab renders the self-drawing line
+ok("Sketch tab exists", clickBtn("Sketch"));
 await new Promise((r) => setTimeout(r, 40));
-ok("Garden renders the biodiversity ladder", !!$(".kf-ladder")[0] && $(".kf-eco").length === 8);
-ok("Garden shows the ambient sky scene", !!$(".kf-sky")[0]);
+ok("Sketch renders the line drawing", !!$(".kf-sketch-svg path.ink")[0]);
 
-// 9. a clean line earned garden growth, persisted into keygarden.v1.garden
-let gardenPersist = false, gardenGrew = false;
+// 9. a clean line added a stroke, persisted into keygarden.v1.sketch
+let sketchPersist = false, sketchGrew = false;
 try {
   const saved = JSON.parse(window.localStorage.getItem("keygarden.v1") || "{}");
-  gardenPersist = !!saved.garden && typeof saved.garden === "object";
-  gardenGrew = gardenPersist && (saved.garden.growth | 0) > 0;
+  sketchPersist = !!saved.sketch && typeof saved.sketch === "object";
+  sketchGrew = sketchPersist && (((saved.sketch.strokes | 0) > 0) || ((saved.sketch.completed | 0) > 0));
 } catch (e) {}
-ok("garden state persists to keygarden.v1", gardenPersist);
-ok("a clean line grows the garden (growth > 0)", gardenGrew);
+ok("sketch state persists to keygarden.v1", sketchPersist);
+ok("a clean line advances the sketch (a stroke is saved)", sketchGrew);
+
+// 9b. the collapsible "How it works" guide toggles from the nav (open on first visit)
+const helpBtn = $("button").find((b) => b.textContent.trim() === "?");
+const guideBefore = !!$(".kf-guide")[0];
+helpBtn && helpBtn.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+await new Promise((r) => setTimeout(r, 20));
+const guideAfter = !!$(".kf-guide")[0];
+ok("How-it-works guide toggles from the nav", !!helpBtn && guideBefore !== guideAfter && (guideBefore || guideAfter));
 
 // 10. typing with audio muted must never throw
 let mutedNoThrow = true;

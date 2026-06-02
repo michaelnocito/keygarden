@@ -20,13 +20,17 @@ LICENSE
 
 ## Make a change
 
-The whole app lives in the `<script type="text/babel">` block in `index.html`: data (symbols + snippets + the garden `LADDER`) at the top, then the audio engine, then the React components. No framework, no build step needed to *run* it — just open the file.
+The whole app lives in the `<script type="text/babel">` block in `index.html`: data (symbols + snippets + the `SKETCHES`) at the top, then the audio engine, then the React components. No framework, no build step needed to *run* it — just open the file.
 
-### The Garden layer
+### The Sketch layer
 
-The **Garden** tab is an ambient, calm reward built from the existing practice hooks — there's nothing new to "play." The biodiversity ladder is the `LADDER` array near the top of the script: each entry is `{ id, icon, name, wild, cost, fact, critters }`, in real ecological unlock order. `cost` is cumulative **growth** (clean lines, clean streaks, and newly-mastered weak keys all add growth). Garden state lives on the existing `keygarden.v1` localStorage object under `garden`, and Reset clears it.
+The **Sketch** tab is a calm reward built from the existing practice hooks — there's nothing new to "play." Each drawing is a single connected SVG path in the `SKETCHES` array near the top: `{ name, d }`. The path uses `pathLength="100"` so it can be revealed a fraction at a time with `stroke-dashoffset`, no length measurement needed. `STROKES_PER` is how many clean lines/streaks complete one drawing; `addStroke()` is fired from the same celebration moments as the audio milestone. Sketch state lives on the `keygarden.v1` localStorage object under `sketch` (`{ strokes, completed }`), and Reset clears it.
 
-If you add or edit a tier, keep the **hard design rules**: no timers, no scores, no decay, nothing wilts, wildlife is ambient-only, and every `fact` must be **true** (cite a real source — don't invent ecology). Wildlife is inline SVG in `critterArt()`; keep counts modest so the scene stays calm.
+To add a drawing, append one `{ name, d }` to `SKETCHES` — keep `d` a **single continuous path** (one `M`, then curves) inside the `0 0 120 120` viewBox so it reveals as one unbroken line. Keep the **hard design rules**: no timers, no scores, no decay, nothing to fail — finishing a drawing simply rolls over to the next.
+
+### The "How it works" guide
+
+The collapsible guide is the `Guide` component (toggled by the **?** nav button, open on first visit, then remembered via `guideSeen`). Keep it to four short cards — it follows the progressive-disclosure principle of showing the 20% everyone needs and tucking the rest.
 
 ### Add code snippets (most common change)
 

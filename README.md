@@ -13,7 +13,9 @@ Most typing tutors drill prose. But if you write queries and scripts all day, th
 - **Drill keys** — one symbol at a time, easiest to hardest, with a finger-placement hint. The order adapts to *you*: the keys you miss or hesitate on come back more often.
 - **Type snippets** — short, real lines of code tagged by track (SQL / Python / Excel / Tableau / Stats / Power BI). Closing brackets auto-fill the way your editor does, so you practice the keys you actually press, not phantom closers.
 - **Progress** — a heatmap of your accuracy and speed per symbol, and the two keys to focus on next.
-- **Garden** — a calm reward that grows as you practice. Clean lines and clean streaks quietly grow a garden, and as it gets more biodiverse, real wildlife arrives. Each step teaches one true fact about backyard ecology. No timers, no scores, nothing wilts — it just waits for you.
+- **Sketch** — a calm reward that builds as you practice. Every clean line (and every clean streak in the drill) adds one stroke to a single-line drawing; finish it and a fresh one begins. No timers, no scores — just the quiet satisfaction of watching your effort become something.
+
+A built-in **How it works** card (the **?** in the nav, open on your first visit) explains all of this in the app, including how to tune or silence the relax prompt.
 
 It also gives gentle, non-punishing feedback: a soft sound and a small visual on the moments that matter (a clean line, a clean streak), a quiet "soft-no" on a miss, plain-language coaching when you slip (*"You hit P — `]` is just to the right"*), and an optional breathe-prompt if it notices you tensing up.
 
@@ -45,15 +47,15 @@ Keygarden is built around two well-supported ideas: **spaced, short repetition**
 
 A realistic rhythm: ~5–10 minutes a day, most days, for two to three weeks. The symbols you dread now should feel ordinary by the end.
 
-## The garden
+## The sketch
 
-The **Garden** tab is the emotional payoff for coming back. It's deliberately not a game-within-a-game — there's nothing to fail and nothing to chase:
+The **Sketch** tab is the quiet payoff for practicing. It's deliberately not a game-within-a-game — there's nothing to fail and nothing to chase:
 
-- **Practicing grows it.** Every clean snippet line and clean drill streak adds a little growth. Turning a key you used to struggle with into a calm, accurate one grows it faster.
-- **Biodiversity unlocks in real ecological order** — native wildflowers, then water, a bee house, a bug hotel and leaf pile, berry shrubs, a native oak with a nest box, a bat house, and finally a certified habitat. Each tier brings new ambient wildlife (bees, butterflies, dragonflies, songbirds, ladybugs, bats, fireflies, hummingbirds) and shows one short, **true** fact about why it matters.
-- **It rests with you.** The breathe-prompt is reframed as the garden settling for a moment — same gentle trigger. Plants close at night; nothing ever dies. Come back after days away and the garden simply waited for you.
+- **Practicing draws it.** Every clean snippet line, and every clean streak in the drill, adds one stroke to a single continuous-line drawing. Watch it fill in over a faint outline of where it's headed.
+- **Finish one, start the next.** Complete a drawing and a fresh one begins; the ones you've finished collect in a small gallery. That completed picture is the whole "win" — no points, no levels.
+- **No pressure, ever.** No timer, no score, nothing decays. Come back whenever; your half-finished drawing is waiting exactly where you left it.
 
-Garden progress is saved alongside everything else in your browser.
+Sketch progress is saved alongside everything else in your browser.
 
 ## Running it locally / offline
 
@@ -66,7 +68,7 @@ Two builds are included:
 
 ## Tech
 
-Single-file React (no build step, no dependencies to install). All audio is synthesized in the browser with the Web Audio API — no sound files. The garden and wildlife are inline SVG, no images. No accounts, no tracking, no data leaves your machine; "progress" is just a value in your own browser's local storage.
+Single-file React (no build step, no dependencies to install). All audio is synthesized in the browser with the Web Audio API — no sound files. The sketch is inline SVG, no images. No accounts, no tracking, no data leaves your machine; "progress" is just a value in your own browser's local storage.
 
 The visual design follows the **calm-analyst design system** shared across the analyst prep kits (Tableau Archaeology, the Analyst Prep Kit, and friends) — the same light theme, soft cards, blue accent, and system typography.
 

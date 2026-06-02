@@ -94,58 +94,39 @@
   .kf-breath{width:90px;height:90px;border-radius:50%;border:2px solid #bcd0f0;box-shadow:0 0 40px rgba(188,208,240,.4);margin-bottom:1.5rem;animation:breath 4s ease-in-out infinite;}
   @keyframes breath{0%,100%{transform:scale(.7);opacity:.4;}50%{transform:scale(1.15);opacity:1;}}
 
-  /* ── Garden / wildlife layer ── */
-  .kf-garden{padding:0;overflow:hidden;}
-  .kf-sky{position:relative;width:100%;height:240px;overflow:hidden;border-radius:14px 14px 0 0;background:linear-gradient(180deg,#aacbf0 0%,#cfe3f7 48%,#eaf4e6 70%,#dcebcf 100%);transition:background 1.6s ease;}
-  .kf-sky.dusk{background:linear-gradient(180deg,#3a4a78 0%,#8a6f9e 42%,#e7a76a 72%,#caa07a 100%);}
-  .kf-sky.night{background:linear-gradient(180deg,#10193a 0%,#1c2b56 50%,#26406a 78%,#2c4630 100%);}
-  .kf-orb{position:absolute;left:50%;top:50%;width:46px;height:46px;border-radius:50%;margin:-23px;transition:opacity 1.2s ease;animation:arc 90s linear infinite;}
-  .kf-orb.sun{background:radial-gradient(circle at 40% 38%,#fff7e0,#ffd86b 60%,#f7b733);box-shadow:0 0 36px rgba(255,216,107,.7);}
-  .kf-orb.moon{background:radial-gradient(circle at 38% 36%,#fdfdff,#dfe6f5 65%,#aeb9d6);box-shadow:0 0 28px rgba(210,224,255,.5);}
-  @keyframes arc{0%{transform:rotate(8deg) translateX(150px) rotate(-8deg);}100%{transform:rotate(172deg) translateX(150px) rotate(-172deg);}}
-  .kf-star{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;opacity:0;animation:twinkle 4s ease-in-out infinite;}
-  .kf-sky.night .kf-star{opacity:.85;}
-  @keyframes twinkle{0%,100%{opacity:.3;}50%{opacity:.9;}}
-  .kf-ground{position:absolute;left:0;right:0;bottom:0;height:64px;background:linear-gradient(180deg,#bcd79a,#8fb877);}
-  .kf-sky.night .kf-ground{background:linear-gradient(180deg,#33523a,#233a2a);transition:background 1.6s ease;}
-  .kf-plant{position:absolute;bottom:42px;transform-origin:bottom center;animation:sway 6s ease-in-out infinite;}
-  @keyframes sway{0%,100%{transform:rotate(-2deg);}50%{transform:rotate(2deg);}}
-  .kf-critter{position:absolute;will-change:transform;pointer-events:none;}
-  .kf-drift{animation:drift 26s linear infinite;}
-  @keyframes drift{0%{transform:translateX(-40px);}100%{transform:translateX(560px);}}
-  .kf-flit{animation:flit 14s ease-in-out infinite;}
-  @keyframes flit{0%{transform:translate(0,0);}25%{transform:translate(140px,-22px);}50%{transform:translate(300px,10px);}75%{transform:translate(440px,-16px);}100%{transform:translate(560px,0);}}
-  .kf-hover{animation:hover 5s ease-in-out infinite;}
-  @keyframes hover{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
-  .kf-firefly{animation:firefly 7s ease-in-out infinite;}
-  @keyframes firefly{0%,100%{transform:translate(0,0);opacity:.2;}50%{transform:translate(60px,-30px);opacity:1;}}
-  .kf-garden-body{padding:1.6rem 1.8rem 2rem;}
-  .kf-ready{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;background:var(--good-bg);border:1px solid var(--good-bd);border-left:4px solid var(--good);border-radius:10px;padding:.85rem 1rem;margin-bottom:1.4rem;animation:fade .4s ease;}
-  .kf-ready p{margin:0;font-size:.92rem;color:#17502b;flex:1 1 200px;}
-  .kf-ready b{color:var(--good);}
-  .kf-plant-btn{font-family:inherit;font-size:.85rem;font-weight:700;color:#fff;background:var(--good);border:0;border-radius:9px;padding:.55rem 1.1rem;cursor:pointer;box-shadow:0 2px 8px rgba(26,127,55,.3);transition:.15s;}
-  .kf-plant-btn:hover{filter:brightness(1.06);}
-  .kf-welcome-back{font-size:.85rem;color:var(--accent-d);background:var(--accent-bg);border:1px solid var(--accent-bd);border-radius:9px;padding:.6rem .9rem;margin-bottom:1.2rem;}
-  .kf-soil{font-size:.85rem;color:var(--dim);margin:0 0 1.4rem;display:flex;align-items:center;gap:.6rem;}
-  .kf-sprout{flex:1;height:6px;border-radius:999px;background:var(--sheet-head);overflow:hidden;border:1px solid var(--line);}
-  .kf-sprout i{display:block;height:100%;background:linear-gradient(90deg,#bcd79a,var(--good));border-radius:999px;transition:width .8s ease;}
-  .kf-ladder{display:flex;flex-direction:column;gap:.7rem;}
-  .kf-eco{display:flex;gap:.85rem;align-items:flex-start;background:var(--sheet-head);border:1px solid var(--line);border-radius:12px;padding:.85rem .95rem;}
-  .kf-eco.locked{opacity:.55;}
-  .kf-eco-icon{font-size:1.6rem;line-height:1;flex:0 0 auto;width:2rem;text-align:center;}
-  .kf-eco-name{font-weight:700;font-size:.95rem;color:var(--ink);margin:0 0 .15rem;}
-  .kf-eco-wild{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--good);margin:0 0 .35rem;}
-  .kf-eco.locked .kf-eco-wild{color:var(--dim);}
-  .kf-eco-fact{font-size:.84rem;line-height:1.5;color:#2b3240;margin:0;}
-  .kf-eco-fact .kf-locktag{color:var(--dim);font-style:italic;}
-  .kf-devtoggle{display:flex;align-items:center;gap:.5rem;margin-top:1rem;padding-top:.8rem;border-top:1px dashed var(--line);font-size:.8rem;color:var(--dim);cursor:pointer;}
-  .kf-devtoggle input{accent-color:var(--accent);cursor:pointer;}
-  .kf-dev{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;background:repeating-linear-gradient(45deg,#fff7e6,#fff7e6 9px,#fcefd2 9px,#fcefd2 18px);border:1px dashed var(--warm-bd);border-radius:10px;padding:.6rem .8rem;margin-bottom:1.3rem;}
-  .kf-dev b{font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--warm);}
-  .kf-dev button{font-family:inherit;font-size:.74rem;font-weight:600;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:7px;padding:.35rem .7rem;cursor:pointer;transition:.15s;}
-  .kf-dev button:hover{border-color:var(--warm);color:var(--warm);}
+  /* ── "How it works" guide (progressive disclosure) ── */
+  .kf-guide{width:100%;max-width:620px;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:1.1rem 1.3rem 1.2rem;margin-bottom:1.2rem;animation:fade .35s ease;}
+  .kf-guide-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;}
+  .kf-guide h3{font-weight:700;font-size:1.05rem;margin:0;color:var(--ink);}
+  .kf-guide-close{flex:0 0 auto;font-family:inherit;font-size:.72rem;font-weight:600;color:var(--dim);background:var(--sheet-head);border:1px solid var(--line);border-radius:7px;padding:.3rem .65rem;cursor:pointer;transition:.15s;}
+  .kf-guide-close:hover{color:var(--accent-d);border-color:var(--accent-bd);}
+  .kf-guide-lead{color:var(--dim);font-size:.85rem;margin:.35rem 0 1rem;}
+  .kf-guide-grid{display:grid;gap:.7rem;}
+  .kf-g-item{background:var(--sheet-head);border:1px solid var(--line);border-radius:10px;padding:.7rem .85rem;}
+  .kf-g-item h4{margin:0 0 .25rem;font-size:.74rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--accent-d);}
+  .kf-g-item p{margin:0;font-size:.86rem;line-height:1.5;color:#2b3240;}
+  .kf-g-item p+p{margin-top:.4rem;}
+  .kf-g-item code{font-family:var(--mono);color:var(--accent-d);background:var(--accent-bg);border:1px solid var(--accent-bd);padding:.02rem .3rem;border-radius:5px;font-size:.82em;}
+
+  /* ── Self-drawing sketch (typing builds a line drawing) ── */
+  .kf-sketch-stage{display:flex;justify-content:center;align-items:center;background:var(--sheet-head);border:1px solid var(--line);border-radius:12px;padding:1.4rem;margin:.4rem 0 1rem;min-height:240px;}
+  .kf-sketch-svg{width:100%;max-width:280px;height:auto;display:block;}
+  .kf-sketch-svg path{fill:none;stroke-linecap:round;stroke-linejoin:round;}
+  .kf-sketch-svg path.ink{stroke:var(--ink);stroke-width:2.6;transition:stroke-dashoffset .9s ease;}
+  .kf-sketch-svg path.ghost{stroke:var(--line);stroke-width:2;}
+  .kf-sketch-cap{font-size:.86rem;color:var(--dim);margin:0 0 .4rem;text-align:center;line-height:1.5;}
+  .kf-sketch-cap b{color:var(--ink);}
+  .kf-sketch-done{color:var(--good);font-weight:700;}
+  .kf-gallery-label{margin:1.5rem 0 .6rem;}
+  .kf-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:.5rem;}
+  .kf-gframe{aspect-ratio:1;background:var(--panel);border:1px solid var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;padding:.45rem;}
+  .kf-gframe.empty{border-style:dashed;}
+  .kf-gframe svg{width:100%;height:100%;}
+  .kf-gframe svg path{fill:none;stroke:var(--dim);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;}
+  .kf-gframe.empty span{font-size:1.1rem;color:var(--line);}
   @media (prefers-reduced-motion:reduce){
-    .kf-orb,.kf-star,.kf-plant,.kf-drift,.kf-flit,.kf-hover,.kf-firefly,.kf-breath{animation:none!important;}
+    .kf-breath{animation:none!important;}
+    .kf-sketch-svg path.ink{transition:none!important;}
   }
 </style>
 </head>
@@ -344,75 +325,36 @@ const weakness=st=>{const acc=st.attempts?st.errors/st.attempts:0;const slow=Mat
 const pick=stats=>{const w=SYMBOLS.map(s=>weakness(stats[s.ch]));const tot=w.reduce((p,q)=>p+q,0);let r=Math.random()*tot;
   for(let i=0;i<SYMBOLS.length;i++){r-=w[i];if(r<=0)return SYMBOLS[i];}return SYMBOLS[SYMBOLS.length-1];};
 
-/* ── Garden: a biodiversity ladder, unlocked in real ecological order ──
-   Each tier brings new wildlife and teaches one vetted, true fact.
-   `cost` is cumulative "growth" (clean lines / clean streaks / mastered weak keys) needed to plant it.
-   Calm rules: nothing wilts, no timers, no scores — growth only accrues. */
-const LADDER=[
-  { id:"wildflowers", icon:"🌼", name:"Native wildflowers", wild:"Bees & butterflies arrive", cost:5,
-    fact:"Plant in clusters of a few square feet — pollinators find and forage them far more easily.", critters:["bee","butterfly"] },
-  { id:"water", icon:"💧", name:"Water (a small basin)", wild:"Dragonflies, frogs & first songbirds drink", cost:14,
-    fact:"Wildlife needs three things: food, water, and cover. This is the water.", critters:["dragonfly","frog","bird"] },
-  { id:"beehouse", icon:"🏠", name:"Bee house", wild:"Solitary bees nest and stay", cost:26,
-    fact:"Solitary bees can pollinate up to ~20× more than honeybees — and most can't sting.", critters:["bee"] },
-  { id:"bughotel", icon:"🍂", name:"Bug hotel + leaf pile", wild:"Ladybugs & lacewings move in", cost:42,
-    fact:"Fallen leaves shelter insects through winter — and those become food for ground-feeding birds.", critters:["ladybug"] },
-  { id:"berries", icon:"🫐", name:"Berry shrubs", wild:"More songbirds, including migrators", cost:62,
-    fact:"Native berries pack more fat and energy than invasive fruit, and birds prefer them.", critters:["bird"] },
-  { id:"oak", icon:"🌳", name:"Native oak + nest box", wild:"Nesting insect-eating birds (chickadees)", cost:86,
-    fact:"One oak can host hundreds of caterpillar species — the exact food nesting birds feed their young.", critters:["bird"] },
-  { id:"bathouse", icon:"🦇", name:"Bat house (unlocks night)", wild:"At dusk: bats & fireflies", cost:114,
-    fact:"A single insect-eating bat can eat about 1,000 mosquito-sized insects in one night.", critters:["bat","firefly"] },
-  { id:"certified", icon:"🏅", name:"Certified habitat", wild:"Hummingbirds & diverse butterflies", cost:150,
-    fact:"Skip pesticides — they kill the very insects and birds you're trying to attract.", critters:["hummingbird","butterfly"] },
+/* ── Sketch: clean typing draws a single continuous line, stroke by stroke.
+   Calm, no scores/timers — completing one drawing simply starts the next.
+   Each drawing is one connected path; `pathLength="100"` normalizes it so we
+   reveal a fraction with stroke-dashoffset regardless of the path's real length. */
+const STROKES_PER=20; // clean lines / clean streaks to complete one drawing
+const SKETCHES=[
+  { name:"a leaf",     d:"M60,112 C60,92 59,82 60,72 C40,68 26,50 32,28 C50,34 58,48 60,62 C62,48 70,34 88,28 C94,50 80,68 60,72" },
+  { name:"a wave",     d:"M12,64 C24,46 36,46 48,64 C60,82 72,82 84,64 C96,46 104,50 110,58" },
+  { name:"birds",      d:"M16,68 C30,52 42,52 54,66 C58,58 64,58 68,66 C80,52 92,52 106,68" },
+  { name:"a hillside", d:"M10,94 Q22,94 30,66 Q40,42 50,64 Q60,82 70,60 Q80,38 90,66 Q100,92 110,94" },
+  { name:"a bloom",    d:"M60,60 C50,44 70,44 60,60 C76,50 76,70 60,60 C70,76 50,76 60,60 C44,70 44,50 60,60" },
 ];
-const LADDER_BY_ID=Object.fromEntries(LADDER.map(e=>[e.id,e]));
-const blankGarden=()=>({growth:0,unlocked:[],placements:[],lastVisit:null,dayStreak:0,rewardedKeys:[]});
-const loadGarden=()=>{
-  const g=store.load().garden;if(!g||typeof g!=="object")return blankGarden();
-  return {growth:g.growth|0,
-    unlocked:Array.isArray(g.unlocked)?g.unlocked.filter(id=>LADDER_BY_ID[id]):[],
-    placements:Array.isArray(g.placements)?g.placements:[],
-    lastVisit:typeof g.lastVisit==="string"?g.lastVisit:null,
-    dayStreak:g.dayStreak|0,
-    rewardedKeys:Array.isArray(g.rewardedKeys)?g.rewardedKeys:[]};
+const blankSketch=()=>({strokes:0,completed:0});
+const loadSketch=()=>{
+  const s=store.load().sketch;if(!s||typeof s!=="object")return blankSketch();
+  return {strokes:Math.max(0,s.strokes|0),completed:Math.max(0,s.completed|0)};
 };
-// the next tier that growth has earned but the player hasn't planted yet
-const nextReady=g=>{const planted=new Set(g.unlocked);const next=LADDER.find(e=>!planted.has(e.id));
-  return next&&g.growth>=next.cost?next:null;};
-// a symbol counts as "mastered" once it's been practiced enough and is fast + accurate
-const isMastered=st=>st&&st.attempts>=12&&(st.errors/st.attempts)<=0.06&&median(st.lat)<=420;
 
 /* ── App ── */
 function App(){
   const [mode,setMode]=useState("home");
   const [stats,setStats]=useState(loadStats);
-  const [garden,setGarden]=useState(loadGarden);
-  const [justReturned,setJustReturned]=useState(false);
-  const [dev,setDev]=useState(()=>!!store.load().dev);   // developer/testing tools
-  const [devPhase,setDevPhase]=useState(null);           // null = auto; else forces day/dusk/night
+  const [sketch,setSketch]=useState(loadSketch);
   const [muted,setMuted]=useState(()=>!!store.load().muted);
   const [sens,setSens]=useState(()=>{const s=store.load().sens;return typeof s==="number"?s:0.4;});
   const [showSet,setShowSet]=useState(false);
+  const [guide,setGuide]=useState(()=>!store.load().guideSeen); // open on first visit, collapsible after
   useEffect(()=>{RELAX_SENS=sens;store.save({sens});},[sens]);
   useEffect(()=>{audio.setMuted(muted);store.save({muted});},[muted]);
-  useEffect(()=>{store.save({garden});},[garden]); // garden persists on every change
-  useEffect(()=>{store.save({dev});},[dev]);
-  // the garden waited for you: on a new day, the streak grows — it never resets, nothing wilts
-  useEffect(()=>{
-    const today=new Date().toISOString().slice(0,10);
-    const prev=loadGarden().lastVisit;
-    if(prev&&prev!==today)setJustReturned(true);
-    setGarden(g=>g.lastVisit===today?g:{...g,lastVisit:today,dayStreak:(g.lastVisit?g.dayStreak:0)+1});
-  },[]);
-  // bonus growth when a once-weak key becomes mastered — gamifies the adaptive drill
-  useEffect(()=>{
-    setGarden(g=>{
-      const newly=SYMBOLS.filter(s=>isMastered(stats[s.ch])&&!g.rewardedKeys.includes(s.ch));
-      if(!newly.length)return g;
-      return {...g,growth:g.growth+newly.length*4,rewardedKeys:[...g.rewardedKeys,...newly.map(s=>s.ch)]};
-    });
-  },[stats]);
+  useEffect(()=>{store.save({sketch});},[sketch]); // sketch progress persists on every change
   const saveTimer=useRef(0);
   const record=useCallback((ch,ok,lat)=>{
     if(!SYMBOL_SET.has(ch))return;
@@ -424,19 +366,15 @@ function App(){
       return next;
     });
   },[]);
-  // clean lines / clean streaks (the existing celebration moments) accrue garden growth
-  const addGrowth=useCallback(n=>{if(n)setGarden(g=>({...g,growth:g.growth+n}));},[]);
-  const plantNext=useCallback(()=>setGarden(g=>{
-    const ready=nextReady(g);if(!ready)return g;
-    const i=g.unlocked.length;
-    return {...g,unlocked:[...g.unlocked,ready.id],placements:[...g.placements,{id:ready.id,x:12+i*11}]};
-  }),[]);
-  // dev/testing tools: see every tier, creature, and sky at will
-  const unlockAllGarden=useCallback(()=>setGarden(g=>({...g,growth:LADDER[LADDER.length-1].cost,unlocked:LADDER.map(e=>e.id),placements:LADDER.map((e,i)=>({id:e.id,x:12+i*11}))})),[]);
-  const resetGarden=useCallback(()=>{setDevPhase(null);setGarden(blankGarden());},[]);
-  const cyclePhase=useCallback(()=>setDevPhase(p=>p==="day"?"dusk":p==="dusk"?"night":p==="night"?null:"day"),[]);
+  // clean lines / clean streaks (the existing celebration moments) add a stroke to the drawing;
+  // a finished drawing simply rolls over to the next — no scores, nothing to lose
+  const addStroke=useCallback(n=>{if(n)setSketch(s=>{
+    const t=s.strokes+n;
+    return t>=STROKES_PER?{strokes:0,completed:s.completed+1}:{...s,strokes:t};
+  });},[]);
+  const toggleGuide=useCallback(()=>setGuide(g=>{const nx=!g;if(!nx)store.save({guideSeen:true});return nx;}),[]);
   const toggleMute=()=>setMuted(m=>!m);
-  const resetAll=()=>{store.clear();setStats(blankStats());setGarden(blankGarden());setSens(0.4);setMuted(false);setShowSet(false);};
+  const resetAll=()=>{store.clear();setStats(blankStats());setSketch(blankSketch());setSens(0.4);setMuted(false);setShowSet(false);};
   const sensLabel=sens<0.25?"Rarely":sens<0.55?"Calm":sens<0.8?"Attentive":"Eager";
   const total=useMemo(()=>Object.values(stats).reduce((s,x)=>s+x.attempts,0),[stats]);
   return (
@@ -449,10 +387,12 @@ function App(){
         <button className={mode==="drill"?"on":""} onClick={()=>setMode("drill")}>Drill keys</button>
         <button className={mode==="snippet"?"on":""} onClick={()=>setMode("snippet")}>Type snippets</button>
         <button className={mode==="home"?"on":""} onClick={()=>setMode("home")}>Progress</button>
-        <button className={mode==="garden"?"on":""} onClick={()=>setMode("garden")}>Garden</button>
+        <button className={mode==="sketch"?"on":""} onClick={()=>setMode("sketch")}>Sketch</button>
+        <button className={"kf-mute"+(guide?" on":"")} onClick={toggleGuide} title="how it works">?</button>
         <button className={"kf-mute"+(muted?" off":"")} onClick={toggleMute} title={muted?"sound off":"sound on"}>♪</button>
         <button className="kf-mute" onClick={()=>setShowSet(s=>!s)} title="settings">⚙</button>
       </nav>
+      {guide&&<Guide onClose={toggleGuide}/>}
       {showSet&&(
         <div className="kf-settings kf-fade">
           <label>Relax prompts: <strong>{sensLabel}</strong></label>
@@ -460,15 +400,13 @@ function App(){
           <div className="kf-slabels"><span>rarely</span><span>eager</span></div>
           <p className="kf-dim">Triggered by mistakes or long hesitation pauses — never by typing fast. Lower = leaves you alone more.</p>
           <button className="kf-reset" onClick={resetAll}>Reset progress &amp; settings</button>
-          <label className="kf-devtoggle"><input type="checkbox" checked={dev} onChange={e=>setDev(e.target.checked)}/> Developer mode — testing tools in the Garden</label>
         </div>
       )}
       <main className="kf-main">
         {mode==="home"&&<Home stats={stats} attempts={total}/>}
-        {mode==="drill"&&<Drill stats={stats} record={record} addGrowth={addGrowth}/>}
-        {mode==="snippet"&&<Snippet record={record} addGrowth={addGrowth}/>}
-        {mode==="garden"&&<Garden garden={garden} plantNext={plantNext} justReturned={justReturned}
-          dev={dev} devPhase={devPhase} unlockAllGarden={unlockAllGarden} resetGarden={resetGarden} cyclePhase={cyclePhase}/>}
+        {mode==="drill"&&<Drill stats={stats} record={record} addStroke={addStroke}/>}
+        {mode==="snippet"&&<Snippet record={record} addStroke={addStroke}/>}
+        {mode==="sketch"&&<Sketch sketch={sketch}/>}
       </main>
     </div>
   );
@@ -510,7 +448,7 @@ function Heatmap({stats}){
   );
 }
 
-function Drill({stats,record,addGrowth}){
+function Drill({stats,record,addStroke}){
   const statsRef=useRef(stats);statsRef.current=stats;
   const warm=useRef(0); // index into SYMBOLS during the one-pass warmup
   const [target,setTarget]=useState(()=>SYMBOLS[0]); // begin on the easiest key
@@ -540,7 +478,7 @@ function Drill({stats,record,addGrowth}){
         setHint(null);
         const finishedWarmup=warm.current===SYMBOLS.length-1; // last warmup key just cleared
         streak.current+=1;
-        if(finishedWarmup||streak.current%12===0){audio.milestone();setCelLvl(finishedWarmup?2:Math.min(Math.floor(streak.current/12),4));setCel(c=>c+1);addGrowth(1);}
+        if(finishedWarmup||streak.current%12===0){audio.milestone();setCelLvl(finishedWarmup?2:Math.min(Math.floor(streak.current/12),4));setCel(c=>c+1);addStroke(1);}
       }
       else{setHint(diagnose(target.ch,e.key));streak.current=0;}
       setFlash(ok?"ok":"miss");setTimeout(()=>setFlash(null),180);
@@ -548,7 +486,7 @@ function Drill({stats,record,addGrowth}){
     };
     window.addEventListener("keydown",onKey);
     return ()=>window.removeEventListener("keydown",onKey);
-  },[target,record,next,relax,addGrowth]);
+  },[target,record,next,relax,addStroke]);
   return (
     <section className="kf-card kf-fade kf-center">
       {relax.show&&<RelaxOverlay onClose={relax.dismiss}/>}
@@ -562,7 +500,7 @@ function Drill({stats,record,addGrowth}){
   );
 }
 
-function Snippet({record,addGrowth}){
+function Snippet({record,addStroke}){
   const [track,setTrack]=useState("Mixed");
   const pool=useMemo(()=>track==="Mixed"?SNIPPETS:SNIPPETS.filter(s=>s.track===track),[track]);
   const [snip,setSnip]=useState(()=>pool[0]);
@@ -601,12 +539,12 @@ function Snippet({record,addGrowth}){
         }
         if(skipped.length)setAuto(prev=>{const s=new Set(prev);skipped.forEach(i=>s.add(i));return s;});
         setPos(np); // always advance, even off the end, so the line closes cleanly
-        if(np>=snip.text.length){if(errs.current===0){audio.milestone();setCelLvl(snip.text.length>=24?3:snip.text.length>=16?2:1);setCel(c=>c+1);addGrowth(1);}setTimeout(()=>loadNext(),380);}
+        if(np>=snip.text.length){if(errs.current===0){audio.milestone();setCelLvl(snip.text.length>=24?3:snip.text.length>=16?2:1);setCel(c=>c+1);addStroke(1);}setTimeout(()=>loadNext(),380);}
       }else{errs.current+=1;setWrong(true);setHint(diagnose(want,e.key));setTimeout(()=>setWrong(false),200);}
     };
     window.addEventListener("keydown",onKey);
     return ()=>window.removeEventListener("keydown",onKey);
-  },[snip,pos,record,loadNext,relax,addGrowth]);
+  },[snip,pos,record,loadNext,relax,addStroke]);
   return (
     <section className="kf-card kf-fade">
       {relax.show&&<RelaxOverlay onClose={relax.dismiss}/>}
@@ -670,7 +608,7 @@ function Celebrate({trigger,level=1}){
   return (
     <div className="kf-celebrate" key={trigger}>
       <div className={"kf-check"+(hi?" hi":"")} style={{width:(48+L*8)+"px",height:(48+L*8)+"px",fontSize:(1.6+L*0.15)+"rem"}}>✓</div>
-      {parts.map((d,i)=><span key={i} className="kf-particle" style={{"--tx":d[0]+"px","--ty":d[1]+"px",background:d[2]?"var(--amber)":"var(--sage)",width:(7+L)+"px",height:(7+L)+"px"}}/>)}
+      {parts.map((d,i)=><span key={i} className="kf-particle" style={{"--tx":d[0]+"px","--ty":d[1]+"px",background:d[2]?"var(--accent)":"var(--good)",width:(7+L)+"px",height:(7+L)+"px"}}/>)}
       <span className={"kf-praise"+(hi?" hi":"")}>{word}{hi?` ×${level}`:""}</span>
     </div>
   );
@@ -681,107 +619,81 @@ function RelaxOverlay({onClose}){
   return (
     <div className="kf-relax" onClick={onClose}>
       <div className="kf-breath"/>
-      <p>The garden rests with you.</p>
-      <p className="kf-dim">Birds settle, the light dims. Drop your shoulders, let your wrists float — one slow breath.</p>
+      <p>Rest a moment.</p>
+      <p className="kf-dim">Let the lines settle. Drop your shoulders, let your wrists float — one slow breath, then carry on.</p>
     </div>
   );
 }
 
-/* ── Garden scene: ambient SVG wildlife over a breathing sky ── */
-const CRITTER_CFG={
-  bee:{top:24,anim:"flit"},butterfly:{top:32,anim:"flit"},dragonfly:{top:42,anim:"drift"},
-  frog:{top:74,anim:"hover"},bird:{top:18,anim:"drift"},ladybug:{top:82,anim:"hover"},
-  bat:{top:22,anim:"flit"},firefly:{top:52,anim:"firefly"},hummingbird:{top:34,anim:"flit"},
-};
-function critterArt(type){
-  const s=type==="firefly"?9:type==="ladybug"?15:type==="bat"?24:22;
-  switch(type){
-    case "bee": return <svg width={s} height={s} viewBox="0 0 24 24"><ellipse cx="13" cy="14" rx="6" ry="4.4" fill="#f3c33b" stroke="#3a2a10" strokeWidth=".8"/><path d="M11 10.2v7.6M14 10.6v6.6" stroke="#3a2a10" strokeWidth="1.4"/><ellipse cx="9" cy="10" rx="4" ry="2.6" fill="#dcecff" opacity=".85" transform="rotate(-25 9 10)"/></svg>;
-    case "butterfly": return <svg width={s} height={s} viewBox="0 0 24 24"><path d="M12 12C7 6 2 7 3 12s5 6 9 0" fill="#e08bb5" opacity=".9"/><path d="M12 12c5-6 10-5 9 0s-5 6-9 0" fill="#7aa6e8" opacity=".9"/><line x1="12" y1="7" x2="12" y2="17" stroke="#3a2a10" strokeWidth="1.2"/></svg>;
-    case "dragonfly": return <svg width={s} height={s} viewBox="0 0 24 24"><line x1="12" y1="4" x2="12" y2="20" stroke="#3b7d6e" strokeWidth="2"/><ellipse cx="7" cy="9" rx="5" ry="1.6" fill="#bfe6f5" opacity=".9"/><ellipse cx="17" cy="9" rx="5" ry="1.6" fill="#bfe6f5" opacity=".9"/><circle cx="12" cy="5" r="2.2" fill="#3b7d6e"/></svg>;
-    case "frog": return <svg width={s} height={s} viewBox="0 0 24 24"><ellipse cx="12" cy="15" rx="8" ry="6" fill="#5aa84b"/><circle cx="8" cy="8" r="3" fill="#5aa84b"/><circle cx="16" cy="8" r="3" fill="#5aa84b"/><circle cx="8" cy="8" r="1.3" fill="#1f2328"/><circle cx="16" cy="8" r="1.3" fill="#1f2328"/></svg>;
-    case "bird": return <svg width={s} height={s} viewBox="0 0 24 24"><path d="M3 13c4-1 6-4 9-4s5 2 9 1c-2 3-5 5-9 5s-7-1-9-2z" fill="#7a93b8"/><circle cx="18" cy="9.5" r="1.1" fill="#1f2328"/><path d="M21 9l3-1-3 2z" fill="#e0a45b"/></svg>;
-    case "ladybug": return <svg width={s} height={s} viewBox="0 0 24 24"><circle cx="12" cy="13" r="7" fill="#d23b32"/><path d="M12 6v14" stroke="#1f2328" strokeWidth="1.2"/><circle cx="9" cy="11" r="1.2" fill="#1f2328"/><circle cx="15" cy="11" r="1.2" fill="#1f2328"/><circle cx="12" cy="5" r="2.2" fill="#1f2328"/></svg>;
-    case "bat": return <svg width={s} height={s} viewBox="0 0 24 24"><path d="M12 9c-2-4-5-4-7-2 1 0 1 2 0 3 2-1 4 0 4 2 1-2 1-2 3-3 2 1 2 1 3 3 0-2 2-3 4-2-1-1-1-3 0-3-2-2-5-2-7 2z" fill="#2c2a3a"/></svg>;
-    case "firefly": return <svg width={s} height={s} viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="#f6f08a" opacity=".5"/><circle cx="6" cy="6" r="2.4" fill="#fff7b0"/></svg>;
-    case "hummingbird": return <svg width={s} height={s} viewBox="0 0 24 24"><ellipse cx="11" cy="12" rx="4.2" ry="3" fill="#3aa6a0"/><path d="M11 12L2 9l9 1z" fill="#3a2a10"/><path d="M13 11c4-2 7-1 8 1-3 1-5 2-8 1z" fill="#6fd0c8" opacity=".9"/><circle cx="8.5" cy="11" r=".9" fill="#1f2328"/></svg>;
-    default: return null;
-  }
-}
-function Critter({type,i}){
-  const cfg=CRITTER_CFG[type]||{top:30,anim:"drift"};
-  const stationary=cfg.anim==="hover"||cfg.anim==="firefly";
-  const dur=[23,29,20,26][i%4];
+/* ── How it works: a collapsible guide (progressive disclosure — open first visit) ── */
+function Guide({onClose}){
   return (
-    <span className={"kf-critter kf-"+cfg.anim}
-      style={{top:cfg.top+"%",left:stationary?(15+(i*23)%60)+"%":"-30px",animationDuration:dur+"s",animationDelay:-((i*7)%30)+"s"}}>
-      {critterArt(type)}
-    </span>
-  );
-}
-function Garden({garden,plantNext,justReturned,dev,devPhase,unlockAllGarden,resetGarden,cyclePhase}){
-  const unlocked=garden.unlocked;
-  const planted=new Set(unlocked);
-  const ready=nextReady(garden);
-  const nightUnlocked=planted.has("bathouse")||planted.has("certified");
-  const phase=devPhase||(planted.has("certified")?"night":nightUnlocked?"dusk":"day");
-  const skyClass="kf-sky"+(phase==="night"?" night":phase==="dusk"?" dusk":"");
-  const NIGHT_ONLY=new Set(["bat","firefly"]);
-  const critters=[];
-  unlocked.forEach(id=>LADDER_BY_ID[id].critters.forEach(c=>{if(!critters.includes(c))critters.push(c);}));
-  const shown=critters.filter(c=>!NIGHT_ONLY.has(c)||nightUnlocked).slice(0,dev?12:7);
-  const stars=useMemo(()=>Array.from({length:16},(_,i)=>({left:(i*61)%100,top:(i*37)%70,delay:-(i%5)})),[]);
-  // gentle, non-numeric progress sprig toward the next planting (never a score)
-  const nextTier=LADDER.find(e=>!planted.has(e.id));
-  const prevCost=nextTier?(LADDER[LADDER.indexOf(nextTier)-1]?LADDER[LADDER.indexOf(nextTier)-1].cost:0):150;
-  const frac=nextTier?Math.max(0,Math.min(1,(garden.growth-prevCost)/Math.max(1,nextTier.cost-prevCost))):1;
-  return (
-    <section className="kf-card kf-garden kf-fade">
-      <div className={skyClass}>
-        <div className={"kf-orb "+(phase==="day"?"sun":"moon")}/>
-        {phase==="night"&&stars.map((s,i)=><span key={i} className="kf-star" style={{left:s.left+"%",top:s.top+"%",animationDelay:s.delay+"s"}}/>)}
-        <div className="kf-ground"/>
-        {unlocked.map((id,i)=>{const e=LADDER_BY_ID[id];const p=garden.placements.find(q=>q.id===id);const x=p?p.x:12+i*11;
-          return <span key={id} className="kf-plant" style={{left:x+"%",fontSize:id==="oak"?"2.5rem":id==="certified"?"2rem":"1.7rem",animationDelay:-(i*0.7)+"s"}}>{e.icon}</span>;})}
-        {shown.map((c,i)=><Critter key={c+i} type={c} i={i}/>)}
+    <div className="kf-guide">
+      <div className="kf-guide-head">
+        <h3>How Keygarden works</h3>
+        <button className="kf-guide-close" onClick={onClose}>Got it ✕</button>
       </div>
-      <div className="kf-garden-body">
-        {dev&&(
-          <div className="kf-dev">
-            <b>Dev</b>
-            <button onClick={unlockAllGarden}>Unlock everything</button>
-            <button onClick={plantNext}>Plant next</button>
-            <button onClick={cyclePhase}>Sky: {devPhase||"auto"}</button>
-            <button onClick={resetGarden}>Reset garden</button>
-          </div>
-        )}
-        <p className="kf-eyebrow">Your garden</p>
-        {justReturned&&<div className="kf-welcome-back">🌿 Welcome back — the garden waited for you{garden.dayStreak>1?` · day ${garden.dayStreak}`:""}. Nothing wilts here.</div>}
-        {ready?(
-          <div className="kf-ready">
-            <p>Your garden is ready for <b>{ready.name.toLowerCase()}</b>. {ready.wild}.</p>
-            <button className="kf-plant-btn" onClick={plantNext}>Plant it 🌱</button>
-          </div>
-        ):unlocked.length<LADDER.length?(
-          <p className="kf-soil"><span>Keep practicing — the soil is getting richer.</span><span className="kf-sprout"><i style={{width:Math.round(frac*100)+"%"}}/></span></p>
-        ):(
-          <p className="kf-soil">A full, certified habitat. Every clean line keeps it humming. 🐝</p>
-        )}
-        {unlocked.length===0&&<p className="kf-dim">Type a clean line, or finish a clean streak in the drill, and your first wildflowers will be ready to plant. Practicing grows the garden — there's nothing to lose and nothing to catch.</p>}
-        <div className="kf-ladder">
-          {LADDER.map(e=>{const on=planted.has(e.id);
-            return (
-              <div key={e.id} className={"kf-eco"+(on?"":" locked")}>
-                <span className="kf-eco-icon">{on?e.icon:"🌱"}</span>
-                <div>
-                  <p className="kf-eco-name">{e.name}</p>
-                  <p className="kf-eco-wild">{e.wild}</p>
-                  <p className="kf-eco-fact">{on?e.fact:<span className="kf-locktag">Grows next as biodiversity builds.</span>}</p>
-                </div>
-              </div>
-            );})}
+      <p className="kf-guide-lead">A calm way to drill the symbols that slow you down — no timer, no score, nothing to fail. A few quiet minutes most days beats one long grind.</p>
+      <div className="kf-guide-grid">
+        <div className="kf-g-item">
+          <h4>Drill, then snippets</h4>
+          <p><b>Drill keys</b> warms up one symbol at a time, easiest first, and quietly resurfaces the ones you fumble. <b>Type snippets</b> drills real lines of code — closers auto-fill, so you only type the openers. <b>Progress</b> is a heatmap of every key.</p>
+        </div>
+        <div className="kf-g-item">
+          <h4>Why it sometimes pauses you</h4>
+          <p>If it notices a run of misses or a long hesitation — <b>never</b> just from typing fast — it gently suggests a breath. Tension is the thing you're unlearning, so the prompt is a cue to drop your shoulders and reset, not a penalty.</p>
+        </div>
+        <div className="kf-g-item">
+          <h4>Set the rhythm — or switch it off</h4>
+          <p>Open <code>⚙</code> and slide <b>Relax prompts</b> from <b>Rarely</b> (slide it all the way down to be left alone) through <b>Calm</b> to <b>Eager</b> (it checks in more often). Prefer silence? Mute all sound anytime with <code>♪</code>.</p>
+        </div>
+        <div className="kf-g-item">
+          <h4>Your typing draws something</h4>
+          <p>Every clean line — and every clean streak in the drill — adds a stroke to a line drawing on the <b>Sketch</b> tab. Finish one and a fresh page begins. No goal but the quiet satisfaction of watching your effort become something.</p>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ── Sketch: one continuous line, revealed a fraction at a time as you type ──
+   pathLength="100" normalizes the path so stroke-dashoffset reveals `frac` of it. */
+function SketchLine({d,frac}){
+  return (
+    <svg className="kf-sketch-svg" viewBox="0 0 120 120" aria-hidden="true">
+      <path className="ghost" d={d} pathLength="100"/>
+      <path className="ink" d={d} pathLength="100" style={{strokeDasharray:100,strokeDashoffset:100*(1-Math.max(0,Math.min(1,frac)))}}/>
+    </svg>
+  );
+}
+function Sketch({sketch}){
+  const cur=SKETCHES[sketch.completed%SKETCHES.length];
+  const frac=Math.max(0,Math.min(1,sketch.strokes/STROKES_PER));
+  const near=frac>=0.8;
+  const done=sketch.completed;
+  // a small gallery of the drawings you've finished, newest first, fully drawn
+  const gallery=[];
+  for(let k=done-1;k>=0&&gallery.length<12;k--) gallery.push(SKETCHES[k%SKETCHES.length]);
+  return (
+    <section className="kf-card kf-fade">
+      <p className="kf-eyebrow">Your sketch</p>
+      <div className="kf-sketch-stage"><SketchLine d={cur.d} frac={frac}/></div>
+      <p className="kf-sketch-cap">
+        {near
+          ? <>Almost there — a few more clean lines complete <b>{cur.name}</b>.</>
+          : <>This drawing fills in as you type. Each clean line — and each clean streak in the drill — adds a stroke to <b>{cur.name}</b>.</>}
+      </p>
+      <p className="kf-dim" style={{textAlign:"center",margin:0}}>
+        {done>0 ? `You've finished ${done} ${done===1?"drawing":"drawings"} so far — no timer, no score.` : "No timer, no score — just type clean lines and watch it come to life."}
+      </p>
+      {done>0&&(
+        <>
+          <p className="kf-eyebrow kf-gallery-label">Finished</p>
+          <div className="kf-gallery">
+            {gallery.map((g,i)=><div key={i} className="kf-gframe"><svg viewBox="0 0 120 120" aria-hidden="true"><path d={g.d}/></svg></div>)}
+          </div>
+        </>
+      )}
     </section>
   );
 }
