@@ -59,7 +59,15 @@
   @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
   .kf-dim{color:var(--dim);font-size:.85rem;}
   .kf-dim code,.kf-focus code{font-family:var(--mono);color:var(--accent-d);background:var(--accent-bg);border:1px solid var(--accent-bd);padding:.05rem .35rem;border-radius:5px;}
-  .kf-bigkey{font-family:var(--mono);position:relative;font-size:6rem;font-weight:700;line-height:1;margin:1.4rem 0 .6rem;color:var(--ink);transition:.12s;display:inline-block;}
+  .kf-lead{font-size:1.05rem;line-height:1.45;color:var(--accent-d);font-weight:600;margin:.2rem auto .9rem;max-width:420px;}
+  .kf-place{margin:0 auto 1rem;max-width:480px;}
+  .kf-place-where{font-size:1.4rem;line-height:1.3;font-weight:700;color:var(--ink);margin:0;}
+  .kf-place-finger{font-size:1rem;font-weight:600;color:var(--accent-d);margin:.35rem 0 0;letter-spacing:.3px;}
+  .kf-focusbar{font-size:.92rem;color:var(--ink);background:var(--warm-bg);border:1px solid var(--warm-bd);border-radius:9px;padding:.5rem .8rem;margin:0 auto 1rem;display:inline-block;}
+  .kf-focusbar code{font-family:var(--mono);color:var(--warm);background:#fff;border:1px solid var(--warm-bd);padding:.02rem .35rem;border-radius:5px;margin:0 .1rem;font-size:.95em;}
+  .kf-linkbtn{font-family:inherit;font-size:.8rem;font-weight:600;color:var(--accent-d);background:none;border:0;border-bottom:1px solid var(--accent-bd);cursor:pointer;padding:0 0 1px;margin-left:.5rem;}
+  .kf-linkbtn:hover{color:var(--accent);}
+  .kf-bigkey{font-family:var(--mono);position:relative;font-size:5.4rem;font-weight:700;line-height:1;margin:.2rem 0 .5rem;color:var(--ink);transition:.12s;display:inline-block;}
   .kf-bigkey.ok{color:var(--good);transform:scale(.92);}
   .kf-bigkey.ok::after{content:"";position:absolute;left:50%;top:50%;width:1.2em;height:1.2em;border:2px solid var(--good);border-radius:50%;transform:translate(-50%,-50%);animation:ring .45s ease-out forwards;}
   @keyframes ring{0%{opacity:.6;transform:translate(-50%,-50%) scale(.6);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.8);}}
@@ -89,8 +97,8 @@
   .kf-empty p{margin:.5rem 0;}
   .kf-empty p:first-child{font-weight:700;font-size:1.25rem;color:var(--ink);}
   .kf-relax{position:fixed;inset:0;background:linear-gradient(180deg,#1b2a44 0%,#243a5e 55%,#33506f 100%);color:#eaf0fb;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;cursor:pointer;text-align:center;padding:2rem;animation:fade .5s ease;}
-  .kf-relax p{font-weight:700;font-size:1.5rem;margin:.4rem 0 0;}
-  .kf-relax .kf-dim{color:#c2d2ec;font-size:.9rem;max-width:340px;}
+  .kf-relax p{font-weight:700;font-size:2rem;margin:.5rem 0 0;}
+  .kf-relax .kf-dim{color:#cdddf5;font-size:1.15rem;line-height:1.5;max-width:420px;margin-top:.6rem;}
   .kf-relax .kf-skip{position:absolute;bottom:1.4rem;font-size:.72rem;color:#8fa3c4;letter-spacing:.04em;}
   .kf-bcount{font-size:.74rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#9fb6da;margin:0 0 1.1rem;}
   .kf-borb{width:130px;height:130px;border-radius:50%;border:2px solid #cfe0ff;background:radial-gradient(circle at 50% 42%,rgba(207,224,255,.4),rgba(207,224,255,.05));box-shadow:0 0 60px rgba(188,208,240,.45);margin-bottom:1.6rem;transform:scale(.55);transition:transform 4s ease-in-out;}
@@ -147,6 +155,18 @@
   .kf-frame{aspect-ratio:1;background:#f1f0ec;border:1px solid var(--line);border-radius:10px;padding:.4rem;overflow:hidden;}
   .kf-frame.empty{border-style:dashed;display:flex;align-items:center;justify-content:center;color:var(--line);font-size:1.2rem;}
 
+  /* status report: most-missed keys + "drill just these" */
+  .kf-report{background:var(--sheet-head);border:1px solid var(--line);border-radius:12px;padding:.9rem 1rem 1rem;margin:0 0 1.2rem;}
+  .kf-missed{display:flex;flex-direction:column;gap:.45rem;margin:.2rem 0 .9rem;}
+  .kf-missed-row{display:flex;align-items:center;gap:.7rem;}
+  .kf-missed-ch{font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:6px;width:1.9rem;text-align:center;padding:.1rem 0;flex:0 0 auto;}
+  .kf-missed-bar{flex:1 1 auto;height:9px;border-radius:999px;background:#fff;border:1px solid var(--line);overflow:hidden;}
+  .kf-missed-bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#e0a45b,var(--bad));transition:width .8s ease;}
+  .kf-missed-pct{flex:0 0 auto;width:2.6rem;text-align:right;font-size:.82rem;font-weight:700;color:var(--bad);}
+  .kf-drillthese{font-family:inherit;font-size:.85rem;font-weight:700;color:#fff;background:var(--accent);border:0;border-radius:9px;padding:.55rem 1rem;cursor:pointer;box-shadow:0 2px 8px rgba(47,109,240,.3);transition:.15s;}
+  .kf-drillthese:hover{background:var(--accent-d);}
+  .kf-drillthese code{font-family:var(--mono);background:rgba(255,255,255,.22);border-radius:4px;padding:.02rem .28rem;margin:0 .08rem;font-size:.92em;}
+
   /* art-style picker (in settings) + the save/delete moment when a sketch finishes */
   .kf-artpick{margin-top:1rem;padding-top:.9rem;border-top:1px dashed var(--line);}
   .kf-artpick-label{display:block;font-size:.72rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--dim);margin-bottom:.45rem;}
@@ -178,22 +198,22 @@ const { useState, useEffect, useRef, useCallback, useMemo } = React;
 
 /* ── Data ── */
 const SYMBOLS = [
-  { ch: "=", name: "equals", finger: "right pinky" },
-  { ch: ";", name: "semicolon", finger: "right pinky" },
-  { ch: "[", name: "left bracket", finger: "right pinky" },
-  { ch: ":", name: "colon", finger: "right pinky + Shift" },
-  { ch: "_", name: "underscore", finger: "right pinky + Shift" },
-  { ch: '"', name: "double quote", finger: "right pinky + Shift" },
-  { ch: "(", name: "left paren", finger: "right ring + Shift" },
-  { ch: "{", name: "left brace", finger: "right pinky + Shift" },
-  { ch: "*", name: "asterisk", finger: "right middle + Shift" },
-  { ch: "<", name: "less than", finger: "right middle + Shift" },
-  { ch: ">", name: "greater than", finger: "right ring + Shift" },
-  { ch: "#", name: "hash", finger: "left middle + Shift" },
-  { ch: "%", name: "percent", finger: "left index + Shift" },
-  { ch: "&", name: "ampersand", finger: "right index + Shift" },
-  { ch: "@", name: "at", finger: "left ring + Shift" },
-  { ch: "|", name: "pipe", finger: "right pinky + Shift" },
+  { ch: "=", name: "equals",       finger: "right pinky",          where: "Top row, far right — just left of Backspace" },
+  { ch: ";", name: "semicolon",    finger: "right pinky",          where: "Home row, just right of L" },
+  { ch: "[", name: "left bracket", finger: "right pinky",          where: "Top-letter row, two keys right of P" },
+  { ch: ":", name: "colon",        finger: "right pinky + Shift",  where: "Home row, right of L — with Shift" },
+  { ch: "_", name: "underscore",   finger: "right pinky + Shift",  where: "Top number row, right of the 0 — with Shift" },
+  { ch: '"', name: "double quote", finger: "right pinky + Shift",  where: "Home row, right of the ; key — with Shift" },
+  { ch: "(", name: "left paren",   finger: "right ring + Shift",   where: "Top number row, above the 9 — with Shift" },
+  { ch: "{", name: "left brace",   finger: "right pinky + Shift",  where: "Right of P — with Shift" },
+  { ch: "*", name: "asterisk",     finger: "right middle + Shift", where: "Top number row, above the 8 — with Shift" },
+  { ch: "<", name: "less than",    finger: "right middle + Shift", where: "Bottom row, just right of M — with Shift" },
+  { ch: ">", name: "greater than", finger: "right ring + Shift",   where: "Bottom row, two right of M — with Shift" },
+  { ch: "#", name: "hash",         finger: "left middle + Shift",  where: "Top number row, above the 3 — with Shift" },
+  { ch: "%", name: "percent",      finger: "left index + Shift",   where: "Top number row, above the 5 — with Shift" },
+  { ch: "&", name: "ampersand",    finger: "right index + Shift",  where: "Top number row, above the 7 — with Shift" },
+  { ch: "@", name: "at",           finger: "left ring + Shift",    where: "Top number row, above the 2 — with Shift" },
+  { ch: "|", name: "pipe",         finger: "right pinky + Shift",  where: "Top right, above Enter (right of ]) — with Shift" },
 ];
 const SYMBOL_SET = new Set(SYMBOLS.map((s) => s.ch));
 const PAIRS = { "(": ")", "[": "]", "{": "}", '"': '"', "'": "'" }; // editor-style auto-close
@@ -422,6 +442,7 @@ function App(){
   const [welcome,setWelcome]=useState(()=>!store.load().welcomeSeen); // shown first visit, reopen via ?
   const [streak,setStreak]=useState(loadStreak);
   const [pack,setPack]=useState(()=>{const p=store.load().pack;return PACK_BY_ID[p]?p:DEFAULT_PACK;});
+  const [focusKeys,setFocusKeys]=useState(null); // when set, Drill practices only these (the most-missed) keys
   useEffect(()=>{RELAX_SENS=sens;store.save({sens});},[sens]);
   useEffect(()=>{RELAX_ON=relaxOn;store.save({relaxOn});},[relaxOn]);
   useEffect(()=>{audio.setMuted(muted);store.save({muted});},[muted]);
@@ -459,6 +480,8 @@ function App(){
   });},[]);
   const saveSketch=useCallback(()=>setSketch(s=>s.pending==null?s:({current:randomSketch(s.current),strokes:0,finished:[...s.finished,s.pending].slice(-24),pending:null})),[]);
   const discardSketch=useCallback(()=>setSketch(s=>s.pending==null?s:({current:randomSketch(s.current),strokes:0,finished:s.finished,pending:null})),[]);
+  const startFocus=useCallback(keys=>{setFocusKeys(keys&&keys.length?keys:null);setMode("drill");},[]);
+  const clearFocus=useCallback(()=>setFocusKeys(null),[]);
   const toggleWelcome=useCallback(()=>setWelcome(w=>{const nx=!w;if(!nx)store.save({welcomeSeen:true});return nx;}),[]);
   const startApp=useCallback(()=>{store.save({welcomeSeen:true});setWelcome(false);setMode("drill");},[]);
   const toggleMute=()=>setMuted(m=>!m);
@@ -500,8 +523,8 @@ function App(){
         </div>
       )}
       <main className="kf-main">
-        {mode==="home"&&<Home stats={stats} attempts={total} sketch={sketch} streak={streak} pack={PACK_BY_ID[pack]}/>}
-        {mode==="drill"&&<Drill stats={stats} record={record} addStroke={addStroke}/>}
+        {mode==="home"&&<Home stats={stats} attempts={total} sketch={sketch} streak={streak} pack={PACK_BY_ID[pack]} onFocus={startFocus}/>}
+        {mode==="drill"&&<Drill stats={stats} record={record} addStroke={addStroke} focusKeys={focusKeys} clearFocus={clearFocus}/>}
         {mode==="snippet"&&<Snippet record={record} addStroke={addStroke}/>}
         {(mode==="drill"||mode==="snippet")&&<LiveSketch sketch={sketch} pack={PACK_BY_ID[pack]} onSave={saveSketch} onDiscard={discardSketch}/>}
       </main>
@@ -509,12 +532,16 @@ function App(){
   );
 }
 
-function Home({stats,attempts,sketch,streak,pack}){
-  const ranked=SYMBOLS.map(s=>({...s,st:stats[s.ch]})).filter(s=>s.st.attempts>0).sort((a,b)=>weakness(b.st)-weakness(a.st));
-  const targets=ranked.slice(0,2);
+function Home({stats,attempts,sketch,streak,pack,onFocus}){
   const finished=sketch?sketch.finished:[];
   const recent=[...finished].reverse().slice(0,12);
   const streakWord=streak&&streak.streak>1?`${streak.streak} days in a row`:"a fresh start";
+  // status report: the keys you miss most (need a few tries before it counts)
+  const missed=SYMBOLS.map(s=>({...s,st:stats[s.ch]}))
+    .filter(s=>s.st.attempts>=3&&s.st.errors>0)
+    .map(s=>({...s,miss:s.st.errors/s.st.attempts}))
+    .sort((a,b)=>b.miss-a.miss).slice(0,5);
+  const focusSet=missed.map(s=>s.ch);
   return (
     <section className="kf-card kf-fade">
       {streak&&streak.sessions>0&&(
@@ -534,7 +561,21 @@ function Home({stats,attempts,sketch,streak,pack}){
       ):(
         <>
           <h2>Where you are</h2>
-          {targets.length>0&&<p className="kf-focus">Focus next: {targets.map(t=><code key={t.ch}>{t.ch}</code>)}</p>}
+          {missed.length>0?(
+            <div className="kf-report">
+              <p className="kf-eyebrow">Your most-missed keys</p>
+              <div className="kf-missed">
+                {missed.map(m=>(
+                  <div key={m.ch} className="kf-missed-row" title={`${m.st.errors} misses in ${m.st.attempts} tries — ${m.where}`}>
+                    <code className="kf-missed-ch">{m.ch}</code>
+                    <span className="kf-missed-bar"><i style={{width:Math.max(6,Math.round(m.miss*100))+"%"}}/></span>
+                    <span className="kf-missed-pct">{Math.round(m.miss*100)}%</span>
+                  </div>
+                ))}
+              </div>
+              <button className="kf-drillthese" onClick={()=>onFocus(focusSet)}>Drill just these {focusSet.map(c=><code key={c}>{c}</code>)} →</button>
+            </div>
+          ):<p className="kf-focus">Clean so far — nothing's tripping you up. Keep going.</p>}
           <Heatmap stats={stats}/>
         </>
       )}
@@ -565,10 +606,17 @@ function Heatmap({stats}){
   );
 }
 
-function Drill({stats,record,addStroke}){
+function Drill({stats,record,addStroke,focusKeys,clearFocus}){
   const statsRef=useRef(stats);statsRef.current=stats;
-  const warm=useRef(0); // index into SYMBOLS during the one-pass warmup
-  const [target,setTarget]=useState(()=>SYMBOLS[0]); // begin on the easiest key
+  // focus mode: practice ONLY the chosen (most-missed) keys — no warm-up, weighted toward the weaker ones
+  const focus=useMemo(()=>{const set=Array.isArray(focusKeys)?focusKeys:[];const pool=SYMBOLS.filter(s=>set.includes(s.ch));return pool.length?pool:null;},[focusKeys]);
+  const warm=useRef(focus?SYMBOLS.length:0); // index into SYMBOLS during the one-pass warm-up (skipped when focusing)
+  const pickNext=useCallback(()=>{
+    if(focus){const w=focus.map(s=>weakness(statsRef.current[s.ch]));const tot=w.reduce((p,q)=>p+q,0)||1;let r=Math.random()*tot;
+      for(let i=0;i<focus.length;i++){r-=w[i];if(r<=0)return focus[i];}return focus[focus.length-1];}
+    return pick(statsRef.current);
+  },[focus]);
+  const [target,setTarget]=useState(()=>focus?focus[0]:SYMBOLS[0]); // begin on the easiest key (or first focus key)
   const [flash,setFlash]=useState(null);
   const [hint,setHint]=useState(null);
   const [cel,setCel]=useState(0);
@@ -579,9 +627,9 @@ function Drill({stats,record,addStroke}){
   useEffect(()=>{audio.duck(relax.show);},[relax.show]);
   const next=useCallback(()=>{
     warm.current++;
-    setTarget(warm.current<SYMBOLS.length?SYMBOLS[warm.current]:pick(statsRef.current));
+    setTarget(!focus&&warm.current<SYMBOLS.length?SYMBOLS[warm.current]:pickNext());
     shownAt.current=performance.now();
-  },[]);
+  },[focus,pickNext]);
   useEffect(()=>{
     shownAt.current=performance.now();
     const onKey=e=>{
@@ -593,7 +641,7 @@ function Drill({stats,record,addStroke}){
       record(target.ch,ok,lat);relax.report(ok,lat);audio.playKey(ok);
       if(ok){
         setHint(null);
-        const finishedWarmup=warm.current===SYMBOLS.length-1; // last warmup key just cleared
+        const finishedWarmup=!focus&&warm.current===SYMBOLS.length-1; // last warm-up key just cleared
         streak.current+=1;
         if(finishedWarmup||streak.current%12===0){audio.milestone();setCelLvl(finishedWarmup?2:Math.min(Math.floor(streak.current/12),4));setCel(c=>c+1);addStroke(1);}
       }
@@ -603,15 +651,21 @@ function Drill({stats,record,addStroke}){
     };
     window.addEventListener("keydown",onKey);
     return ()=>window.removeEventListener("keydown",onKey);
-  },[target,record,next,relax,addStroke]);
+  },[target,record,next,relax,addStroke,focus]);
   return (
     <section className="kf-card kf-fade kf-center">
       {relax.show&&<BreatheOverlay onClose={relax.dismiss}/>}
       <Celebrate trigger={cel} level={celLvl}/>
-      <p className="kf-dim">{warm.current<SYMBOLS.length?`Warm-up · ${warm.current+1}/${SYMBOLS.length}`:"Adaptive practice"} — no timer, no penalty.</p>
+      {focus
+        ? <p className="kf-focusbar">Focusing on your missed keys {focus.map(s=><code key={s.ch}>{s.ch}</code>)} <button className="kf-linkbtn" onClick={clearFocus}>drill all keys</button></p>
+        : <p className="kf-dim">{warm.current<SYMBOLS.length?`Warm-up · ${warm.current+1}/${SYMBOLS.length}`:"Adaptive practice"} — no timer, no penalty.</p>}
+      <p className="kf-lead">Take a breath — let the screen lead your finger.</p>
+      <div className="kf-place">
+        <p className="kf-place-where">{target.where}</p>
+        <p className="kf-place-finger">{target.finger}</p>
+      </div>
       <div className={"kf-bigkey "+(flash||"")}>{target.ch}</div>
       <p className="kf-name">{target.name}</p>
-      <p className="kf-finger">{target.finger}</p>
       {hint&&<p className="kf-hint" key={hint}>{hint}</p>}
     </section>
   );

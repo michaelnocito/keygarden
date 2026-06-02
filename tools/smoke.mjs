@@ -82,8 +82,12 @@ const firstTarget = big ? big.textContent : null;
 ok("warmup opens on easiest key (=)", firstTarget === "=");
 ok("warmup label shown", /Warm-up/.test(txt()));
 
-// 3. drive a wrong key, expect a coaching hint
-try { key("a"); } catch (e) { console.error("KEYDOWN ERROR:", e.message); }
+// 2b. the placement description sits above the symbol (big), with the calming lead line
+ok("drill shows a 'where' description above the key", !!$(".kf-place-where")[0] && $(".kf-place-where")[0].textContent.length > 0);
+ok("drill shows the calming lead line", /let the screen lead/i.test($(".kf-lead")[0]?.textContent || ""));
+
+// 3. drive a wrong key, expect a coaching hint (and miss the same key a few times to seed the report)
+try { key("a"); key("a"); key("a"); } catch (e) { console.error("KEYDOWN ERROR:", e.message); }
 await new Promise((r) => setTimeout(r, 30));
 ok("wrong key shows a hint", !!$(".kf-hint")[0]);
 
@@ -247,6 +251,22 @@ try { soundOff = JSON.parse(window.localStorage.getItem("keygarden.v1") || "{}")
 ok("sound is off by default", soundOff);
 if (!$(".kf-toggle")[0]) { const g = $("button").find((b) => b.textContent.trim() === "⚙"); g && g.dispatchEvent(new window.MouseEvent("click", { bubbles: true })); await new Promise((r) => setTimeout(r, 20)); }
 ok("breathing-break on/off toggle exists in settings", !!$(".kf-toggle input")[0]);
+
+// 9g. Progress reports the most-missed keys, and "Drill just these" starts a focused drill
+clickBtn("Progress");
+await new Promise((r) => setTimeout(r, 30));
+ok("Progress reports most-missed keys", !!$(".kf-missed-row")[0]);
+const drillThese = $(".kf-drillthese")[0];
+ok("a 'Drill just these' button is offered", !!drillThese);
+drillThese && drillThese.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+await new Promise((r) => setTimeout(r, 40));
+ok("focused drill shows the focus bar (just the missed keys)", !!$(".kf-focusbar")[0]);
+ok("focused drill still shows the placement description", !!$(".kf-place-where")[0]);
+// clear focus back to the full drill
+const allBtn = $(".kf-linkbtn").find((b) => /drill all keys/i.test(b.textContent));
+allBtn && allBtn.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+await new Promise((r) => setTimeout(r, 30));
+ok("'drill all keys' clears the focus", !$(".kf-focusbar")[0]);
 
 // 10. typing with audio muted must never throw
 let mutedNoThrow = true;

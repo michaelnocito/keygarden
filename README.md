@@ -10,9 +10,9 @@ Most typing tutors drill prose. But if you write queries and scripts all day, th
 
 ## What it does
 
-- **Drill keys** — one symbol at a time, easiest to hardest, with a finger-placement hint. The order adapts to *you*: the keys you miss or hesitate on come back more often.
+- **Drill keys** — one symbol at a time, easiest to hardest. A big **placement description sits above the key** ("Top number row, above the 3 — with Shift") so you can find it by orientation, plus the finger to use. The order adapts to *you*: the keys you miss or hesitate on come back more often.
 - **Type snippets** — short, real lines of code tagged by track (SQL / Python / Excel / Tableau / Stats / Power BI). Closing brackets auto-fill the way your editor does, so you practice the keys you actually press, not phantom closers.
-- **Progress** — a heatmap of your accuracy and speed per symbol, and the two keys to focus on next.
+- **Progress** — a status report of your **most-missed keys** (ranked by miss rate), a **"Drill just these →"** button that starts a focused session on only those symbols, a heatmap of accuracy and speed per symbol, your finished sketches, and your return streak.
 - **A live sketch** — as you practice, a little hand-drawn sketch fills in *right below the keys*. Every clean line (and every clean streak in the drill) adds a stroke; most drawings finish in about a five-minute session. When one's done you **save it to your collection or delete it**, then a new, random drawing begins. Choose an **art style** in settings — **Charcoal, Watercolor, Abstract, or Celestial**. Finished sketches collect on **Progress**, which also greets you with a gentle **return streak** — coming back is the whole reward. No timers, no grades, nothing to fail.
 
 A built-in **How it works** card (the **?** in the nav, open on your first visit) explains all of this in the app, including how to tune or silence the relax prompt.

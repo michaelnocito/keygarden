@@ -18,6 +18,8 @@ LICENSE
 
 **Edit `index.html` only.** `keygarden-offline.html` is built from it — never edit the offline file by hand, or your change will be lost on the next build.
 
+**Drill orientation + focus.** Each `SYMBOLS` entry has a `where` field (row + landmark, e.g. "Top number row, above the 3 — with Shift"); the drill shows it **big, above the symbol**, with a calming lead line. **Progress** ranks the most-missed keys (`attempts >= 3 && errors > 0`, by miss rate) and a **"Drill just these"** button calls `onFocus(chars)` → App `focusKeys` → `Drill` practices only those (no warm-up, weighted toward the weaker ones); "drill all keys" clears it.
+
 ## Make a change
 
 The whole app lives in the `<script type="text/babel">` block in `index.html`: data (symbols + snippets + the `SKETCHES`) at the top, then the audio engine, then the React components. No framework, no build step needed to *run* it — just open the file.
