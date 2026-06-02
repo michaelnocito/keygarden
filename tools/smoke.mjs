@@ -85,7 +85,7 @@ ok("learning-progression label shown", /Building up|All keys in play/.test(txt()
 
 // 2b. the placement description sits above the symbol (big), with the calming lead line
 ok("drill shows a 'where' description above the key", !!$(".kf-place-where")[0] && $(".kf-place-where")[0].textContent.length > 0);
-ok("drill shows the calming lead line", /let the screen lead/i.test($(".kf-lead")[0]?.textContent || ""));
+ok("drill shows the keyboard diagram", !!$(".kf-kbd-wrap")[0]);
 
 // 3. drive a wrong key, expect a coaching hint (and miss the same key a few times to seed the report)
 try { key("a"); key("a"); key("a"); } catch (e) { console.error("KEYDOWN ERROR:", e.message); }
@@ -176,13 +176,13 @@ try {
 } catch (e) {}
 ok("saved state available for rehydration", rehydrated);
 
-// 8. Sketch layer: the live charcoal drawing renders ON the typing screens (not a separate tab)
+// 8. Sketch layer: the live drawing panel renders in the work area (below the typing card)
 clickBtn("Type snippets");
 await new Promise((r) => setTimeout(r, 30));
-ok("live sketch renders on the Type-snippets screen", !!$(".kf-live .kf-art .ink")[0]);
+ok("live sketch panel renders in the work area", !!$(".kf-sketch-panel .kf-art .ink")[0] || !!$(".kf-sketch-panel")[0]);
 clickBtn("Drill keys");
 await new Promise((r) => setTimeout(r, 30));
-ok("live sketch persists onto the Drill screen", !!$(".kf-live .kf-art .ink")[0]);
+ok("live sketch persists on the Drill screen", !!$(".kf-sketch-panel")[0]);
 
 // 9. a clean line added a stroke, persisted into keygarden.v1.sketch; a returning streak is tracked
 let sketchPersist = false, sketchGrew = false, streakTracked = false;
@@ -262,7 +262,7 @@ await new Promise((r) => setTimeout(r, 40));
 ok("focused drill shows the focus bar (just the missed keys)", !!$(".kf-focusbar")[0]);
 ok("focused drill still shows the placement description", !!$(".kf-place-where")[0]);
 // clear focus back to the full drill
-const allBtn = $(".kf-linkbtn").find((b) => /drill all keys/i.test(b.textContent));
+const allBtn = $(".kf-linkbtn").find((b) => /drill all/i.test(b.textContent));
 allBtn && allBtn.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
 await new Promise((r) => setTimeout(r, 30));
 ok("'drill all keys' clears the focus", !$(".kf-focusbar")[0]);

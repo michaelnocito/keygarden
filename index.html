@@ -99,7 +99,49 @@
   @keyframes nudge{0%,100%{transform:none;}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
   .kf-name{font-weight:700;font-size:1.1rem;margin:.2rem 0 .1rem;color:var(--ink);}
   .kf-finger{color:var(--accent-d);font-size:.78rem;font-weight:600;letter-spacing:.5px;}
-  .kf-hint{margin:1rem auto 0;color:var(--warm);font-size:.85rem;background:var(--warm-bg);border:1px solid var(--warm-bd);border-radius:8px;padding:.5rem .8rem;display:inline-block;animation:fade .25s ease;}
+  .kf-hint{margin:.7rem auto 0;color:var(--warm);font-size:.9rem;background:var(--warm-bg);border:1px solid var(--warm-bd);border-left:4px solid var(--warm);border-radius:8px;padding:.55rem .9rem;display:inline-block;animation:fade .25s ease;max-width:520px;}
+  /* keystroke counter (drill + snippet) */
+  .kf-counter{font-family:var(--mono);font-size:.72rem;color:var(--dim);letter-spacing:.04em;margin-bottom:.5rem;}
+  .kf-counter b{color:var(--ink);}
+  /* speech toggle in controls */
+  .kf-mute.speech{font-size:.9rem;}
+  /* on-screen keyboard diagram */
+  .kf-kbd{width:100%;max-width:720px;margin:1.1rem auto 0;user-select:none;}
+  .kf-kbd svg{width:100%;height:auto;display:block;}
+  .kf-krow{display:flex;gap:3px;margin-bottom:3px;justify-content:center;}
+  .kf-key{font-family:var(--mono);font-size:10px;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:default;transition:background .12s,transform .12s;line-height:1.1;}
+  .kf-key.std{height:38px;width:38px;background:var(--sheet-head);border:1px solid var(--line);color:var(--dim);}
+  .kf-key.wide{height:38px;width:58px;background:var(--sheet-head);border:1px solid var(--line);color:var(--dim);}
+  .kf-key.xwide{height:38px;width:78px;background:var(--sheet-head);border:1px solid var(--line);color:var(--dim);}
+  .kf-key.spc{height:38px;width:200px;background:var(--sheet-head);border:1px solid var(--line);color:var(--dim);}
+  .kf-key .kf-shifted{font-size:8.5px;color:var(--dim);opacity:.75;margin-bottom:1px;}
+  .kf-key .kf-base{font-weight:600;color:var(--ink);}
+  .kf-key.finger-lp{background:#eaf3ee;}
+  .kf-key.finger-lr{background:#fef3ec;}
+  .kf-key.finger-lm{background:#fff8e6;}
+  .kf-key.finger-li{background:#fdf2e0;}
+  .kf-key.finger-ri{background:#eef4ff;}
+  .kf-key.finger-rm{background:#f3eeff;}
+  .kf-key.finger-rr{background:#f9eeff;}
+  .kf-key.finger-rp{background:#fef0f0;}
+  .kf-key.target{background:var(--accent)!important;border-color:var(--accent-d)!important;box-shadow:0 2px 10px rgba(47,109,240,.4);transform:scale(1.08);}
+  .kf-key.target .kf-base,.kf-key.target .kf-shifted{color:#fff!important;}
+  .kf-key.target-shift{background:#7b68ee!important;border-color:#6a5bc4!important;}
+  .kf-key.target-shift .kf-base{color:#fff!important;}
+  .kf-key.wrong{background:var(--bad)!important;border-color:#b01a24!important;animation:nudge .18s;}
+  .kf-key.wrong .kf-base,.kf-key.wrong .kf-shifted{color:#fff!important;}
+  /* sketch panel in work area — big, prominent */
+  .kf-sketch-panel{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:1.1rem 1.4rem 1.2rem;margin-top:1rem;}
+  .kf-sketch-row{display:flex;align-items:center;gap:1.2rem;}
+  .kf-sketch-canvas{flex:0 0 auto;width:220px;height:220px;background:var(--sheet-head);border:1px solid var(--line);border-radius:12px;overflow:hidden;position:relative;}
+  .kf-sketch-canvas svg{width:100%;height:100%;}
+  .kf-art .ink{transition:stroke-dashoffset .32s ease-out;}
+  .kf-sketch-info{flex:1 1 auto;min-width:0;}
+  .kf-sketch-status{font-size:.82rem;font-weight:600;color:var(--dim);margin-bottom:.5rem;}
+  .kf-sketch-name{font-size:1.2rem;font-weight:700;color:var(--ink);margin:0 0 .5rem;}
+  .kf-sketch-prog{height:8px;border-radius:999px;background:var(--sheet-head);border:1px solid var(--line);overflow:hidden;margin-bottom:.65rem;}
+  .kf-sketch-prog i{display:block;height:100%;background:linear-gradient(90deg,#9aa0a6,#46443f);border-radius:999px;transition:width .32s ease-out;}
+  .kf-pen-tip{transition:transform .32s ease-out;pointer-events:none;}
   .kf-snip{font-family:var(--mono);font-size:1.5rem;line-height:2.4;letter-spacing:1px;margin:1.4rem 0 .5rem;word-break:break-word;border-radius:10px;padding:.6rem;transition:.15s;}
   .kf-snip.wrong{background:var(--bad-bg);}
   .kf-snip .done{color:var(--good);}
@@ -223,24 +265,42 @@ const { useState, useEffect, useRef, useCallback, useMemo } = React;
 
 /* ── Data ── */
 const SYMBOLS = [
-  { ch: "=", name: "equals",       finger: "right pinky",          where: "Top row, far right — just left of Backspace" },
-  { ch: ";", name: "semicolon",    finger: "right pinky",          where: "Home row, just right of L" },
-  { ch: "[", name: "left bracket", finger: "right pinky",          where: "Top-letter row, two keys right of P" },
-  { ch: ":", name: "colon",        finger: "right pinky + Shift",  where: "Home row, right of L — with Shift" },
-  { ch: "_", name: "underscore",   finger: "right pinky + Shift",  where: "Top number row, right of the 0 — with Shift" },
-  { ch: '"', name: "double quote", finger: "right pinky + Shift",  where: "Home row, right of the ; key — with Shift" },
-  { ch: "(", name: "left paren",   finger: "right ring + Shift",   where: "Top number row, above the 9 — with Shift" },
-  { ch: "{", name: "left brace",   finger: "right pinky + Shift",  where: "Right of P — with Shift" },
-  { ch: "*", name: "asterisk",     finger: "right middle + Shift", where: "Top number row, above the 8 — with Shift" },
-  { ch: "<", name: "less than",    finger: "right middle + Shift", where: "Bottom row, just right of M — with Shift" },
-  { ch: ">", name: "greater than", finger: "right ring + Shift",   where: "Bottom row, two right of M — with Shift" },
-  { ch: "#", name: "hash",         finger: "left middle + Shift",  where: "Top number row, above the 3 — with Shift" },
-  { ch: "%", name: "percent",      finger: "left index + Shift",   where: "Top number row, above the 5 — with Shift" },
-  { ch: "&", name: "ampersand",    finger: "right index + Shift",  where: "Top number row, above the 7 — with Shift" },
-  { ch: "@", name: "at",           finger: "left ring + Shift",    where: "Top number row, above the 2 — with Shift" },
-  { ch: "|", name: "pipe",         finger: "right pinky + Shift",  where: "Top right, above Enter (right of ]) — with Shift" },
+  { ch: "=", name: "equals",       finger: "right pinky",          where: "Top row, far right — just left of Backspace",       physKey:"=",  shift:false },
+  { ch: ";", name: "semicolon",    finger: "right pinky",          where: "Home row, just right of L",                         physKey:";",  shift:false },
+  { ch: "[", name: "left bracket", finger: "right pinky",          where: "Top-letter row, two keys right of P",               physKey:"[",  shift:false },
+  { ch: ":", name: "colon",        finger: "right pinky + Shift",  where: "Home row, right of L — with Shift",                 physKey:";",  shift:true  },
+  { ch: "_", name: "underscore",   finger: "right pinky + Shift",  where: "Top number row, right of the 0 — with Shift",       physKey:"-",  shift:true  },
+  { ch: '"', name: "double quote", finger: "right pinky + Shift",  where: "Home row, right of the ; key — with Shift",         physKey:"'",  shift:true  },
+  { ch: "(", name: "left paren",   finger: "right ring + Shift",   where: "Top number row, above the 9 — with Shift",          physKey:"9",  shift:true  },
+  { ch: "{", name: "left brace",   finger: "right pinky + Shift",  where: "Right of P — with Shift",                           physKey:"[",  shift:true  },
+  { ch: "*", name: "asterisk",     finger: "right middle + Shift", where: "Top number row, above the 8 — with Shift",          physKey:"8",  shift:true  },
+  { ch: "<", name: "less than",    finger: "right middle + Shift", where: "Bottom row, just right of M — with Shift",          physKey:",",  shift:true  },
+  { ch: ">", name: "greater than", finger: "right ring + Shift",   where: "Bottom row, two right of M — with Shift",           physKey:".",  shift:true  },
+  { ch: "#", name: "hash",         finger: "left middle + Shift",  where: "Top number row, above the 3 — with Shift",          physKey:"3",  shift:true  },
+  { ch: "%", name: "percent",      finger: "left index + Shift",   where: "Top number row, above the 5 — with Shift",          physKey:"5",  shift:true  },
+  { ch: "&", name: "ampersand",    finger: "right index + Shift",  where: "Top number row, above the 7 — with Shift",          physKey:"7",  shift:true  },
+  { ch: "@", name: "at",           finger: "left ring + Shift",    where: "Top number row, above the 2 — with Shift",          physKey:"2",  shift:true  },
+  { ch: "|", name: "pipe",         finger: "right pinky + Shift",  where: "Top right, above Enter (right of ]) — with Shift",  physKey:"\\", shift:true  },
 ];
 const SYMBOL_SET = new Set(SYMBOLS.map((s) => s.ch));
+const SYM_BY_CH = Object.fromEntries(SYMBOLS.map(s=>[s.ch,s]));
+
+/* ── Keyboard layout (QWERTY) — drives the on-screen diagram ── */
+const KROWS=[
+  {row:0,keys:[{k:"`",s:"~",f:"lp"},{k:"1",s:"!",f:"lp"},{k:"2",s:"@",f:"lr"},{k:"3",s:"#",f:"lm"},{k:"4",s:"$",f:"li"},{k:"5",s:"%",f:"li"},{k:"6",s:"^",f:"ri"},{k:"7",s:"&",f:"ri"},{k:"8",s:"*",f:"rm"},{k:"9",s:"(",f:"rr"},{k:"0",s:")",f:"rp"},{k:"-",s:"_",f:"rp"},{k:"=",s:"+",f:"rp"}]},
+  {row:1,keys:[{k:"q",s:"",f:"lp"},{k:"w",s:"",f:"lr"},{k:"e",s:"",f:"lm"},{k:"r",s:"",f:"li"},{k:"t",s:"",f:"li"},{k:"y",s:"",f:"ri"},{k:"u",s:"",f:"ri"},{k:"i",s:"",f:"rm"},{k:"o",s:"",f:"rr"},{k:"p",s:"",f:"rp"},{k:"[",s:"{",f:"rp"},{k:"]",s:"}",f:"rp"},{k:"\\",s:"|",f:"rp"}]},
+  {row:2,keys:[{k:"a",s:"",f:"lp"},{k:"s",s:"",f:"lr"},{k:"d",s:"",f:"lm"},{k:"f",s:"",f:"li"},{k:"g",s:"",f:"li"},{k:"h",s:"",f:"ri"},{k:"j",s:"",f:"ri"},{k:"k",s:"",f:"rm"},{k:"l",s:"",f:"rr"},{k:";",s:":",f:"rp"},{k:"'",s:'"',f:"rp"}]},
+  {row:3,keys:[{k:"z",s:"",f:"lp"},{k:"x",s:"",f:"lr"},{k:"c",s:"",f:"lm"},{k:"v",s:"",f:"li"},{k:"b",s:"",f:"li"},{k:"n",s:"",f:"ri"},{k:"m",s:"",f:"ri"},{k:",",s:"<",f:"rm"},{k:".",s:">",f:"rr"},{k:"/",s:"?",f:"rp"}]},
+];
+
+/* ── Speech synthesis: read the coaching hint + key name aloud (toggle in settings) ── */
+let VOICE_ON=false;
+const speak=(text,rate=0.92)=>{
+  if(!VOICE_ON||!window.speechSynthesis)return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);u.rate=rate;u.volume=0.95;
+  speechSynthesis.speak(u);
+};
 const PAIRS = { "(": ")", "[": "]", "{": "}", '"': '"', "'": "'" }; // editor-style auto-close
 const SNIPPETS = [
   { track: "SQL", text: "SELECT * FROM users;" },
@@ -471,12 +531,14 @@ function App(){
   const [pack,setPack]=useState(()=>{const p=store.load().pack;return PACK_BY_ID[p]?p:DEFAULT_PACK;});
   const [focusKeys,setFocusKeys]=useState(null); // when set, Drill practices only these (the most-missed) keys
   const [breathe,setBreathe]=useState(0);        // >0 = breathing overlay open with this many cycles
+  const [voiceOn,setVoiceOn]=useState(()=>!!store.load().voiceOn); // spoken coaching toggle
   useEffect(()=>{RELAX_SENS=sens;store.save({sens});},[sens]);
   useEffect(()=>{RELAX_ON=relaxOn;store.save({relaxOn});},[relaxOn]);
   useEffect(()=>{audio.setMuted(muted);store.save({muted});},[muted]);
   useEffect(()=>{store.save({sketch});},[sketch]);   // sketch progress persists on every change
   useEffect(()=>{store.save({streak});},[streak]);   // returning streak persists
   useEffect(()=>{store.save({pack});},[pack]);       // chosen art pack persists
+  useEffect(()=>{VOICE_ON=voiceOn;store.save({voiceOn});},[voiceOn]); // speech toggle syncs the module flag
   // count this visit; the day-streak grows when you come back (consecutive days), never punished on a gap
   useEffect(()=>{
     const today=new Date().toISOString().slice(0,10);
@@ -532,6 +594,7 @@ function App(){
         </nav>
         <div className="kf-controls">
           <button className={"kf-mute"+(welcome?" on":"")} onClick={toggleWelcome} title="welcome &amp; how it works">?</button>
+          <button className={"kf-mute speech"+(voiceOn?" on":"")} onClick={()=>setVoiceOn(v=>!v)} title={voiceOn?"voice coaching on — click to mute":"voice coaching off — click to enable"}>🔊</button>
           <button className={"kf-mute"+(muted?" off":"")} onClick={toggleMute} title={muted?"sound off":"sound on"}>♪</button>
           <button className="kf-mute" onClick={()=>setShowSet(s=>!s)} title="settings">⚙</button>
         </div>
@@ -564,8 +627,9 @@ function App(){
         </aside>
         <main className="kf-work">
           {mode==="snippet"
-            ? <Snippet record={record} addProgress={addProgress} onBreathe={triggerBreathe}/>
-            : <Drill stats={stats} record={record} addProgress={addProgress} onBreathe={triggerBreathe} focusKeys={focusKeys} clearFocus={clearFocus}/>}
+            ? <Snippet record={record} addProgress={addProgress} onBreathe={triggerBreathe} voiceOn={voiceOn}/>
+            : <Drill stats={stats} record={record} addProgress={addProgress} onBreathe={triggerBreathe} focusKeys={focusKeys} clearFocus={clearFocus} voiceOn={voiceOn}/>}
+          <LiveSketch sketch={sketch} pack={PACK_BY_ID[pack]} onSave={saveSketch} onDiscard={discardSketch}/>
         </main>
       </div>
     </div>
@@ -613,7 +677,7 @@ function ProgressRail({stats,attempts,sketch,streak,pack,onFocus,onSave,onDiscar
               </>
             : <p className="kf-dim" style={{margin:0}}>Clean so far — nothing's tripping you up. Keep going.</p>}
       </div>
-      <LiveSketch sketch={sketch} pack={pack} onSave={onSave} onDiscard={onDiscard}/>
+      {/* LiveSketch now lives in the work area for more prominence */}
       {attempts>0&&(
         <div className="kf-railcard">
           <p className="kf-eyebrow">Accuracy per key</p>
@@ -647,7 +711,47 @@ function Heatmap({stats}){
   );
 }
 
-function Drill({stats,record,addProgress,onBreathe,focusKeys,clearFocus}){
+/* ── On-screen keyboard diagram ──
+   Shows the full QWERTY layout; target key = blue, shift key = purple (when needed),
+   wrong key = red for ~700ms. Finger-zone tints follow standard 8-finger color guide. */
+function KeyboardDiagram({target,wrongKey}){
+  // The POS map (already computed above) gives us row + column for every key
+  const tKey=target?target.physKey:null;
+  const needsShift=target?target.shift:false;
+  const OFFSETS=[0,14,23,34]; // horizontal offset per row (px) to stagger like a real keyboard
+  return (
+    <div className="kf-kbd-wrap" style={{overflowX:"auto"}}>
+      <div style={{display:"inline-block",minWidth:560}}>
+        {KROWS.map((row)=>(
+          <div key={row.row} className="kf-krow" style={{justifyContent:"flex-start",paddingLeft:OFFSETS[row.row]}}>
+            {row.row===2&&<div className="kf-key wide" style={{fontSize:9,color:"var(--dim)"}}>Caps</div>}
+            {row.row===3&&<div className={"kf-key wide"+(needsShift?" target-shift":"")} style={{fontSize:9}}>Shift</div>}
+            {row.keys.map(k=>{
+              const isTarget=tKey&&k.k===tKey&&!(!needsShift&&k.s&&k.s===target.ch); // main highlight
+              // For `physKey` highlight, we match the raw base key regardless of shift
+              const isPhysTarget=tKey&&k.k===tKey;
+              const isWrong=wrongKey&&k.k===wrongKey;
+              const cls=["kf-key std","finger-"+k.f, isPhysTarget?"target":"", isWrong?"wrong":""].filter(Boolean).join(" ");
+              return (
+                <div key={k.k} className={cls}>
+                  {k.s&&<span className="kf-shifted">{k.s}</span>}
+                  <span className="kf-base">{k.k.toUpperCase()}</span>
+                </div>
+              );
+            })}
+            {row.row===2&&<div className="kf-key wide" style={{fontSize:9,color:"var(--dim)"}}>Enter</div>}
+            {row.row===0&&<div className="kf-key xwide" style={{fontSize:9,color:"var(--dim)"}}>Back</div>}
+          </div>
+        ))}
+        <div className="kf-krow" style={{paddingLeft:120}}>
+          <div className="kf-key spc"><span className="kf-base" style={{fontSize:8,letterSpacing:2}}>SPACE</span></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Drill({stats,record,addProgress,onBreathe,focusKeys,clearFocus,voiceOn}){
   const statsRef=useRef(stats);statsRef.current=stats;
   // focus mode: practice ONLY the chosen (most-missed) keys — weighted toward the weaker ones
   const focus=useMemo(()=>{const set=Array.isArray(focusKeys)?focusKeys:[];const pool=SYMBOLS.filter(s=>set.includes(s.ch));return pool.length?pool:null;},[focusKeys]);
@@ -672,14 +776,19 @@ function Drill({stats,record,addProgress,onBreathe,focusKeys,clearFocus}){
   const advance=useCallback(()=>{const l=schedule();seen.current[l.sym.ch]=(seen.current[l.sym.ch]||0)+1;if(!l.isNew)sinceIntro.current++;last.current=l.sym.ch;return l;},[schedule]);
   const [lesson,setLesson]=useState(advance);   // { sym, isNew }
   const target=lesson.sym, isNew=lesson.isNew;
+  const prevTarget=useRef(target.ch);
   const [flash,setFlash]=useState(null);
   const [hint,setHint]=useState(null);
+  const [wrongKey,setWrongKey]=useState(null);  // physical key lit red on the keyboard diagram
   const [typed,setTyped]=useState([]);          // terminal echo of what you actually pressed
+  const [ks,setKs]=useState(0);                 // keystroke counter this session
   const [cel,setCel]=useState(0);
   const [celLvl,setCelLvl]=useState(1);
   const shownAt=useRef(performance.now());
   const streak=useRef(0);
   const report=useRelaxCue(useCallback(()=>onBreathe(3),[onBreathe]));
+  // speak the key name when target changes
+  useEffect(()=>{if(target.ch!==prevTarget.current){prevTarget.current=target.ch;speak(target.name,0.88);}},[target]);
   const next=useCallback(()=>{setLesson(advance());shownAt.current=performance.now();},[advance]);
   useEffect(()=>{
     shownAt.current=performance.now();
@@ -690,13 +799,20 @@ function Drill({stats,record,addProgress,onBreathe,focusKeys,clearFocus}){
       const lat=performance.now()-shownAt.current;
       const ok=e.key===target.ch;
       record(target.ch,ok,lat);report(ok,lat);audio.playKey(ok);addProgress(ok);
+      setKs(k=>k+1);
       setTyped(p=>[...p,{ch:e.key,ok}].slice(-36)); // echo it into the terminal line
       if(ok){
-        setHint(null);
+        setHint(null);setWrongKey(null);
         streak.current+=1;
         if(streak.current%12===0){audio.milestone();setCelLvl(Math.min(Math.floor(streak.current/12),4));setCel(c=>c+1);}
       }
-      else{setHint(diagnose(target.ch,e.key));streak.current=0;}
+      else{
+        const h=diagnose(target.ch,e.key);setHint(h);
+        if(h)speak(h,0.9);  // voice coaching: "you hit A — colon is up and to the right"
+        const wrongPhys=(SYM_BY_CH[e.key]?SYM_BY_CH[e.key].physKey:e.key.toLowerCase());
+        setWrongKey(wrongPhys);setTimeout(()=>setWrongKey(null),700);
+        streak.current=0;
+      }
       setFlash(ok?"ok":"miss");setTimeout(()=>setFlash(null),180);
       if(ok)setTimeout(next,120);
     };
@@ -706,10 +822,12 @@ function Drill({stats,record,addProgress,onBreathe,focusKeys,clearFocus}){
   return (
     <section className="kf-card kf-fade kf-center">
       <Celebrate trigger={cel} level={celLvl}/>
-      {focus
-        ? <p className="kf-focusbar">Focusing on your missed keys {focus.map(s=><code key={s.ch}>{s.ch}</code>)} <button className="kf-linkbtn" onClick={clearFocus}>drill all keys</button></p>
-        : <p className="kf-dim">{intro.current>=SYMBOLS.length?"All keys in play":`Building up · ${intro.current} of ${SYMBOLS.length} keys`} — no timer, no penalty.</p>}
-      <p className="kf-lead">Take a breath — let the screen lead your finger.</p>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",width:"100%",marginBottom:".3rem",flexWrap:"wrap",gap:".4rem"}}>
+        {focus
+          ? <p className="kf-focusbar" style={{margin:0}}>Focusing on {focus.map(s=><code key={s.ch}>{s.ch}</code>)} <button className="kf-linkbtn" onClick={clearFocus}>drill all</button></p>
+          : <p className="kf-dim" style={{margin:0}}>{intro.current>=SYMBOLS.length?"All keys in play":`Building up · ${intro.current}/${SYMBOLS.length} keys`}</p>}
+        <p className="kf-counter" style={{margin:0}}><b>{ks}</b> keys this session</p>
+      </div>
       {isNew&&!focus&&<span className="kf-newkey">New key — take it slow</span>}
       <div className="kf-place">
         <p className="kf-place-where">{target.where}</p>
@@ -718,12 +836,13 @@ function Drill({stats,record,addProgress,onBreathe,focusKeys,clearFocus}){
       <div className={"kf-bigkey "+(flash||"")}>{target.ch}</div>
       <p className="kf-name">{target.name}</p>
       {hint&&<p className="kf-hint" key={hint}>{hint}</p>}
+      <div className="kf-kbd"><KeyboardDiagram target={target} wrongKey={wrongKey}/></div>
       <div className="kf-term"><span className="kf-term-prompt">&gt;</span>{typed.map((t,i)=><span key={i} className={t.ok?"ok":"bad"}>{t.ch===" "?" ":t.ch}</span>)}<span className="kf-term-caret">&nbsp;</span></div>
     </section>
   );
 }
 
-function Snippet({record,addProgress,onBreathe}){
+function Snippet({record,addProgress,onBreathe,voiceOn}){
   const [track,setTrack]=useState("Mixed");
   const pool=useMemo(()=>track==="Mixed"?SNIPPETS:SNIPPETS.filter(s=>s.track===track),[track]);
   const [snip,setSnip]=useState(()=>pool[0]);
@@ -732,6 +851,7 @@ function Snippet({record,addProgress,onBreathe}){
   const [hint,setHint]=useState(null);
   const [cel,setCel]=useState(0);
   const [celLvl,setCelLvl]=useState(1);
+  const [ks,setKs]=useState(0);
   const lastAt=useRef(performance.now());
   const errs=useRef(0);
   const report=useRelaxCue(useCallback(()=>onBreathe(3),[onBreathe]));
@@ -746,12 +866,17 @@ function Snippet({record,addProgress,onBreathe}){
       const lat=performance.now()-lastAt.current;
       const ok=e.key===want;
       if(SYMBOL_SET.has(want))record(want,ok,lat);
-      report(ok,lat);audio.playKey(ok);addProgress(ok);
+      report(ok,lat);audio.playKey(ok);addProgress(ok);setKs(k=>k+1);
       if(ok){
         setWrong(false);setHint(null);lastAt.current=performance.now();
         const np=pos+1; setPos(np); // you type every character — closers included
         if(np>=snip.text.length){if(errs.current===0){audio.milestone();setCelLvl(snip.text.length>=24?3:snip.text.length>=16?2:1);setCel(c=>c+1);}setTimeout(()=>loadNext(),420);}
-      }else{errs.current+=1;setWrong(true);setHint(diagnose(want,e.key));setTimeout(()=>setWrong(false),200);}
+      }else{
+        errs.current+=1;setWrong(true);
+        const h=diagnose(want,e.key);setHint(h);
+        if(h)speak(h,0.9);
+        setTimeout(()=>setWrong(false),200);
+      }
     };
     window.addEventListener("keydown",onKey);
     return ()=>window.removeEventListener("keydown",onKey);
@@ -762,7 +887,10 @@ function Snippet({record,addProgress,onBreathe}){
       <div className="kf-tracks">
         {TRACKS.map(t=><button key={t} className={t===track?"on":""} onClick={()=>setTrack(t)}>{t}</button>)}
       </div>
-      <p className="kf-dim">Type the line exactly — every symbol and closer, like a real terminal. <code>{snip.track}</code></p>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:".3rem",flexWrap:"wrap",gap:".4rem"}}>
+        <p className="kf-dim" style={{margin:0}}>Type every character including closers — like a real terminal. <code>{snip.track}</code></p>
+        <p className="kf-counter" style={{margin:0}}><b>{ks}</b> keys this session</p>
+      </div>
       <div className={"kf-snip "+(wrong?"wrong":"")}>
         {snip.text.split("").map((c,i)=><span key={i} className={i<pos?"done":i===pos?"cur":"pending"}>{c===" "?"\u00A0":c}</span>)}
       </div>
@@ -934,35 +1062,58 @@ function SketchArt({sketch,frac,pack}){
   );
 }
 // the live drawing that fills in beneath the keys, on both Drill and Type-snippets
+/* ── LiveSketch: the drawing is prominent in the work area. A pen-tip dot follows
+   the end of the drawn line so it looks like someone is actively sketching.
+   Type faster → it draws faster. Pause → the pen waits at the current tip. ── */
 function LiveSketch({sketch,pack,onSave,onDiscard}){
   const pending=sketch.pending!=null;
   const cur=SKETCHES[pending?sketch.pending:sketch.current]||SKETCHES[0];
   const frac=pending?1:Math.max(0,Math.min(1,sketch.strokes/STROKES_GOAL));
-  const near=frac>=0.75;
+  const near=frac>=0.75&&!pending;
   const n=sketch.finished?sketch.finished.length:0;
   const title=cur.name.charAt(0).toUpperCase()+cur.name.slice(1);
+  // pen-tip: find the SVG point at the current fraction using getPointAtLength
+  const pathRef=useRef(null);
+  const [tip,setTip]=useState({x:60,y:60,visible:false});
+  useEffect(()=>{
+    if(!pathRef.current||frac===0||frac>=1){setTip(t=>({...t,visible:false}));return;}
+    try{
+      const totalLen=pathRef.current.getTotalLength();
+      const pt=pathRef.current.getPointAtLength(frac*totalLen);
+      setTip({x:pt.x,y:pt.y,visible:true});
+    }catch(e){}
+  },[frac,cur.d]);
   return (
-    <div className={"kf-live"+(pending?" done":"")}>
-      <div className="kf-live-paper" style={{background:pack.bg}}><SketchArt sketch={cur} frac={frac} pack={pack}/></div>
-      <div className="kf-live-meta">
-        {pending?(
-          <>
-            <p className="kf-live-eyebrow">Finished ✓</p>
-            <p className="kf-live-title">{title}</p>
-            <p className="kf-live-note">Keep this one in your collection?</p>
-            <div className="kf-save-row">
-              <button className="kf-save" onClick={onSave}>Save</button>
-              <button className="kf-del" onClick={onDiscard}>Delete</button>
-            </div>
-          </>
-        ):(
-          <>
-            <p className="kf-live-eyebrow">Sketching · {pack.label.toLowerCase()}</p>
-            <p className="kf-live-title">{title}</p>
-            <div className="kf-live-bar"><i style={{width:Math.round(frac*100)+"%"}}/></div>
-            <p className="kf-live-note">{near ? <>Almost there — a few more clean lines finish it.</> : <>Every clean line adds a stroke{n>0?<> · <b>{n}</b> saved</>:""}.</>}</p>
-          </>
-        )}
+    <div className={"kf-sketch-panel"+(pending?" done":"")}>
+      <div className="kf-sketch-row">
+        <div className="kf-sketch-canvas" style={{background:pack.bg}}>
+          <svg viewBox="0 0 120 120" style={{width:"100%",height:"100%"}} aria-hidden="true">
+            <SketchDefs/>
+            {STAR_FIELD.map&&pack.stars?STAR_FIELD.map((s,i)=><circle key={"sp"+i} cx={s.x} cy={s.y} r={s.r} fill="#f3ecd6" opacity={(s.o*frac).toFixed(2)}/>):null}
+            {(cur.accent||[]).map((a,i)=><circle key={i} cx={a.cx} cy={a.cy} r={a.r*pack.accentScale} fill={a.c} opacity={(pack.accentOp*frac).toFixed(3)} filter={pack.accentSoft?"url(#kf-soft)":undefined}/>)}
+            {pack.ghost&&<path className="ghost" d={cur.d} pathLength="100" style={{stroke:pack.ghost}}/>}
+            <path ref={pathRef} className="ink" d={cur.d} pathLength="100" style={{stroke:pack.ink,strokeWidth:pack.w,strokeDasharray:100,strokeDashoffset:100*(1-frac),filter:pack.filter?`url(#${pack.filter})`:"none"}}/>
+            {tip.visible&&<circle cx={tip.x} cy={tip.y} r={pack.w*0.72} fill={pack.ink} opacity="0.85" className="kf-pen-tip"/>}
+          </svg>
+        </div>
+        <div className="kf-sketch-info">
+          <p className="kf-sketch-status">{pending?"Finished ✓":`Sketching · ${pack.label.toLowerCase()}`}</p>
+          <p className="kf-sketch-name">{title}</p>
+          {pending?(
+            <>
+              <p className="kf-dim">Keep this one in your collection?</p>
+              <div className="kf-save-row" style={{marginTop:".6rem"}}>
+                <button className="kf-save" onClick={onSave}>Save</button>
+                <button className="kf-del" onClick={onDiscard}>Delete</button>
+              </div>
+            </>
+          ):(
+            <>
+              <div className="kf-sketch-prog"><i style={{width:Math.round(frac*100)+"%"}}/></div>
+              <p className="kf-dim">{near?"Almost there — a few more keystrokes finish it.":n>0?`${n} ${n===1?"sketch":"sketches"} saved · type to draw`:"Type to draw — each keystroke unfolds the line."}</p>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
