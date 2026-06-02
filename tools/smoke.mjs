@@ -232,13 +232,21 @@ let collected = false;
 try { const sk = JSON.parse(window.localStorage.getItem("keygarden.v1") || "{}").sketch; collected = sk && Array.isArray(sk.finished) && sk.finished.length >= 1 && sk.pending == null; } catch (e) {}
 ok("Save adds the finished sketch to the collection", collected);
 
-// 9b. the collapsible "How it works" guide toggles from the nav (open on first visit)
+// 9e. the welcome screen lists features and toggles from the nav (open on first visit)
 const helpBtn = $("button").find((b) => b.textContent.trim() === "?");
-const guideBefore = !!$(".kf-guide")[0];
+const welcomeBefore = !!$(".kf-welcome")[0];
+ok("welcome screen lists the features", welcomeBefore && $(".kf-feat").length >= 4);
 helpBtn && helpBtn.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
 await new Promise((r) => setTimeout(r, 20));
-const guideAfter = !!$(".kf-guide")[0];
-ok("How-it-works guide toggles from the nav", !!helpBtn && guideBefore !== guideAfter && (guideBefore || guideAfter));
+const welcomeAfter = !!$(".kf-welcome")[0];
+ok("welcome toggles from the nav", !!helpBtn && welcomeBefore !== welcomeAfter);
+
+// 9f. defaults: sound starts OFF; the breathing-break toggle is in settings
+let soundOff = false;
+try { soundOff = JSON.parse(window.localStorage.getItem("keygarden.v1") || "{}").muted === true; } catch (e) {}
+ok("sound is off by default", soundOff);
+if (!$(".kf-toggle")[0]) { const g = $("button").find((b) => b.textContent.trim() === "⚙"); g && g.dispatchEvent(new window.MouseEvent("click", { bubbles: true })); await new Promise((r) => setTimeout(r, 20)); }
+ok("breathing-break on/off toggle exists in settings", !!$(".kf-toggle input")[0]);
 
 // 10. typing with audio muted must never throw
 let mutedNoThrow = true;

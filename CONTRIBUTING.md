@@ -36,9 +36,11 @@ To add a drawing, append `{ name, d, accent:[{cx,cy,r,c}] }` to `SKETCHES` — k
 
 Coming back is rewarded by a gentle day-streak shown on **Progress** (`keygarden.v1.streak` = `{ lastVisit, streak, days, sessions }`). It grows on consecutive days, **restarts (never scolds) after a gap**, counts every session, and is never a timer or a leaderboard. Finished sketches also collect on Progress. Keep both calm — they reward *showing up*, not performance.
 
-### The "How it works" guide
+### The welcome screen + breathing break
 
-The collapsible guide is the `Guide` component (toggled by the **?** nav button, open on first visit, then remembered via `guideSeen`). Keep it to four short cards — it follows the progressive-disclosure principle of showing the 20% everyone needs and tucking the rest.
+`Welcome` is the first-run orientation (toggled by the **?** nav button, open on first visit, remembered via `welcomeSeen`). It follows the Archaeology kits' North-Star principles — orient first (what you do / next / result / what you get), top-down and scannable, with one clear CTA (`onStart` → the warm-up). The feature list is the `FEATURES` array; keep entries short.
+
+`BreatheOverlay` is the relax prompt: a guided **3-breath** reset with the exhale longer than the inhale (the fastest parasympathetic lever) plus tension cues. It's triggered by `useRelaxCue` (misses/hesitation, never speed) and gated by the module flag `RELAX_ON`. Defaults: **sound off** (`muted` defaults true), **breathing on** (`relaxOn` defaults true, toggle in ⚙). Keep both calm — no timers, no scores.
 
 ### Add code snippets (most common change)
 

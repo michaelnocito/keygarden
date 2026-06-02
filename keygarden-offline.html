@@ -90,23 +90,36 @@
   .kf-empty p:first-child{font-weight:700;font-size:1.25rem;color:var(--ink);}
   .kf-relax{position:fixed;inset:0;background:linear-gradient(180deg,#1b2a44 0%,#243a5e 55%,#33506f 100%);color:#eaf0fb;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;cursor:pointer;text-align:center;padding:2rem;animation:fade .5s ease;}
   .kf-relax p{font-weight:700;font-size:1.5rem;margin:.4rem 0 0;}
-  .kf-relax .kf-dim{color:#c2d2ec;font-size:.9rem;max-width:320px;}
-  .kf-breath{width:90px;height:90px;border-radius:50%;border:2px solid #bcd0f0;box-shadow:0 0 40px rgba(188,208,240,.4);margin-bottom:1.5rem;animation:breath 4s ease-in-out infinite;}
-  @keyframes breath{0%,100%{transform:scale(.7);opacity:.4;}50%{transform:scale(1.15);opacity:1;}}
+  .kf-relax .kf-dim{color:#c2d2ec;font-size:.9rem;max-width:340px;}
+  .kf-relax .kf-skip{position:absolute;bottom:1.4rem;font-size:.72rem;color:#8fa3c4;letter-spacing:.04em;}
+  .kf-bcount{font-size:.74rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#9fb6da;margin:0 0 1.1rem;}
+  .kf-borb{width:130px;height:130px;border-radius:50%;border:2px solid #cfe0ff;background:radial-gradient(circle at 50% 42%,rgba(207,224,255,.4),rgba(207,224,255,.05));box-shadow:0 0 60px rgba(188,208,240,.45);margin-bottom:1.6rem;transform:scale(.55);transition:transform 4s ease-in-out;}
+  @media (prefers-reduced-motion:reduce){ .kf-borb{transition:opacity .4s ease!important;transform:scale(.9)!important;} }
 
-  /* ── "How it works" guide (progressive disclosure) ── */
-  .kf-guide{width:100%;max-width:620px;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:1.1rem 1.3rem 1.2rem;margin-bottom:1.2rem;animation:fade .35s ease;}
-  .kf-guide-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;}
-  .kf-guide h3{font-weight:700;font-size:1.05rem;margin:0;color:var(--ink);}
-  .kf-guide-close{flex:0 0 auto;font-family:inherit;font-size:.72rem;font-weight:600;color:var(--dim);background:var(--sheet-head);border:1px solid var(--line);border-radius:7px;padding:.3rem .65rem;cursor:pointer;transition:.15s;}
-  .kf-guide-close:hover{color:var(--accent-d);border-color:var(--accent-bd);}
-  .kf-guide-lead{color:var(--dim);font-size:.85rem;margin:.35rem 0 1rem;}
-  .kf-guide-grid{display:grid;gap:.7rem;}
-  .kf-g-item{background:var(--sheet-head);border:1px solid var(--line);border-radius:10px;padding:.7rem .85rem;}
-  .kf-g-item h4{margin:0 0 .25rem;font-size:.74rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--accent-d);}
-  .kf-g-item p{margin:0;font-size:.86rem;line-height:1.5;color:#2b3240;}
-  .kf-g-item p+p{margin-top:.4rem;}
-  .kf-g-item code{font-family:var(--mono);color:var(--accent-d);background:var(--accent-bg);border:1px solid var(--accent-bd);padding:.02rem .3rem;border-radius:5px;font-size:.82em;}
+  /* ── Welcome / orientation screen (first visit; reopen via ?) ── */
+  .kf-welcome{width:100%;max-width:620px;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:1.5rem 1.6rem 1.6rem;margin-bottom:1.3rem;animation:fade .4s ease;}
+  .kf-welcome-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;}
+  .kf-welcome h2{font-weight:700;font-size:1.45rem;margin:0;color:var(--ink);}
+  .kf-welcome-sub{color:var(--dim);font-size:.88rem;margin:.25rem 0 0;}
+  .kf-welcome-x{flex:0 0 auto;font-family:inherit;font-size:.72rem;font-weight:600;color:var(--dim);background:var(--sheet-head);border:1px solid var(--line);border-radius:7px;padding:.3rem .65rem;cursor:pointer;transition:.15s;}
+  .kf-welcome-x:hover{color:var(--accent-d);border-color:var(--accent-bd);}
+  .kf-premise{font-size:.92rem;line-height:1.55;color:#2b3240;margin:1rem 0 1.1rem;}
+  .kf-premise b{color:var(--accent-d);}
+  .kf-feats{display:flex;flex-direction:column;gap:.55rem;margin:0 0 1.2rem;}
+  .kf-feat{display:flex;gap:.8rem;align-items:flex-start;background:var(--sheet-head);border:1px solid var(--line);border-radius:11px;padding:.7rem .85rem;}
+  .kf-feat-ic{flex:0 0 auto;width:2rem;height:2rem;border-radius:8px;display:grid;place-items:center;font-family:var(--mono);font-size:1rem;font-weight:700;background:var(--accent-bg);color:var(--accent-d);border:1px solid var(--accent-bd);}
+  .kf-feat-b{flex:1 1 auto;min-width:0;}
+  .kf-feat-b h4{margin:0 0 .15rem;font-size:.92rem;font-weight:700;color:var(--ink);}
+  .kf-feat-step{font-weight:700;color:var(--accent-d);}
+  .kf-feat-b p{margin:0;font-size:.82rem;line-height:1.45;color:#41505f;}
+  .kf-welcome-cta{display:flex;align-items:center;gap:.95rem;flex-wrap:wrap;}
+  .kf-start{font-family:inherit;font-size:.95rem;font-weight:700;color:#fff;background:var(--accent);border:0;border-radius:10px;padding:.7rem 1.4rem;cursor:pointer;box-shadow:0 2px 8px rgba(47,109,240,.3);transition:.15s;}
+  .kf-start:hover{background:var(--accent-d);}
+  .kf-start:active{transform:translateY(1px);}
+  .kf-welcome-cta span{font-size:.82rem;color:var(--dim);}
+  .kf-welcome code,.kf-toggle code{font-family:var(--mono);color:var(--accent-d);background:var(--accent-bg);border:1px solid var(--accent-bd);padding:.02rem .3rem;border-radius:5px;font-size:.82em;}
+  .kf-toggle{display:flex;align-items:center;gap:.5rem;font-size:.88rem;color:var(--ink);cursor:pointer;margin:.2rem 0 .3rem;}
+  .kf-toggle input{accent-color:var(--accent);cursor:pointer;width:1rem;height:1rem;}
 
   /* ── Charcoal drawing: soft graphite stroke on paper, one muted color accent ── */
   .kf-art{display:block;width:100%;height:100%;}
@@ -149,7 +162,6 @@
   .kf-del{background:#fff;color:var(--bad);border-color:rgba(207,34,46,.3);}
   .kf-del:hover{background:var(--bad-bg);}
   @media (prefers-reduced-motion:reduce){
-    .kf-breath{animation:none!important;}
     .kf-art .ink{transition:none!important;}
   }
 </style>
@@ -1148,13 +1160,20 @@ function App() {
   const [mode, setMode] = useState("home");
   const [stats, setStats] = useState(loadStats);
   const [sketch, setSketch] = useState(loadSketch);
-  const [muted, setMuted] = useState(() => !!store.load().muted);
+  const [muted, setMuted] = useState(() => {
+    const m = store.load().muted;
+    return typeof m === "boolean" ? m : true;
+  }); // sound OFF by default
+  const [relaxOn, setRelaxOn] = useState(() => {
+    const v = store.load().relaxOn;
+    return typeof v === "boolean" ? v : true;
+  }); // breathing prompt ON by default
   const [sens, setSens] = useState(() => {
     const s = store.load().sens;
     return typeof s === "number" ? s : 0.4;
   });
   const [showSet, setShowSet] = useState(false);
-  const [guide, setGuide] = useState(() => !store.load().guideSeen); // open on first visit, collapsible after
+  const [welcome, setWelcome] = useState(() => !store.load().welcomeSeen); // shown first visit, reopen via ?
   const [streak, setStreak] = useState(loadStreak);
   const [pack, setPack] = useState(() => {
     const p = store.load().pack;
@@ -1166,6 +1185,12 @@ function App() {
       sens
     });
   }, [sens]);
+  useEffect(() => {
+    RELAX_ON = relaxOn;
+    store.save({
+      relaxOn
+    });
+  }, [relaxOn]);
   useEffect(() => {
     audio.setMuted(muted);
     store.save({
@@ -1254,13 +1279,20 @@ function App() {
     finished: s.finished,
     pending: null
   }), []);
-  const toggleGuide = useCallback(() => setGuide(g => {
-    const nx = !g;
+  const toggleWelcome = useCallback(() => setWelcome(w => {
+    const nx = !w;
     if (!nx) store.save({
-      guideSeen: true
+      welcomeSeen: true
     });
     return nx;
   }), []);
+  const startApp = useCallback(() => {
+    store.save({
+      welcomeSeen: true
+    });
+    setWelcome(false);
+    setMode("drill");
+  }, []);
   const toggleMute = () => setMuted(m => !m);
   const resetAll = () => {
     store.clear();
@@ -1269,7 +1301,9 @@ function App() {
     setStreak(blankStreak());
     setPack(DEFAULT_PACK);
     setSens(0.4);
-    setMuted(false);
+    setRelaxOn(true);
+    setMuted(true);
+    setWelcome(true);
     setShowSet(false);
   };
   const sensLabel = sens < 0.25 ? "Rarely" : sens < 0.55 ? "Calm" : sens < 0.8 ? "Attentive" : "Eager";
@@ -1296,9 +1330,9 @@ function App() {
     className: mode === "home" ? "on" : "",
     onClick: () => setMode("home")
   }, "Progress"), /*#__PURE__*/React.createElement("button", {
-    className: "kf-mute" + (guide ? " on" : ""),
-    onClick: toggleGuide,
-    title: "how it works"
+    className: "kf-mute" + (welcome ? " on" : ""),
+    onClick: toggleWelcome,
+    title: "welcome & how it works"
   }, "?"), /*#__PURE__*/React.createElement("button", {
     className: "kf-mute" + (muted ? " off" : ""),
     onClick: toggleMute,
@@ -1307,11 +1341,29 @@ function App() {
     className: "kf-mute",
     onClick: () => setShowSet(s => !s),
     title: "settings"
-  }, "\u2699")), guide && /*#__PURE__*/React.createElement(Guide, {
-    onClose: toggleGuide
+  }, "\u2699")), welcome && /*#__PURE__*/React.createElement(Welcome, {
+    onStart: startApp,
+    onClose: toggleWelcome,
+    muted: muted
   }), showSet && /*#__PURE__*/React.createElement("div", {
     className: "kf-settings kf-fade"
-  }, /*#__PURE__*/React.createElement("label", null, "Relax prompts: ", /*#__PURE__*/React.createElement("strong", null, sensLabel)), /*#__PURE__*/React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "kf-toggle"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: relaxOn,
+    onChange: e => setRelaxOn(e.target.checked)
+  }), " Breathing breaks ", /*#__PURE__*/React.createElement("strong", null, relaxOn ? "on" : "off")), /*#__PURE__*/React.createElement("p", {
+    className: "kf-dim"
+  }, "A gentle 3-breath reset when it senses tension or hesitation \u2014 never from typing fast. Visual only; turn it off to never be interrupted."), relaxOn && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("label", {
+    style: {
+      fontSize: ".85rem"
+    }
+  }, "How often: ", /*#__PURE__*/React.createElement("strong", {
+    style: {
+      color: "var(--accent-d)"
+    }
+  }, sensLabel)), /*#__PURE__*/React.createElement("input", {
     type: "range",
     min: "0",
     max: "1",
@@ -1320,9 +1372,7 @@ function App() {
     onChange: e => setSens(parseFloat(e.target.value))
   }), /*#__PURE__*/React.createElement("div", {
     className: "kf-slabels"
-  }, /*#__PURE__*/React.createElement("span", null, "rarely"), /*#__PURE__*/React.createElement("span", null, "eager")), /*#__PURE__*/React.createElement("p", {
-    className: "kf-dim"
-  }, "Triggered by mistakes or long hesitation pauses \u2014 never by typing fast. Lower = leaves you alone more."), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", null, "rarely"), /*#__PURE__*/React.createElement("span", null, "eager"))), /*#__PURE__*/React.createElement("div", {
     className: "kf-artpick"
   }, /*#__PURE__*/React.createElement("span", {
     className: "kf-artpick-label"
@@ -1384,7 +1434,7 @@ function Home({
     className: "kf-empty"
   }, /*#__PURE__*/React.createElement("p", null, "No keystrokes yet."), /*#__PURE__*/React.createElement("p", {
     className: "kf-dim"
-  }, "Don't worry about understanding the SQL or Python \u2014 just get the typing down. The patterns start to feel familiar on their own. Sound's on; tap \u266A to mute.")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", null, "Where you are"), targets.length > 0 && /*#__PURE__*/React.createElement("p", {
+  }, "Don't worry about understanding the SQL or Python \u2014 just get the typing down. The patterns start to feel familiar on their own. Sound's off to start; tap \u266A for gentle audio.")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", null, "Where you are"), targets.length > 0 && /*#__PURE__*/React.createElement("p", {
     className: "kf-focus"
   }, "Focus next: ", targets.map(t => /*#__PURE__*/React.createElement("code", {
     key: t.ch
@@ -1489,7 +1539,7 @@ function Drill({
   }, [target, record, next, relax, addStroke]);
   return /*#__PURE__*/React.createElement("section", {
     className: "kf-card kf-fade kf-center"
-  }, relax.show && /*#__PURE__*/React.createElement(RelaxOverlay, {
+  }, relax.show && /*#__PURE__*/React.createElement(BreatheOverlay, {
     onClose: relax.dismiss
   }), /*#__PURE__*/React.createElement(Celebrate, {
     trigger: cel,
@@ -1594,7 +1644,7 @@ function Snippet({
   }, [snip, pos, record, loadNext, relax, addStroke]);
   return /*#__PURE__*/React.createElement("section", {
     className: "kf-card kf-fade"
-  }, relax.show && /*#__PURE__*/React.createElement(RelaxOverlay, {
+  }, relax.show && /*#__PURE__*/React.createElement(BreatheOverlay, {
     onClose: relax.dismiss
   }), /*#__PURE__*/React.createElement(Celebrate, {
     trigger: cel,
@@ -1618,14 +1668,16 @@ function Snippet({
   }, hint));
 }
 
-// shared sensitivity, 0 (rarely) .. 1 (eager); default calm
+// shared sensitivity, 0 (rarely) .. 1 (eager); default calm. RELAX_ON gates the breathing prompt entirely.
 let RELAX_SENS = 0.4;
+let RELAX_ON = true;
 function useRelaxCue() {
   const [show, setShow] = useState(false);
   const recent = useRef([]);
   const cooldown = useRef(0);
   const spikes = useRef(0);
   const report = useCallback((ok, lat) => {
+    if (!RELAX_ON) return; // breathing breaks switched off
     const r = recent.current;
     r.push({
       ok,
@@ -1713,47 +1765,130 @@ function Celebrate({
     className: "kf-praise" + (hi ? " hi" : "")
   }, word, hi ? ` ×${level}` : ""));
 }
-function RelaxOverlay({
+
+/* Guided breathing reset: 3 slow breaths, exhale longer than inhale (the lever that
+   flips on the calming "rest" response fastest), with a breath counter + tension cues. */
+const BREATHE_IN = 4000,
+  BREATHE_OUT = 6000,
+  BREATHE_N = 3;
+function BreatheOverlay({
   onClose
 }) {
+  const [phase, setPhase] = useState("in"); // in | out | done
+  const [count, setCount] = useState(1);
   useEffect(() => {
-    const t = setTimeout(onClose, 6000);
-    return () => clearTimeout(t);
+    let alive = true;
+    const timers = [];
+    let n = 1;
+    const after = (ms, fn) => timers.push(setTimeout(() => {
+      if (alive) fn();
+    }, ms));
+    const cycle = () => {
+      setPhase("in");
+      setCount(n);
+      after(BREATHE_IN, () => {
+        setPhase("out");
+        after(BREATHE_OUT, () => {
+          if (n >= BREATHE_N) {
+            setPhase("done");
+            after(2800, onClose);
+          } else {
+            n += 1;
+            cycle();
+          }
+        });
+      });
+    };
+    cycle();
+    return () => {
+      alive = false;
+      timers.forEach(clearTimeout);
+    };
   }, [onClose]);
+  const done = phase === "done";
+  const scale = phase === "in" ? 1.15 : done ? 0.95 : 0.55;
+  const dur = phase === "in" ? BREATHE_IN : BREATHE_OUT;
   return /*#__PURE__*/React.createElement("div", {
     className: "kf-relax",
     onClick: onClose
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "kf-breath"
-  }), /*#__PURE__*/React.createElement("p", null, "Rest a moment."), /*#__PURE__*/React.createElement("p", {
+  }, !done && /*#__PURE__*/React.createElement("p", {
+    className: "kf-bcount"
+  }, "Breath ", count, " of ", BREATHE_N), /*#__PURE__*/React.createElement("div", {
+    className: "kf-borb",
+    style: {
+      transform: `scale(${scale})`,
+      transitionDuration: dur + "ms"
+    }
+  }), /*#__PURE__*/React.createElement("p", null, done ? "Nice." : phase === "in" ? "Deep breath in…" : "…and slowly out"), /*#__PURE__*/React.createElement("p", {
     className: "kf-dim"
-  }, "Let the lines settle. Drop your shoulders, let your wrists float \u2014 one slow breath, then carry on."));
+  }, done ? "Shoulders down, wrists floating. Carry on whenever you're ready." : "Let your shoulders drop and your wrists float. Follow the circle — slow and easy."), /*#__PURE__*/React.createElement("span", {
+    className: "kf-skip"
+  }, "tap anywhere to skip"));
 }
 
-/* ── How it works: a collapsible guide (progressive disclosure — open first visit) ── */
-function Guide({
-  onClose
+/* ── Welcome / orientation (first visit; reopen via ?) ──
+   North-Star principles from the Archaeology kits: orient first — what you do, what's next,
+   what the result is, what you get — top-down and scannable, with one clear way to start. */
+const FEATURES = [{
+  ic: "=",
+  name: "Drill the symbols",
+  body: /*#__PURE__*/React.createElement(React.Fragment, null, "Warm up on one symbol at a time, easiest first, with a finger hint. The order quietly adapts to the keys you fumble. ", /*#__PURE__*/React.createElement("span", {
+    className: "kf-feat-step"
+  }, "You get:"), " the awkward reaches stop feeling awkward.")
+}, {
+  ic: "{}",
+  name: "Type real commands",
+  body: /*#__PURE__*/React.createElement(React.Fragment, null, "Type short, real lines of SQL, Python, Excel and more. Closing brackets auto-fill \u2014 you just type the openers. ", /*#__PURE__*/React.createElement("span", {
+    className: "kf-feat-step"
+  }, "You get:"), " the patterns start to feel familiar under your fingers.")
+}, {
+  ic: "✎",
+  name: "Watch a sketch appear",
+  body: /*#__PURE__*/React.createElement(React.Fragment, null, "Each clean line quietly draws a little picture below the keys. Finish one in ~5 minutes, then save it or delete it; pick a style (charcoal, watercolor, abstract, celestial) in ", /*#__PURE__*/React.createElement("code", null, "\u2699"), ". ", /*#__PURE__*/React.createElement("span", {
+    className: "kf-feat-step"
+  }, "You get:"), " a calm, growing reward for showing up.")
+}, {
+  ic: "♪",
+  name: "Optional gentle sound",
+  body: /*#__PURE__*/React.createElement(React.Fragment, null, "Soft, musical key feedback and a low flow pad that swells as you find a rhythm. ", /*#__PURE__*/React.createElement("span", {
+    className: "kf-feat-step"
+  }, "Off by default"), " \u2014 tap ", /*#__PURE__*/React.createElement("code", null, "\u266A"), " anytime to turn it on.")
+}, {
+  ic: "~",
+  name: "Breathing breaks",
+  body: /*#__PURE__*/React.createElement(React.Fragment, null, "If it senses tension or hesitation (never speed), it offers ", /*#__PURE__*/React.createElement("b", null, "three slow breaths"), " to loosen your shoulders. On by default; tune it or switch it off in ", /*#__PURE__*/React.createElement("code", null, "\u2699"), ".")
+}];
+function Welcome({
+  onStart,
+  onClose,
+  muted
 }) {
   return /*#__PURE__*/React.createElement("div", {
-    className: "kf-guide"
+    className: "kf-welcome"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "kf-guide-head"
-  }, /*#__PURE__*/React.createElement("h3", null, "How Keygarden works"), /*#__PURE__*/React.createElement("button", {
-    className: "kf-guide-close",
+    className: "kf-welcome-head"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h2", null, "Welcome to Keygarden"), /*#__PURE__*/React.createElement("p", {
+    className: "kf-welcome-sub"
+  }, "the symbols data work runs on \u2014 slow, relaxed, repeated")), /*#__PURE__*/React.createElement("button", {
+    className: "kf-welcome-x",
     onClick: onClose
-  }, "Got it \u2715")), /*#__PURE__*/React.createElement("p", {
-    className: "kf-guide-lead"
-  }, "A calm way to drill the symbols that slow you down \u2014 no timer, no grades, nothing to fail. A few quiet minutes most days beats one long grind."), /*#__PURE__*/React.createElement("div", {
-    className: "kf-guide-grid"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "kf-g-item"
-  }, /*#__PURE__*/React.createElement("h4", null, "Drill, then snippets"), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("b", null, "Drill keys"), " warms up one symbol at a time, easiest first, and quietly resurfaces the ones you fumble. ", /*#__PURE__*/React.createElement("b", null, "Type snippets"), " drills real lines of code \u2014 closers auto-fill, so you only type the openers. ", /*#__PURE__*/React.createElement("b", null, "Progress"), " shows a heatmap of every key, your finished sketches, and your return streak.")), /*#__PURE__*/React.createElement("div", {
-    className: "kf-g-item"
-  }, /*#__PURE__*/React.createElement("h4", null, "Why it sometimes pauses you"), /*#__PURE__*/React.createElement("p", null, "If it notices a run of misses or a long hesitation \u2014 ", /*#__PURE__*/React.createElement("b", null, "never"), " just from typing fast \u2014 it gently suggests a breath. Tension is the thing you're unlearning, so the prompt is a cue to drop your shoulders and reset, not a penalty.")), /*#__PURE__*/React.createElement("div", {
-    className: "kf-g-item"
-  }, /*#__PURE__*/React.createElement("h4", null, "Set the rhythm \u2014 or switch it off"), /*#__PURE__*/React.createElement("p", null, "Open ", /*#__PURE__*/React.createElement("code", null, "\u2699"), " and slide ", /*#__PURE__*/React.createElement("b", null, "Relax prompts"), " from ", /*#__PURE__*/React.createElement("b", null, "Rarely"), " (slide it all the way down to be left alone) through ", /*#__PURE__*/React.createElement("b", null, "Calm"), " to ", /*#__PURE__*/React.createElement("b", null, "Eager"), " (it checks in more often). Prefer silence? Mute all sound anytime with ", /*#__PURE__*/React.createElement("code", null, "\u266A"), ".")), /*#__PURE__*/React.createElement("div", {
-    className: "kf-g-item"
-  }, /*#__PURE__*/React.createElement("h4", null, "Your typing draws something"), /*#__PURE__*/React.createElement("p", null, "As you practice, a little drawing fills in below the keys \u2014 every clean line, and every clean streak, adds a stroke. Pick an ", /*#__PURE__*/React.createElement("b", null, "art style"), " in ", /*#__PURE__*/React.createElement("code", null, "\u2699"), " (charcoal, watercolor, abstract, celestial). When one finishes \u2014 about five minutes \u2014 ", /*#__PURE__*/React.createElement("b", null, "save"), " it to your collection on ", /*#__PURE__*/React.createElement("b", null, "Progress"), " or delete it. Coming back also grows a gentle return streak: showing up is the whole reward."))));
+  }, "Skip \u2715")), /*#__PURE__*/React.createElement("p", {
+    className: "kf-premise"
+  }, "A calm place to drill the brackets, braces, and operators that slow you down in SQL, Python, and spreadsheets. ", /*#__PURE__*/React.createElement("b", null, "No timer, no score, nothing to fail"), " \u2014 a few quiet minutes, most days, is the whole method. Here's what's inside:"), /*#__PURE__*/React.createElement("div", {
+    className: "kf-feats"
+  }, FEATURES.map((f, i) => /*#__PURE__*/React.createElement("div", {
+    className: "kf-feat",
+    key: i
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "kf-feat-ic"
+  }, f.ic), /*#__PURE__*/React.createElement("div", {
+    className: "kf-feat-b"
+  }, /*#__PURE__*/React.createElement("h4", null, f.name), /*#__PURE__*/React.createElement("p", null, f.body))))), /*#__PURE__*/React.createElement("div", {
+    className: "kf-welcome-cta"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "kf-start",
+    onClick: onStart
+  }, "Start the warm-up \u2192"), /*#__PURE__*/React.createElement("span", null, "New here? The warm-up is the gentlest way in.", muted ? " Sound is off — tap ♪ to add it." : "")));
 }
 
 /* ── Charcoal sketch ──

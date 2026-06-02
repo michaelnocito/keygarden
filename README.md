@@ -21,11 +21,13 @@ It also gives gentle, non-punishing feedback: a soft sound and a small visual on
 
 ## How to use it (60 seconds)
 
-1. Open the link on a computer with a **physical keyboard** (it's a typing app — phones won't work).
+1. Open the link on a computer with a **physical keyboard** (it's a typing app — phones won't work). A short **welcome screen** introduces the features the first time; reopen it anytime with **?**.
 2. Start with **Drill keys**. Let it walk you through the warm-up once — easiest keys first. Don't rush; there's no timer and no score.
 3. Switch to **Type snippets**, pick a track (or leave it on Mixed), and type the lines through. Closers fill themselves — just type the openers and content.
-4. Check **Progress** to see which keys are still slow, then drill those.
-5. Tap **⚙** to set how often the relax prompt appears, or to mute sound. Tap **♪** to toggle sound quickly.
+4. Watch the **sketch** fill in below the keys as you go, and check **Progress** for your finished sketches, return streak, and which keys are still slow.
+5. **Sound is off to start** — tap **♪** for gentle audio. In **⚙** you can switch the breathing breaks on/off and set how often they appear, and pick an art style.
+
+If it senses tension (a run of misses, or a long hesitation — never typing fast), it offers a **guided breathing break**: three slow breaths, exhale longer than inhale, to loosen your shoulders. It's visual-only, on by default, and you can turn it off in **⚙**.
 
 Your progress, settings, and sound preference are saved automatically in your browser.
 
