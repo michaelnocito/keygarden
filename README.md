@@ -13,7 +13,7 @@ Most typing tutors drill prose. But if you write queries and scripts all day, th
 - **Drill keys** — one symbol at a time, easiest to hardest, with a finger-placement hint. The order adapts to *you*: the keys you miss or hesitate on come back more often.
 - **Type snippets** — short, real lines of code tagged by track (SQL / Python / Excel / Tableau / Stats / Power BI). Closing brackets auto-fill the way your editor does, so you practice the keys you actually press, not phantom closers.
 - **Progress** — a heatmap of your accuracy and speed per symbol, and the two keys to focus on next.
-- **A live charcoal sketch** — as you practice, a little hand-drawn sketch fills in *right below the keys*, in a pencil-with-a-touch-of-color style. Every clean line (and every clean streak in the drill) adds a stroke; most drawings finish in about a five-minute session, then a new, random one begins. Finished sketches collect on **Progress**, which also greets you with a gentle **return streak** — coming back is the whole reward. No timers, no grades, nothing to fail.
+- **A live sketch** — as you practice, a little hand-drawn sketch fills in *right below the keys*. Every clean line (and every clean streak in the drill) adds a stroke; most drawings finish in about a five-minute session. When one's done you **save it to your collection or delete it**, then a new, random drawing begins. Choose an **art style** in settings — **Charcoal, Watercolor, Abstract, or Celestial**. Finished sketches collect on **Progress**, which also greets you with a gentle **return streak** — coming back is the whole reward. No timers, no grades, nothing to fail.
 
 A built-in **How it works** card (the **?** in the nav, open on your first visit) explains all of this in the app, including how to tune or silence the relax prompt.
 
@@ -52,7 +52,8 @@ A realistic rhythm: ~5–10 minutes a day, most days, for two to three weeks. Th
 The sketch is the quiet payoff for practicing. It lives *on the typing screens* — a small charcoal drawing on paper, drawn in a pencil-with-a-little-color style. It's deliberately not a game-within-a-game; there's nothing to fail and nothing to chase:
 
 - **Practicing draws it.** Every clean snippet line, and every clean streak in the drill, adds one stroke to a single continuous line. Watch it fill in over a faint outline of where it's headed, right under the keys.
-- **A short, surprise reward.** Most drawings finish in about a five-minute session, then a new, randomly chosen one begins — a leaf, a wave, a sailboat, a coffee cup, a key… Finished sketches collect on **Progress**.
+- **Pick your style.** Choose an art pack in settings — **Charcoal** (default), **Watercolor**, **Abstract**, or **Celestial** (a calming night-sky mood). Every drawing renders in the style you pick.
+- **Save it or let it go.** Most drawings finish in about a five-minute session. When one's done you **save it to your collection or delete it**, then a new, randomly chosen drawing begins — a leaf, a wave, a sailboat, a coffee cup, a key…
 - **Coming back is rewarded.** **Progress** greets you with a gentle return streak that grows each day you show up. It never punishes a gap and never puts you on a clock — showing up at all is the point.
 
 Everything is saved alongside the rest in your browser.

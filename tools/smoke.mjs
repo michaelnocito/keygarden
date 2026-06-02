@@ -197,6 +197,41 @@ clickBtn("Progress");
 await new Promise((r) => setTimeout(r, 30));
 ok("Progress shows the return-streak banner", !!$(".kf-streak")[0]);
 
+// 9c. art-style packs: the picker offers the styles and the choice persists
+const gear9 = $("button").find((b) => b.textContent.trim() === "⚙");
+if (!$(".kf-artpick-row button")[0]) { // open settings only if it isn't already
+  gear9 && gear9.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+  await new Promise((r) => setTimeout(r, 20));
+}
+ok("art-style picker offers the packs", $(".kf-artpick-row button").length >= 4);
+const wcBtn = $(".kf-artpick-row button").find((b) => /Watercolor/.test(b.textContent));
+wcBtn && wcBtn.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+await new Promise((r) => setTimeout(r, 30));
+let packSaved = false;
+try { packSaved = JSON.parse(window.localStorage.getItem("keygarden.v1") || "{}").pack === "watercolor"; } catch (e) {}
+ok("chosen art pack persists to keygarden.v1", packSaved);
+
+// 9d. finishing a drawing offers Save / Delete; Save adds it to the collection
+clickBtn("Type snippets");
+await new Promise((r) => setTimeout(r, 40));
+for (let ln = 0; ln < 18 && !$(".kf-save")[0]; ln++) {
+  for (let g = 0; g < 60; g++) {
+    const cur = $(".kf-snip .cur")[0];
+    if (!cur) break;
+    key(cur.textContent === " " ? " " : cur.textContent);
+    await new Promise((r) => setTimeout(r, 5));
+  }
+  await new Promise((r) => setTimeout(r, 70));
+  if ($(".kf-save")[0]) break;
+  await new Promise((r) => setTimeout(r, 440)); // wait for the next line to load
+}
+ok("finishing a drawing offers Save / Delete", !!$(".kf-save")[0]);
+$(".kf-save")[0] && $(".kf-save")[0].dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+await new Promise((r) => setTimeout(r, 60));
+let collected = false;
+try { const sk = JSON.parse(window.localStorage.getItem("keygarden.v1") || "{}").sketch; collected = sk && Array.isArray(sk.finished) && sk.finished.length >= 1 && sk.pending == null; } catch (e) {}
+ok("Save adds the finished sketch to the collection", collected);
+
 // 9b. the collapsible "How it works" guide toggles from the nav (open on first visit)
 const helpBtn = $("button").find((b) => b.textContent.trim() === "?");
 const guideBefore = !!$(".kf-guide")[0];

@@ -110,9 +110,8 @@
 
   /* ── Charcoal drawing: soft graphite stroke on paper, one muted color accent ── */
   .kf-art{display:block;width:100%;height:100%;}
-  .kf-art .accent{filter:url(#kf-soft);}
-  .kf-art .ghost{fill:none;stroke:#cdccc7;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
-  .kf-art .ink{fill:none;stroke:#34322e;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;filter:url(#kf-charcoal);transition:stroke-dashoffset .85s ease;}
+  .kf-art .ghost{fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+  .kf-art .ink{fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke-dashoffset .85s ease;}
 
   /* live sketch panel — sits under the typing card on Drill + Type snippets */
   .kf-live{display:flex;align-items:center;gap:1rem;width:100%;max-width:620px;margin:1rem auto 0;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:.8rem 1rem;animation:fade .4s ease;}
@@ -132,8 +131,23 @@
   .kf-streak-txt b{color:var(--accent-d);}
   .kf-collection-label{margin:1.5rem 0 .6rem;}
   .kf-collection{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:.5rem;}
-  .kf-frame{aspect-ratio:1;background:linear-gradient(160deg,#f4f3ef,#e7e8ea);border:1px solid var(--line);border-radius:10px;padding:.4rem;}
+  .kf-frame{aspect-ratio:1;background:#f1f0ec;border:1px solid var(--line);border-radius:10px;padding:.4rem;overflow:hidden;}
   .kf-frame.empty{border-style:dashed;display:flex;align-items:center;justify-content:center;color:var(--line);font-size:1.2rem;}
+
+  /* art-style picker (in settings) + the save/delete moment when a sketch finishes */
+  .kf-artpick{margin-top:1rem;padding-top:.9rem;border-top:1px dashed var(--line);}
+  .kf-artpick-label{display:block;font-size:.72rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--dim);margin-bottom:.45rem;}
+  .kf-artpick-row{display:flex;gap:.35rem;flex-wrap:wrap;}
+  .kf-artpick-row button{font-family:inherit;font-size:.74rem;font-weight:600;color:var(--dim);background:var(--sheet-head);border:1px solid var(--line);padding:.3rem .75rem;border-radius:999px;cursor:pointer;transition:.15s;}
+  .kf-artpick-row button:hover{color:var(--accent-d);border-color:var(--accent-bd);}
+  .kf-artpick-row button.on{color:#fff;background:var(--accent);border-color:var(--accent);}
+  .kf-live.done{border-color:var(--good-bd);background:var(--good-bg);}
+  .kf-save-row{display:flex;gap:.5rem;margin-top:.5rem;}
+  .kf-save,.kf-del{font-family:inherit;font-size:.78rem;font-weight:700;border-radius:8px;padding:.4rem 1rem;cursor:pointer;border:1px solid transparent;transition:.15s;}
+  .kf-save{background:var(--good);color:#fff;box-shadow:0 2px 8px rgba(26,127,55,.25);}
+  .kf-save:hover{filter:brightness(1.06);}
+  .kf-del{background:#fff;color:var(--bad);border-color:rgba(207,34,46,.3);}
+  .kf-del:hover{background:var(--bad-bg);}
   @media (prefers-reduced-motion:reduce){
     .kf-breath{animation:none!important;}
     .kf-art .ink{transition:none!important;}
@@ -996,10 +1010,109 @@ const randomSketch = cur => {
   } while (i === cur);
   return i;
 };
+
+/* ── Art packs: the SAME drawings rendered in a chosen style ──
+   Researched for mass appeal + "soft fascination" (restorative): charcoal (default), watercolor,
+   bold abstract, and a calming celestial night-sky mood. Each is just a render-style config. */
+const PACKS = [{
+  id: "charcoal",
+  label: "Charcoal",
+  bg: "#f1f0ec",
+  ink: "#34322e",
+  w: 3,
+  filter: "kf-charcoal",
+  ghost: "#cdccc7",
+  accentOp: 0.5,
+  accentScale: 1,
+  accentSoft: true
+}, {
+  id: "watercolor",
+  label: "Watercolor",
+  bg: "#f5f4f0",
+  ink: "#4a5a6a",
+  w: 2.4,
+  filter: "kf-wet",
+  ghost: "#e2e5ea",
+  accentOp: 0.85,
+  accentScale: 1.7,
+  accentSoft: true
+}, {
+  id: "abstract",
+  label: "Abstract",
+  bg: "#ffffff",
+  ink: "#1f2328",
+  w: 5.5,
+  filter: null,
+  ghost: null,
+  accentOp: 0.9,
+  accentScale: 1.15,
+  accentSoft: false
+}, {
+  id: "celestial",
+  label: "Celestial",
+  bg: "#171b30",
+  ink: "#f3ecd6",
+  w: 2.4,
+  filter: "kf-glow",
+  ghost: "#39406a",
+  accentOp: 0.7,
+  accentScale: 1.4,
+  accentSoft: true,
+  stars: true
+}];
+const PACK_BY_ID = Object.fromEntries(PACKS.map(p => [p.id, p]));
+const DEFAULT_PACK = "charcoal";
+const STAR_FIELD = [{
+  x: 18,
+  y: 20,
+  r: 1,
+  o: .9
+}, {
+  x: 96,
+  y: 16,
+  r: 1.3,
+  o: .8
+}, {
+  x: 60,
+  y: 11,
+  r: .9,
+  o: .7
+}, {
+  x: 31,
+  y: 40,
+  r: .8,
+  o: .6
+}, {
+  x: 104,
+  y: 48,
+  r: 1,
+  o: .7
+}, {
+  x: 12,
+  y: 64,
+  r: .9,
+  o: .6
+}, {
+  x: 88,
+  y: 80,
+  r: 1.1,
+  o: .7
+}, {
+  x: 46,
+  y: 27,
+  r: .7,
+  o: .6
+}, {
+  x: 74,
+  y: 34,
+  r: .8,
+  o: .6
+}];
 const blankSketch = () => ({
   current: Math.floor(Math.random() * SKETCHES.length),
   strokes: 0,
-  finished: []
+  finished: [],
+  pending: null
 });
 const loadSketch = () => {
   const s = store.load().sketch;
@@ -1008,7 +1121,8 @@ const loadSketch = () => {
   return {
     current: okIdx(s.current) ? s.current : Math.floor(Math.random() * SKETCHES.length),
     strokes: Math.max(0, s.strokes | 0),
-    finished: Array.isArray(s.finished) ? s.finished.filter(okIdx).slice(-24) : []
+    finished: Array.isArray(s.finished) ? s.finished.filter(okIdx).slice(-24) : [],
+    pending: okIdx(s.pending) ? s.pending : null
   };
 };
 // returning reward: a gentle day-streak that grows when you come back — never punished, never a timer
@@ -1042,6 +1156,10 @@ function App() {
   const [showSet, setShowSet] = useState(false);
   const [guide, setGuide] = useState(() => !store.load().guideSeen); // open on first visit, collapsible after
   const [streak, setStreak] = useState(loadStreak);
+  const [pack, setPack] = useState(() => {
+    const p = store.load().pack;
+    return PACK_BY_ID[p] ? p : DEFAULT_PACK;
+  });
   useEffect(() => {
     RELAX_SENS = sens;
     store.save({
@@ -1064,6 +1182,11 @@ function App() {
       streak
     });
   }, [streak]); // returning streak persists
+  useEffect(() => {
+    store.save({
+      pack
+    });
+  }, [pack]); // chosen art pack persists
   // count this visit; the day-streak grows when you come back (consecutive days), never punished on a gap
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
@@ -1106,19 +1229,31 @@ function App() {
   // a finished drawing simply rolls over to the next — no scores, nothing to lose
   const addStroke = useCallback(n => {
     if (n) setSketch(s => {
+      if (s.pending != null) return s; // finished drawing waiting on a save/delete choice — pause
       const t = s.strokes + n;
       if (t < STROKES_PER) return {
         ...s,
         strokes: t
       };
-      // drawing finished: add it to the collection, roll to a fresh (different) one
       return {
-        current: randomSketch(s.current),
-        strokes: 0,
-        finished: [...s.finished, s.current].slice(-24)
-      };
+        ...s,
+        strokes: STROKES_PER,
+        pending: s.current
+      }; // fully drawn; ask the player to keep or delete it
     });
   }, []);
+  const saveSketch = useCallback(() => setSketch(s => s.pending == null ? s : {
+    current: randomSketch(s.current),
+    strokes: 0,
+    finished: [...s.finished, s.pending].slice(-24),
+    pending: null
+  }), []);
+  const discardSketch = useCallback(() => setSketch(s => s.pending == null ? s : {
+    current: randomSketch(s.current),
+    strokes: 0,
+    finished: s.finished,
+    pending: null
+  }), []);
   const toggleGuide = useCallback(() => setGuide(g => {
     const nx = !g;
     if (!nx) store.save({
@@ -1132,6 +1267,7 @@ function App() {
     setStats(blankStats());
     setSketch(blankSketch());
     setStreak(blankStreak());
+    setPack(DEFAULT_PACK);
     setSens(0.4);
     setMuted(false);
     setShowSet(false);
@@ -1186,7 +1322,17 @@ function App() {
     className: "kf-slabels"
   }, /*#__PURE__*/React.createElement("span", null, "rarely"), /*#__PURE__*/React.createElement("span", null, "eager")), /*#__PURE__*/React.createElement("p", {
     className: "kf-dim"
-  }, "Triggered by mistakes or long hesitation pauses \u2014 never by typing fast. Lower = leaves you alone more."), /*#__PURE__*/React.createElement("button", {
+  }, "Triggered by mistakes or long hesitation pauses \u2014 never by typing fast. Lower = leaves you alone more."), /*#__PURE__*/React.createElement("div", {
+    className: "kf-artpick"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "kf-artpick-label"
+  }, "Art style"), /*#__PURE__*/React.createElement("div", {
+    className: "kf-artpick-row"
+  }, PACKS.map(p => /*#__PURE__*/React.createElement("button", {
+    key: p.id,
+    className: p.id === pack ? "on" : "",
+    onClick: () => setPack(p.id)
+  }, p.label)))), /*#__PURE__*/React.createElement("button", {
     className: "kf-reset",
     onClick: resetAll
   }, "Reset progress & settings")), /*#__PURE__*/React.createElement("main", {
@@ -1195,7 +1341,8 @@ function App() {
     stats: stats,
     attempts: total,
     sketch: sketch,
-    streak: streak
+    streak: streak,
+    pack: PACK_BY_ID[pack]
   }), mode === "drill" && /*#__PURE__*/React.createElement(Drill, {
     stats: stats,
     record: record,
@@ -1204,14 +1351,18 @@ function App() {
     record: record,
     addStroke: addStroke
   }), (mode === "drill" || mode === "snippet") && /*#__PURE__*/React.createElement(LiveSketch, {
-    sketch: sketch
+    sketch: sketch,
+    pack: PACK_BY_ID[pack],
+    onSave: saveSketch,
+    onDiscard: discardSketch
   })));
 }
 function Home({
   stats,
   attempts,
   sketch,
-  streak
+  streak,
+  pack
 }) {
   const ranked = SYMBOLS.map(s => ({
     ...s,
@@ -1245,10 +1396,14 @@ function Home({
     className: "kf-collection"
   }, recent.map((idx, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
-    className: "kf-frame"
+    className: "kf-frame",
+    style: {
+      background: pack.bg
+    }
   }, /*#__PURE__*/React.createElement(SketchArt, {
     sketch: SKETCHES[idx],
-    frac: 1
+    frac: 1,
+    pack: pack
   }))))));
 }
 function Heatmap({
@@ -1598,7 +1753,7 @@ function Guide({
     className: "kf-g-item"
   }, /*#__PURE__*/React.createElement("h4", null, "Set the rhythm \u2014 or switch it off"), /*#__PURE__*/React.createElement("p", null, "Open ", /*#__PURE__*/React.createElement("code", null, "\u2699"), " and slide ", /*#__PURE__*/React.createElement("b", null, "Relax prompts"), " from ", /*#__PURE__*/React.createElement("b", null, "Rarely"), " (slide it all the way down to be left alone) through ", /*#__PURE__*/React.createElement("b", null, "Calm"), " to ", /*#__PURE__*/React.createElement("b", null, "Eager"), " (it checks in more often). Prefer silence? Mute all sound anytime with ", /*#__PURE__*/React.createElement("code", null, "\u266A"), ".")), /*#__PURE__*/React.createElement("div", {
     className: "kf-g-item"
-  }, /*#__PURE__*/React.createElement("h4", null, "Your typing draws something"), /*#__PURE__*/React.createElement("p", null, "As you practice, a little charcoal drawing fills in below the keys \u2014 every clean line, and every clean streak in the drill, adds a stroke. Most finish in about five minutes, and the next one's a surprise. They collect on ", /*#__PURE__*/React.createElement("b", null, "Progress"), ", which greets you with your return streak \u2014 coming back is the whole reward."))));
+  }, /*#__PURE__*/React.createElement("h4", null, "Your typing draws something"), /*#__PURE__*/React.createElement("p", null, "As you practice, a little drawing fills in below the keys \u2014 every clean line, and every clean streak, adds a stroke. Pick an ", /*#__PURE__*/React.createElement("b", null, "art style"), " in ", /*#__PURE__*/React.createElement("code", null, "\u2699"), " (charcoal, watercolor, abstract, celestial). When one finishes \u2014 about five minutes \u2014 ", /*#__PURE__*/React.createElement("b", null, "save"), " it to your collection on ", /*#__PURE__*/React.createElement("b", null, "Progress"), " or delete it. Coming back also grows a gentle return streak: showing up is the whole reward."))));
 }
 
 /* ── Charcoal sketch ──
@@ -1631,6 +1786,32 @@ function SketchDefs() {
     xChannelSelector: "R",
     yChannelSelector: "G"
   })), /*#__PURE__*/React.createElement("filter", {
+    id: "kf-wet",
+    x: "-20%",
+    y: "-20%",
+    width: "140%",
+    height: "140%"
+  }, /*#__PURE__*/React.createElement("feTurbulence", {
+    type: "fractalNoise",
+    baseFrequency: "0.05",
+    numOctaves: "2",
+    seed: "3",
+    result: "n"
+  }), /*#__PURE__*/React.createElement("feDisplacementMap", {
+    in: "SourceGraphic",
+    in2: "n",
+    scale: "1.6"
+  }), /*#__PURE__*/React.createElement("feGaussianBlur", {
+    stdDeviation: "0.5"
+  })), /*#__PURE__*/React.createElement("filter", {
+    id: "kf-glow",
+    x: "-40%",
+    y: "-40%",
+    width: "180%",
+    height: "180%"
+  }, /*#__PURE__*/React.createElement("feGaussianBlur", {
+    stdDeviation: "0.9"
+  })), /*#__PURE__*/React.createElement("filter", {
     id: "kf-soft",
     x: "-60%",
     y: "-60%",
@@ -1642,56 +1823,94 @@ function SketchDefs() {
 }
 function SketchArt({
   sketch,
-  frac
+  frac,
+  pack
 }) {
+  const p = pack || PACK_BY_ID[DEFAULT_PACK];
   const f = Math.max(0, Math.min(1, frac));
   return /*#__PURE__*/React.createElement("svg", {
     className: "kf-art",
     viewBox: "0 0 120 120",
+    preserveAspectRatio: "xMidYMid meet",
     "aria-hidden": "true"
-  }, (sketch.accent || []).map((a, i) => /*#__PURE__*/React.createElement("circle", {
+  }, p.stars && STAR_FIELD.map((s, i) => /*#__PURE__*/React.createElement("circle", {
+    key: "s" + i,
+    cx: s.x,
+    cy: s.y,
+    r: s.r,
+    fill: "#f3ecd6",
+    opacity: (s.o * f).toFixed(2)
+  })), (sketch.accent || []).map((a, i) => /*#__PURE__*/React.createElement("circle", {
     key: i,
-    className: "accent",
     cx: a.cx,
     cy: a.cy,
-    r: a.r,
+    r: a.r * p.accentScale,
     fill: a.c,
-    opacity: (0.5 * f).toFixed(3)
-  })), /*#__PURE__*/React.createElement("path", {
+    opacity: (p.accentOp * f).toFixed(3),
+    filter: p.accentSoft ? "url(#kf-soft)" : undefined
+  })), p.ghost && /*#__PURE__*/React.createElement("path", {
     className: "ghost",
     d: sketch.d,
-    pathLength: "100"
+    pathLength: "100",
+    style: {
+      stroke: p.ghost
+    }
   }), /*#__PURE__*/React.createElement("path", {
     className: "ink",
     d: sketch.d,
     pathLength: "100",
     style: {
+      stroke: p.ink,
+      strokeWidth: p.w,
       strokeDasharray: 100,
-      strokeDashoffset: 100 * (1 - f)
+      strokeDashoffset: 100 * (1 - f),
+      filter: p.filter ? `url(#${p.filter})` : "none"
     }
   }));
 }
 // the live drawing that fills in beneath the keys, on both Drill and Type-snippets
 function LiveSketch({
-  sketch
+  sketch,
+  pack,
+  onSave,
+  onDiscard
 }) {
-  const cur = SKETCHES[sketch.current] || SKETCHES[0];
-  const frac = Math.max(0, Math.min(1, sketch.strokes / STROKES_PER));
+  const pending = sketch.pending != null;
+  const cur = SKETCHES[pending ? sketch.pending : sketch.current] || SKETCHES[0];
+  const frac = pending ? 1 : Math.max(0, Math.min(1, sketch.strokes / STROKES_PER));
   const near = frac >= 0.75;
   const n = sketch.finished ? sketch.finished.length : 0;
   const title = cur.name.charAt(0).toUpperCase() + cur.name.slice(1);
   return /*#__PURE__*/React.createElement("div", {
-    className: "kf-live"
+    className: "kf-live" + (pending ? " done" : "")
   }, /*#__PURE__*/React.createElement("div", {
-    className: "kf-live-paper"
+    className: "kf-live-paper",
+    style: {
+      background: pack.bg
+    }
   }, /*#__PURE__*/React.createElement(SketchArt, {
     sketch: cur,
-    frac: frac
+    frac: frac,
+    pack: pack
   })), /*#__PURE__*/React.createElement("div", {
     className: "kf-live-meta"
-  }, /*#__PURE__*/React.createElement("p", {
+  }, pending ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
     className: "kf-live-eyebrow"
-  }, "Sketching \xB7 charcoal"), /*#__PURE__*/React.createElement("p", {
+  }, "Finished \u2713"), /*#__PURE__*/React.createElement("p", {
+    className: "kf-live-title"
+  }, title), /*#__PURE__*/React.createElement("p", {
+    className: "kf-live-note"
+  }, "Keep this one in your collection?"), /*#__PURE__*/React.createElement("div", {
+    className: "kf-save-row"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "kf-save",
+    onClick: onSave
+  }, "Save"), /*#__PURE__*/React.createElement("button", {
+    className: "kf-del",
+    onClick: onDiscard
+  }, "Delete"))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
+    className: "kf-live-eyebrow"
+  }, "Sketching \xB7 ", pack.label.toLowerCase()), /*#__PURE__*/React.createElement("p", {
     className: "kf-live-title"
   }, title), /*#__PURE__*/React.createElement("div", {
     className: "kf-live-bar"
@@ -1701,7 +1920,7 @@ function LiveSketch({
     }
   })), /*#__PURE__*/React.createElement("p", {
     className: "kf-live-note"
-  }, near ? /*#__PURE__*/React.createElement(React.Fragment, null, "Almost there \u2014 a few more clean lines finish it.") : /*#__PURE__*/React.createElement(React.Fragment, null, "Every clean line adds a stroke", n > 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, " \xB7 ", /*#__PURE__*/React.createElement("b", null, n), " finished") : "", "."))));
+  }, near ? /*#__PURE__*/React.createElement(React.Fragment, null, "Almost there \u2014 a few more clean lines finish it.") : /*#__PURE__*/React.createElement(React.Fragment, null, "Every clean line adds a stroke", n > 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, " \xB7 ", /*#__PURE__*/React.createElement("b", null, n), " saved") : "", ".")))));
 }
 ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(App, null));</script>
 </body>
