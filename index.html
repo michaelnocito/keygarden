@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>keyform — symbol typing trainer</title>
+<style>
+  /* ── Nocito calm-analyst design system (canonical: spreadsheet-archaeology/DESIGN_SYSTEM.md) ──
+     Light theme, soft shadows, restrained color. System-ui for chrome; monospace only for code/keys. */
+  *{box-sizing:border-box;}
+  body{margin:0;}
+  #root{
+    --bg:#eef1f5;--panel:#ffffff;--line:#d6dce4;
+    --shadow:0 1px 2px rgba(20,30,50,.06),0 6px 20px rgba(20,30,50,.06);
+    --ink:#1f2328;--dim:#5b6470;
+    --accent:#2f6df0;--accent-d:#1f4fc4;--accent-bg:#eef4ff;--accent-bd:#d4e1ff;
+    --good:#1a7f37;--good-bg:#e7f6ec;--good-bd:#bfe5ca;
+    --bad:#cf222e;--bad-bg:#fdecee;
+    --warm:#9a6700;--warm-bg:#fbf7ec;--warm-bd:#e3d7a5;
+    --sheet-head:#f3f5f8;
+    --mono:"Consolas",ui-monospace,SFMono-Regular,Menlo,monospace;
+    min-height:100vh;background:radial-gradient(120% 120% at 50% 0%,#f6f8fb 0%,#eef1f5 62%);
+    color:var(--ink);font:15px/1.55 -apple-system,"Segoe UI",Roboto,system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+    padding:2rem 1.25rem 4rem;display:flex;flex-direction:column;align-items:center;}
+  .kf-head{text-align:center;margin-bottom:1.75rem;}
+  .kf-brand{display:flex;align-items:center;justify-content:center;gap:.6rem;}
+  .kf-glyph{font-family:var(--mono);color:var(--accent);font-size:1.3rem;letter-spacing:-2px;background:linear-gradient(135deg,#eaf1ff,#dbe7ff);padding:.25rem .45rem;border-radius:9px;}
+  .kf-head h1{font-weight:700;font-size:2.2rem;margin:0;letter-spacing:-.5px;color:var(--ink);}
+  .kf-tag{color:var(--dim);font-size:.82rem;margin:.4rem 0 0;}
+  .kf-nav{display:flex;gap:.4rem;margin-bottom:1.5rem;flex-wrap:wrap;justify-content:center;align-items:center;}
+  .kf-nav button{font-family:inherit;font-size:.8rem;font-weight:600;color:var(--dim);background:var(--panel);border:1px solid var(--line);padding:.5rem .9rem;border-radius:999px;cursor:pointer;transition:.18s;}
+  .kf-nav button:hover{color:var(--accent-d);border-color:var(--accent-bd);}
+  .kf-nav button.on{color:#fff;background:var(--accent);border-color:var(--accent);box-shadow:0 2px 8px rgba(47,109,240,.3);}
+  .kf-mute{width:2.2rem;height:2.2rem;padding:0!important;border-radius:50%!important;font-size:1rem;}
+  .kf-mute.off{opacity:.4;text-decoration:line-through;}
+  .kf-settings{width:100%;max-width:620px;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:1.1rem 1.3rem;margin-bottom:1.2rem;}
+  .kf-settings label{font-size:.9rem;color:var(--ink);}
+  .kf-settings label strong{color:var(--accent-d);}
+  .kf-settings input[type=range]{width:100%;margin:.7rem 0 .2rem;accent-color:var(--accent);cursor:pointer;}
+  .kf-slabels{display:flex;justify-content:space-between;font-size:.66rem;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;}
+  .kf-settings .kf-dim{margin:.6rem 0 0;}
+  .kf-reset{margin-top:.9rem;font-family:inherit;font-size:.72rem;font-weight:600;color:var(--bad);background:transparent;border:1px solid rgba(207,34,46,.3);padding:.4rem .8rem;border-radius:8px;cursor:pointer;transition:.15s;}
+  .kf-reset:hover{background:var(--bad-bg);}
+  .kf-main{width:100%;max-width:620px;}
+  .kf-card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:2.2rem 1.8rem;box-shadow:var(--shadow);}
+  .kf-eyebrow{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--accent-d);margin:0 0 .5rem;}
+  .kf-celebrate{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:6;}
+  .kf-check{border-radius:50%;background:var(--good);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 8px 24px -6px rgba(26,127,55,.5);animation:pop .55s cubic-bezier(.2,1.5,.4,1),celebfade .35s ease-out .7s forwards;}
+  .kf-check.hi{background:var(--accent);box-shadow:0 8px 30px -4px rgba(47,109,240,.55);}
+  .kf-praise.hi{color:var(--accent-d);font-weight:700;}
+  @keyframes pop{0%{transform:scale(0);}60%{transform:scale(1.18);}100%{transform:scale(1);}}
+  @keyframes celebfade{to{opacity:0;transform:scale(.9);}}
+  .kf-praise{position:absolute;top:calc(50% + 44px);font-weight:700;color:var(--good);font-size:1.1rem;white-space:nowrap;animation:praise 1s ease-out forwards;}
+  @keyframes praise{0%{opacity:0;transform:translateY(6px);}25%{opacity:1;transform:none;}80%{opacity:1;}100%{opacity:0;}}
+  .kf-particle{position:absolute;width:9px;height:9px;border-radius:50%;animation:burst .85s cubic-bezier(.25,.6,.3,1) forwards;}
+  @keyframes burst{0%{transform:translate(0,0) scale(1);opacity:1;}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0;}}
+  .kf-center{text-align:center;}
+  .kf-fade{animation:fade .4s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+  .kf-dim{color:var(--dim);font-size:.85rem;}
+  .kf-dim code,.kf-focus code{font-family:var(--mono);color:var(--accent-d);background:var(--accent-bg);border:1px solid var(--accent-bd);padding:.05rem .35rem;border-radius:5px;}
+  .kf-bigkey{font-family:var(--mono);position:relative;font-size:6rem;font-weight:700;line-height:1;margin:1.4rem 0 .6rem;color:var(--ink);transition:.12s;display:inline-block;}
+  .kf-bigkey.ok{color:var(--good);transform:scale(.92);}
+  .kf-bigkey.ok::after{content:"";position:absolute;left:50%;top:50%;width:1.2em;height:1.2em;border:2px solid var(--good);border-radius:50%;transform:translate(-50%,-50%);animation:ring .45s ease-out forwards;}
+  @keyframes ring{0%{opacity:.6;transform:translate(-50%,-50%) scale(.6);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.8);}}
+  .kf-bigkey.miss{color:var(--bad);animation:nudge .18s;}
+  @keyframes nudge{0%,100%{transform:none;}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+  .kf-name{font-weight:700;font-size:1.1rem;margin:.2rem 0 .1rem;color:var(--ink);}
+  .kf-finger{color:var(--accent-d);font-size:.78rem;font-weight:600;letter-spacing:.5px;}
+  .kf-hint{margin:1rem auto 0;color:var(--warm);font-size:.85rem;background:var(--warm-bg);border:1px solid var(--warm-bd);border-radius:8px;padding:.5rem .8rem;display:inline-block;animation:fade .25s ease;}
+  .kf-snip{font-family:var(--mono);font-size:1.5rem;line-height:2.4;letter-spacing:1px;margin:1.4rem 0 .5rem;word-break:break-word;border-radius:10px;padding:.6rem;transition:.15s;}
+  .kf-snip.wrong{background:var(--bad-bg);}
+  .kf-snip .done{color:var(--good);}
+  .kf-snip .auto{color:var(--good);opacity:.6;font-style:italic;border-bottom:1px dotted var(--good);}
+  .kf-snip .pending{color:var(--dim);opacity:.55;}
+  .kf-snip .cur{color:#fff;background:var(--accent);border-radius:4px;padding:.05rem .12rem;box-shadow:0 0 0 2px rgba(47,109,240,.25);}
+  .kf-tracks{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:1.2rem;}
+  .kf-tracks button{font-family:inherit;font-size:.72rem;font-weight:600;color:var(--dim);background:var(--sheet-head);border:1px solid var(--line);padding:.3rem .65rem;border-radius:999px;cursor:pointer;transition:.15s;}
+  .kf-tracks button:hover{color:var(--accent-d);border-color:var(--accent-bd);}
+  .kf-tracks button.on{color:#fff;background:var(--accent);border-color:var(--accent);}
+  .kf-card h2{font-weight:700;margin:0 0 1rem;font-size:1.4rem;color:var(--ink);}
+  .kf-focus{font-size:.85rem;margin:0 0 1.3rem;}
+  .kf-focus code{margin-right:.3rem;font-size:1rem;}
+  .kf-heat{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:.45rem;}
+  .kf-cell{border-radius:9px;padding:.6rem .2rem;text-align:center;border:1px solid var(--line);}
+  .kf-cell-ch{font-family:var(--mono);display:block;font-size:1.3rem;font-weight:600;color:var(--ink);}
+  .kf-cell-meta{display:block;font-size:.62rem;color:var(--dim);margin-top:.15rem;}
+  .kf-empty{text-align:center;}
+  .kf-empty p{margin:.5rem 0;}
+  .kf-empty p:first-child{font-weight:700;font-size:1.25rem;color:var(--ink);}
+  .kf-relax{position:fixed;inset:0;background:linear-gradient(180deg,#1b2a44 0%,#243a5e 55%,#33506f 100%);color:#eaf0fb;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;cursor:pointer;text-align:center;padding:2rem;animation:fade .5s ease;}
+  .kf-relax p{font-weight:700;font-size:1.5rem;margin:.4rem 0 0;}
+  .kf-relax .kf-dim{color:#c2d2ec;font-size:.9rem;max-width:320px;}
+  .kf-breath{width:90px;height:90px;border-radius:50%;border:2px solid #bcd0f0;box-shadow:0 0 40px rgba(188,208,240,.4);margin-bottom:1.5rem;animation:breath 4s ease-in-out infinite;}
+  @keyframes breath{0%,100%{transform:scale(.7);opacity:.4;}50%{transform:scale(1.15);opacity:1;}}
+
+  /* ── Garden / wildlife layer ── */
+  .kf-garden{padding:0;overflow:hidden;}
+  .kf-sky{position:relative;width:100%;height:240px;overflow:hidden;border-radius:14px 14px 0 0;background:linear-gradient(180deg,#aacbf0 0%,#cfe3f7 48%,#eaf4e6 70%,#dcebcf 100%);transition:background 1.6s ease;}
+  .kf-sky.dusk{background:linear-gradient(180deg,#3a4a78 0%,#8a6f9e 42%,#e7a76a 72%,#caa07a 100%);}
+  .kf-sky.night{background:linear-gradient(180deg,#10193a 0%,#1c2b56 50%,#26406a 78%,#2c4630 100%);}
+  .kf-orb{position:absolute;left:50%;top:50%;width:46px;height:46px;border-radius:50%;margin:-23px;transition:opacity 1.2s ease;animation:arc 90s linear infinite;}
+  .kf-orb.sun{background:radial-gradient(circle at 40% 38%,#fff7e0,#ffd86b 60%,#f7b733);box-shadow:0 0 36px rgba(255,216,107,.7);}
+  .kf-orb.moon{background:radial-gradient(circle at 38% 36%,#fdfdff,#dfe6f5 65%,#aeb9d6);box-shadow:0 0 28px rgba(210,224,255,.5);}
+  @keyframes arc{0%{transform:rotate(8deg) translateX(150px) rotate(-8deg);}100%{transform:rotate(172deg) translateX(150px) rotate(-172deg);}}
+  .kf-star{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;opacity:0;animation:twinkle 4s ease-in-out infinite;}
+  .kf-sky.night .kf-star{opacity:.85;}
+  @keyframes twinkle{0%,100%{opacity:.3;}50%{opacity:.9;}}
+  .kf-ground{position:absolute;left:0;right:0;bottom:0;height:64px;background:linear-gradient(180deg,#bcd79a,#8fb877);}
+  .kf-sky.night .kf-ground{background:linear-gradient(180deg,#33523a,#233a2a);transition:background 1.6s ease;}
+  .kf-plant{position:absolute;bottom:42px;transform-origin:bottom center;animation:sway 6s ease-in-out infinite;}
+  @keyframes sway{0%,100%{transform:rotate(-2deg);}50%{transform:rotate(2deg);}}
+  .kf-critter{position:absolute;will-change:transform;pointer-events:none;}
+  .kf-drift{animation:drift 26s linear infinite;}
+  @keyframes drift{0%{transform:translateX(-40px);}100%{transform:translateX(560px);}}
+  .kf-flit{animation:flit 14s ease-in-out infinite;}
+  @keyframes flit{0%{transform:translate(0,0);}25%{transform:translate(140px,-22px);}50%{transform:translate(300px,10px);}75%{transform:translate(440px,-16px);}100%{transform:translate(560px,0);}}
+  .kf-hover{animation:hover 5s ease-in-out infinite;}
+  @keyframes hover{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+  .kf-firefly{animation:firefly 7s ease-in-out infinite;}
+  @keyframes firefly{0%,100%{transform:translate(0,0);opacity:.2;}50%{transform:translate(60px,-30px);opacity:1;}}
+  .kf-garden-body{padding:1.6rem 1.8rem 2rem;}
+  .kf-ready{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;background:var(--good-bg);border:1px solid var(--good-bd);border-left:4px solid var(--good);border-radius:10px;padding:.85rem 1rem;margin-bottom:1.4rem;animation:fade .4s ease;}
+  .kf-ready p{margin:0;font-size:.92rem;color:#17502b;flex:1 1 200px;}
+  .kf-ready b{color:var(--good);}
+  .kf-plant-btn{font-family:inherit;font-size:.85rem;font-weight:700;color:#fff;background:var(--good);border:0;border-radius:9px;padding:.55rem 1.1rem;cursor:pointer;box-shadow:0 2px 8px rgba(26,127,55,.3);transition:.15s;}
+  .kf-plant-btn:hover{filter:brightness(1.06);}
+  .kf-welcome-back{font-size:.85rem;color:var(--accent-d);background:var(--accent-bg);border:1px solid var(--accent-bd);border-radius:9px;padding:.6rem .9rem;margin-bottom:1.2rem;}
+  .kf-soil{font-size:.85rem;color:var(--dim);margin:0 0 1.4rem;display:flex;align-items:center;gap:.6rem;}
+  .kf-sprout{flex:1;height:6px;border-radius:999px;background:var(--sheet-head);overflow:hidden;border:1px solid var(--line);}
+  .kf-sprout i{display:block;height:100%;background:linear-gradient(90deg,#bcd79a,var(--good));border-radius:999px;transition:width .8s ease;}
+  .kf-ladder{display:flex;flex-direction:column;gap:.7rem;}
+  .kf-eco{display:flex;gap:.85rem;align-items:flex-start;background:var(--sheet-head);border:1px solid var(--line);border-radius:12px;padding:.85rem .95rem;}
+  .kf-eco.locked{opacity:.55;}
+  .kf-eco-icon{font-size:1.6rem;line-height:1;flex:0 0 auto;width:2rem;text-align:center;}
+  .kf-eco-name{font-weight:700;font-size:.95rem;color:var(--ink);margin:0 0 .15rem;}
+  .kf-eco-wild{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--good);margin:0 0 .35rem;}
+  .kf-eco.locked .kf-eco-wild{color:var(--dim);}
+  .kf-eco-fact{font-size:.84rem;line-height:1.5;color:#2b3240;margin:0;}
+  .kf-eco-fact .kf-locktag{color:var(--dim);font-style:italic;}
+  @media (prefers-reduced-motion:reduce){
+    .kf-orb,.kf-star,.kf-plant,.kf-drift,.kf-flit,.kf-hover,.kf-firefly,.kf-breath{animation:none!important;}
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+/* ── Data ── */
+const SYMBOLS = [
+  { ch: "=", name: "equals", finger: "right pinky" },
+  { ch: ";", name: "semicolon", finger: "right pinky" },
+  { ch: "[", name: "left bracket", finger: "right pinky" },
+  { ch: ":", name: "colon", finger: "right pinky + Shift" },
+  { ch: "_", name: "underscore", finger: "right pinky + Shift" },
+  { ch: '"', name: "double quote", finger: "right pinky + Shift" },
+  { ch: "(", name: "left paren", finger: "right ring + Shift" },
+  { ch: "{", name: "left brace", finger: "right pinky + Shift" },
+  { ch: "*", name: "asterisk", finger: "right middle + Shift" },
+  { ch: "<", name: "less than", finger: "right middle + Shift" },
+  { ch: ">", name: "greater than", finger: "right ring + Shift" },
+  { ch: "#", name: "hash", finger: "left middle + Shift" },
+  { ch: "%", name: "percent", finger: "left index + Shift" },
+  { ch: "&", name: "ampersand", finger: "right index + Shift" },
+  { ch: "@", name: "at", finger: "left ring + Shift" },
+  { ch: "|", name: "pipe", finger: "right pinky + Shift" },
+];
+const SYMBOL_SET = new Set(SYMBOLS.map((s) => s.ch));
+const PAIRS = { "(": ")", "[": "]", "{": "}", '"': '"', "'": "'" }; // editor-style auto-close
+const SNIPPETS = [
+  { track: "SQL", text: "SELECT * FROM users;" },
+  { track: "SQL", text: "WHERE id = 1 AND active = TRUE;" },
+  { track: "SQL", text: "GROUP BY dept HAVING COUNT(*) > 5;" },
+  { track: "Python", text: 'df[df["age"] > 21]' },
+  { track: "Python", text: 'data = {"key": [1, 2, 3]}' },
+  { track: "Python", text: "result = sum(x for x in nums)" },
+  { track: "Excel", text: "=VLOOKUP(A2, B:C, 2, FALSE)" },
+  { track: "Excel", text: '=IF(B2 > 0, "yes", "no")' },
+  { track: "Excel", text: '=SUMIF(A:A, ">100")' },
+  { track: "Tableau", text: 'IF [Sales] > 1000 THEN "High" END' },
+  { track: "Tableau", text: "SUM([Profit]) / SUM([Sales])" },
+  { track: "Stats", text: "z = (x - mu) / sigma" },
+  { track: "Stats", text: "mean = sum(x) / len(x)" },
+  { track: "Power BI", text: "Total = SUM(Sales[Amount])" },
+  { track: "Power BI", text: "Margin = DIVIDE([Profit], [Revenue])" },
+];
+const TRACKS = ["Mixed","SQL","Python","Excel","Tableau","Stats","Power BI"];
+
+/* ── Audio: researched feedback design ──
+   correct = soft warm pitched confirmation (low-salience, ignorable in bulk)
+   wrong   = low dull "soft-no", quieter, slight downward slip
+   reward  = warm rising arpeggio, only on clean line / clean streak */
+const PENTA = (() => {
+  const iv=[0,3,5,7,10], out=[];
+  for(let o=0;o<2;o++) for(const i of iv) out.push(110*2**((o*12+i)/12));
+  out.push(110*2**2); return out;
+})();
+
+function fade(a,sr){const f=Math.floor(sr*0.005);for(let i=0;i<f&&i<a.length;i++)a[a.length-1-i]*=i/f;return a;}
+function norm(a,p){let m=0;for(const v of a)m=Math.max(m,Math.abs(v));if(m>0)for(let i=0;i<a.length;i++)a[i]=a[i]/m*p;return a;}
+
+function warmPad(f,sr,dur=0.22,gain=0.45){
+  const n=Math.floor(sr*dur),buf=new Float32Array(n),w=2*Math.PI*f;
+  const a=0.008,d=0.12,sus=0.4;
+  for(let i=0;i<n;i++){const t=i/sr;let e;
+    if(t<a)e=t/a; else if(t<a+d)e=1-(1-sus)*((t-a)/d); else e=sus*Math.max(0,1-(t-a-d)/(dur-a-d));
+    buf[i]=(0.7*Math.sin(w*t)+0.2*Math.sin(2*w*t)+0.1*Math.sin(3*w*t))*e*gain;}
+  return fade(buf,sr);
+}
+// correct: warm, gentle upward lift, no harsh high end
+function correctVoice(f,sr){
+  const dur=0.085,n=Math.floor(sr*dur),buf=new Float32Array(n);let ph=0;
+  for(let i=0;i<n;i++){const t=i/sr;
+    const finst=f*(1+0.05*(t/dur));        // small rise = "yes"
+    ph+=2*Math.PI*finst/sr;
+    let s=0.8*Math.sin(ph)+0.2*Math.sin(2*ph); // + soft octave
+    s*=Math.exp(-t/0.03);
+    if(t<0.0015)s*=t/0.0015;
+    buf[i]=s;}
+  return fade(norm(buf,0.55),sr);
+}
+// wrong: low dull soft-no, downward, quieter
+function missVoice(sr){
+  const dur=0.12,n=Math.floor(sr*dur),buf=new Float32Array(n);let ph=0;
+  for(let i=0;i<n;i++){const t=i/sr;
+    const finst=165*(1-0.27*(t/dur));      // downward slip
+    ph+=2*Math.PI*finst/sr;
+    let s=Math.sin(ph)*Math.exp(-t/0.04);
+    if(t<0.008)s+=(Math.random()*2-1)*0.18*(1-t/0.008); // soft body, low-passed feel
+    if(t<0.0015)s*=t/0.0015;
+    buf[i]=s;}
+  return fade(norm(buf,0.6),sr);
+}
+// reward: warm rising arpeggio (root, fifth, octave)
+function rewardVoice(sr){
+  const notes=[220,329.63,440],dur=0.6,n=Math.floor(sr*dur),mix=new Float32Array(n);
+  notes.forEach((f,k)=>{const v=warmPad(f,sr,0.26,0.4);const off=Math.floor(sr*0.085*k);
+    for(let i=0;i<v.length&&i+off<n;i++)mix[i+off]+=v[i];});
+  return fade(norm(mix,0.6),sr);
+}
+
+// gentle pentatonic phrase — an unbroken run plays it as a melody
+const PHRASE=[0,2,4,5,4,2,3,5,7,5,4,3,2,4,5,7];
+
+class AudioEngine{
+  constructor(){this.ctx=null;this.master=null;this.notes=new Map();this.miss=null;this.reward=null;this.muted=false;this.flow=0;this.pad=null;}
+  ensure(){
+    if(this.ctx)return;
+    const AC=window.AudioContext||window.webkitAudioContext;
+    this.ctx=new AC();
+    this.master=this.ctx.createGain();
+    this.master.gain.value=this.muted?0:0.5;
+    this.master.connect(this.ctx.destination);
+    this.miss=this._buf(missVoice(this.ctx.sampleRate));
+    this.reward=this._buf(rewardVoice(this.ctx.sampleRate));
+    // flow pad: quiet root+fifth drone behind a lowpass; swells with the streak
+    const pg=this.ctx.createGain();pg.gain.value=0;
+    const lp=this.ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=520;
+    pg.connect(lp).connect(this.master);
+    [110,164.81].forEach(f=>{const o=this.ctx.createOscillator();o.type="sine";o.frequency.value=f;o.connect(pg);o.start();});
+    this.pad=pg;
+  }
+  _buf(a){const b=this.ctx.createBuffer(1,a.length,this.ctx.sampleRate);b.copyToChannel(a,0);return b;}
+  _note(idx){
+    if(!this.notes.has(idx)) this.notes.set(idx,this._buf(correctVoice(PENTA[idx],this.ctx.sampleRate)));
+    return this.notes.get(idx);
+  }
+  _play(buf,g=1){if(!buf||this.muted)return;const gn=this.ctx.createGain();gn.gain.value=g;
+    const s=this.ctx.createBufferSource();s.buffer=buf;s.connect(gn).connect(this.master);s.start();}
+  _pad(g){if(this.pad)this.pad.gain.linearRampToValueAtTime(g,this.ctx.currentTime+0.3);}
+  playKey(ok){this.ensure();if(this.ctx.state==="suspended")this.ctx.resume();
+    if(ok){this._play(this._note(PHRASE[this.flow%PHRASE.length]));this.flow++;this._pad(Math.min(this.flow/22,1)*0.12);}
+    else{this.flow=0;this._pad(0);this._play(this.miss,0.85);}}
+  milestone(){if(this.ctx)this._play(this.reward);}
+  setMuted(m){this.muted=m;if(this.master)this.master.gain.linearRampToValueAtTime(m?0:0.5,this.ctx.currentTime+0.05);}
+  duck(on){if(this.master&&!this.muted)this.master.gain.linearRampToValueAtTime(on?0.12:0.5,this.ctx.currentTime+0.15);}
+}
+const audio=new AudioEngine();
+
+/* ── miss diagnosis: spatial + Shift coaching ── */
+const POS=(()=>{
+  const rows=["`1234567890-=","qwertyuiop[]\\","asdfghjkl;'","zxcvbnm,./"];
+  const sh={"`":"~","1":"!","2":"@","3":"#","4":"$","5":"%","6":"^","7":"&","8":"*","9":"(","0":")","-":"_","=":"+","[":"{","]":"}","\\":"|",";":":","'":'"',",":"<",".":">","/":"?"};
+  const m={};
+  rows.forEach((row,r)=>row.split("").forEach((base,c)=>{
+    const x=c+r*0.4, y=r;
+    m[base]={x,y,shift:false,base};
+    if(sh[base]) m[sh[base]]={x,y,shift:true,base};
+  }));
+  for(let i=0;i<26;i++){const lo=String.fromCharCode(97+i);if(m[lo])m[String.fromCharCode(65+i)]={...m[lo],shift:true,base:lo};}
+  return m;
+})();
+const label=ch=>ch===" "?"Space":ch;
+function diagnose(targetCh,actualCh){
+  const t=POS[targetCh], a=POS[actualCh];
+  if(!t) return null;
+  if(a){
+    if(a.base===t.base){
+      if(t.shift&&!a.shift) return `Right key — ${label(targetCh)} just needs Shift.`;
+      if(!t.shift&&a.shift) return `Right key — ease off Shift for ${label(targetCh)}.`;
+    }
+    const dx=t.x-a.x, dy=t.y-a.y, adx=Math.abs(dx), ady=Math.abs(dy);
+    const h=dx>0?"right":"left", v=dy>0?"down":"up";
+    let dir;
+    if(ady<0.5) dir=`just to the ${h}`;
+    else if(adx<0.6) dir=`one row ${v}`;
+    else dir=`${v} and to the ${h}`;
+    return `You hit ${label(actualCh)} — ${label(targetCh)} is ${dir}${t.shift?", with Shift":""}.`;
+  }
+  return `Not quite — aim for ${label(targetCh)}${t.shift?" (with Shift)":""}.`;
+}
+
+/* ── persistence (localStorage; safe-fails on file:// or private mode) ── */
+const KEY="keyform.v1";
+const store={
+  load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}},
+  save(patch){try{const cur=this.load();localStorage.setItem(KEY,JSON.stringify({...cur,...patch}));}catch(e){}},
+  clear(){try{localStorage.removeItem(KEY);}catch(e){}},
+};
+
+/* ── stats ── */
+const blankStats=()=>{const s={};SYMBOLS.forEach(x=>s[x.ch]={attempts:0,errors:0,lat:[]});return s;};
+const loadStats=()=>{
+  const b=blankStats();const saved=store.load().stats;
+  if(saved)SYMBOLS.forEach(x=>{if(saved[x.ch])b[x.ch]={attempts:saved[x.ch].attempts|0,errors:saved[x.ch].errors|0,lat:Array.isArray(saved[x.ch].lat)?saved[x.ch].lat.slice(-30):[]};});
+  return b;
+};
+const median=a=>{if(!a.length)return 0;const x=[...a].sort((p,q)=>p-q),m=Math.floor(x.length/2);return x.length%2?x[m]:(x[m-1]+x[m])/2;};
+const mean=a=>a.length?a.reduce((p,q)=>p+q,0)/a.length:0;
+const weakness=st=>{const acc=st.attempts?st.errors/st.attempts:0;const slow=Math.min(median(st.lat)/600,1);return 0.15+acc*2+slow;};
+const pick=stats=>{const w=SYMBOLS.map(s=>weakness(stats[s.ch]));const tot=w.reduce((p,q)=>p+q,0);let r=Math.random()*tot;
+  for(let i=0;i<SYMBOLS.length;i++){r-=w[i];if(r<=0)return SYMBOLS[i];}return SYMBOLS[SYMBOLS.length-1];};
+
+/* ── Garden: a biodiversity ladder, unlocked in real ecological order ──
+   Each tier brings new wildlife and teaches one vetted, true fact.
+   `cost` is cumulative "growth" (clean lines / clean streaks / mastered weak keys) needed to plant it.
+   Calm rules: nothing wilts, no timers, no scores — growth only accrues. */
+const LADDER=[
+  { id:"wildflowers", icon:"🌼", name:"Native wildflowers", wild:"Bees & butterflies arrive", cost:5,
+    fact:"Plant in clusters of a few square feet — pollinators find and forage them far more easily.", critters:["bee","butterfly"] },
+  { id:"water", icon:"💧", name:"Water (a small basin)", wild:"Dragonflies, frogs & first songbirds drink", cost:14,
+    fact:"Wildlife needs three things: food, water, and cover. This is the water.", critters:["dragonfly","frog","bird"] },
+  { id:"beehouse", icon:"🏠", name:"Bee house", wild:"Solitary bees nest and stay", cost:26,
+    fact:"Solitary bees can pollinate up to ~20× more than honeybees — and most can't sting.", critters:["bee"] },
+  { id:"bughotel", icon:"🍂", name:"Bug hotel + leaf pile", wild:"Ladybugs & lacewings move in", cost:42,
+    fact:"Fallen leaves shelter insects through winter — and those become food for ground-feeding birds.", critters:["ladybug"] },
+  { id:"berries", icon:"🫐", name:"Berry shrubs", wild:"More songbirds, including migrators", cost:62,
+    fact:"Native berries pack more fat and energy than invasive fruit, and birds prefer them.", critters:["bird"] },
+  { id:"oak", icon:"🌳", name:"Native oak + nest box", wild:"Nesting insect-eating birds (chickadees)", cost:86,
+    fact:"One oak can host hundreds of caterpillar species — the exact food nesting birds feed their young.", critters:["bird"] },
+  { id:"bathouse", icon:"🦇", name:"Bat house (unlocks night)", wild:"At dusk: bats & fireflies", cost:114,
+    fact:"A single insect-eating bat can eat about 1,000 mosquito-sized insects in one night.", critters:["bat","firefly"] },
+  { id:"certified", icon:"🏅", name:"Certified habitat", wild:"Hummingbirds & diverse butterflies", cost:150,
+    fact:"Skip pesticides — they kill the very insects and birds you're trying to attract.", critters:["hummingbird","butterfly"] },
+];
+const LADDER_BY_ID=Object.fromEntries(LADDER.map(e=>[e.id,e]));
+const blankGarden=()=>({growth:0,unlocked:[],placements:[],lastVisit:null,dayStreak:0,rewardedKeys:[]});
+const loadGarden=()=>{
+  const g=store.load().garden;if(!g||typeof g!=="object")return blankGarden();
+  return {growth:g.growth|0,
+    unlocked:Array.isArray(g.unlocked)?g.unlocked.filter(id=>LADDER_BY_ID[id]):[],
+    placements:Array.isArray(g.placements)?g.placements:[],
+    lastVisit:typeof g.lastVisit==="string"?g.lastVisit:null,
+    dayStreak:g.dayStreak|0,
+    rewardedKeys:Array.isArray(g.rewardedKeys)?g.rewardedKeys:[]};
+};
+// the next tier that growth has earned but the player hasn't planted yet
+const nextReady=g=>{const planted=new Set(g.unlocked);const next=LADDER.find(e=>!planted.has(e.id));
+  return next&&g.growth>=next.cost?next:null;};
+// a symbol counts as "mastered" once it's been practiced enough and is fast + accurate
+const isMastered=st=>st&&st.attempts>=12&&(st.errors/st.attempts)<=0.06&&median(st.lat)<=420;
+
+/* ── App ── */
+function App(){
+  const [mode,setMode]=useState("home");
+  const [stats,setStats]=useState(loadStats);
+  const [garden,setGarden]=useState(loadGarden);
+  const [justReturned,setJustReturned]=useState(false);
+  const [muted,setMuted]=useState(()=>!!store.load().muted);
+  const [sens,setSens]=useState(()=>{const s=store.load().sens;return typeof s==="number"?s:0.4;});
+  const [showSet,setShowSet]=useState(false);
+  useEffect(()=>{RELAX_SENS=sens;store.save({sens});},[sens]);
+  useEffect(()=>{audio.setMuted(muted);store.save({muted});},[muted]);
+  useEffect(()=>{store.save({garden});},[garden]); // garden persists on every change
+  // the garden waited for you: on a new day, the streak grows — it never resets, nothing wilts
+  useEffect(()=>{
+    const today=new Date().toISOString().slice(0,10);
+    const prev=loadGarden().lastVisit;
+    if(prev&&prev!==today)setJustReturned(true);
+    setGarden(g=>g.lastVisit===today?g:{...g,lastVisit:today,dayStreak:(g.lastVisit?g.dayStreak:0)+1});
+  },[]);
+  // bonus growth when a once-weak key becomes mastered — gamifies the adaptive drill
+  useEffect(()=>{
+    setGarden(g=>{
+      const newly=SYMBOLS.filter(s=>isMastered(stats[s.ch])&&!g.rewardedKeys.includes(s.ch));
+      if(!newly.length)return g;
+      return {...g,growth:g.growth+newly.length*4,rewardedKeys:[...g.rewardedKeys,...newly.map(s=>s.ch)]};
+    });
+  },[stats]);
+  const saveTimer=useRef(0);
+  const record=useCallback((ch,ok,lat)=>{
+    if(!SYMBOL_SET.has(ch))return;
+    setStats(prev=>{
+      const c=prev[ch];
+      const next={...prev,[ch]:{attempts:c.attempts+1,errors:c.errors+(ok?0:1),lat:ok?[...c.lat.slice(-30),lat]:c.lat}};
+      clearTimeout(saveTimer.current);
+      saveTimer.current=setTimeout(()=>store.save({stats:next}),400); // debounce writes
+      return next;
+    });
+  },[]);
+  // clean lines / clean streaks (the existing celebration moments) accrue garden growth
+  const addGrowth=useCallback(n=>{if(n)setGarden(g=>({...g,growth:g.growth+n}));},[]);
+  const plantNext=useCallback(()=>setGarden(g=>{
+    const ready=nextReady(g);if(!ready)return g;
+    const i=g.unlocked.length;
+    return {...g,unlocked:[...g.unlocked,ready.id],placements:[...g.placements,{id:ready.id,x:12+i*11}]};
+  }),[]);
+  const toggleMute=()=>setMuted(m=>!m);
+  const resetAll=()=>{store.clear();setStats(blankStats());setGarden(blankGarden());setSens(0.4);setMuted(false);setShowSet(false);};
+  const sensLabel=sens<0.25?"Rarely":sens<0.55?"Calm":sens<0.8?"Attentive":"Eager";
+  const total=useMemo(()=>Object.values(stats).reduce((s,x)=>s+x.attempts,0),[stats]);
+  return (
+    <div className="kf-root">
+      <header className="kf-head">
+        <div className="kf-brand"><span className="kf-glyph">{"{ }"}</span><h1>keyform</h1></div>
+        <p className="kf-tag">the symbols data work runs on — slow, relaxed, repeated</p>
+      </header>
+      <nav className="kf-nav">
+        <button className={mode==="drill"?"on":""} onClick={()=>setMode("drill")}>Drill keys</button>
+        <button className={mode==="snippet"?"on":""} onClick={()=>setMode("snippet")}>Type snippets</button>
+        <button className={mode==="home"?"on":""} onClick={()=>setMode("home")}>Progress</button>
+        <button className={mode==="garden"?"on":""} onClick={()=>setMode("garden")}>Garden</button>
+        <button className={"kf-mute"+(muted?" off":"")} onClick={toggleMute} title={muted?"sound off":"sound on"}>♪</button>
+        <button className="kf-mute" onClick={()=>setShowSet(s=>!s)} title="settings">⚙</button>
+      </nav>
+      {showSet&&(
+        <div className="kf-settings kf-fade">
+          <label>Relax prompts: <strong>{sensLabel}</strong></label>
+          <input type="range" min="0" max="1" step="0.05" value={sens} onChange={e=>setSens(parseFloat(e.target.value))}/>
+          <div className="kf-slabels"><span>rarely</span><span>eager</span></div>
+          <p className="kf-dim">Triggered by mistakes or long hesitation pauses — never by typing fast. Lower = leaves you alone more.</p>
+          <button className="kf-reset" onClick={resetAll}>Reset progress &amp; settings</button>
+        </div>
+      )}
+      <main className="kf-main">
+        {mode==="home"&&<Home stats={stats} attempts={total}/>}
+        {mode==="drill"&&<Drill stats={stats} record={record} addGrowth={addGrowth}/>}
+        {mode==="snippet"&&<Snippet record={record} addGrowth={addGrowth}/>}
+        {mode==="garden"&&<Garden garden={garden} plantNext={plantNext} justReturned={justReturned}/>}
+      </main>
+    </div>
+  );
+}
+
+function Home({stats,attempts}){
+  const ranked=SYMBOLS.map(s=>({...s,st:stats[s.ch]})).filter(s=>s.st.attempts>0).sort((a,b)=>weakness(b.st)-weakness(a.st));
+  const targets=ranked.slice(0,2);
+  return (
+    <section className="kf-card kf-fade">
+      {attempts===0?(
+        <div className="kf-empty">
+          <p>No keystrokes yet.</p>
+          <p className="kf-dim">Don't worry about understanding the SQL or Python — just get the typing down. The patterns start to feel familiar on their own. Sound's on; tap ♪ to mute.</p>
+        </div>
+      ):(
+        <>
+          <h2>Where you are</h2>
+          {targets.length>0&&<p className="kf-focus">Focus next: {targets.map(t=><code key={t.ch}>{t.ch}</code>)}</p>}
+          <Heatmap stats={stats}/>
+        </>
+      )}
+    </section>
+  );
+}
+function Heatmap({stats}){
+  return (
+    <div className="kf-heat">
+      {SYMBOLS.map(s=>{const st=stats[s.ch];const acc=st.attempts?1-st.errors/st.attempts:null;const ml=Math.round(mean(st.lat));const hue=acc===null?null:95-(1-acc)*95;
+        return (
+          <div key={s.ch} className="kf-cell"
+            style={{background:acc===null?"var(--sheet-head)":`hsl(${hue},48%,${90-acc*8}%)`,borderColor:acc===null?"var(--line)":`hsl(${hue},42%,${80-acc*8}%)`}}
+            title={acc===null?"untouched":`${Math.round(acc*100)}% · ${ml}ms · ${st.attempts} hits`}>
+            <span className="kf-cell-ch">{s.ch}</span>
+            <span className="kf-cell-meta">{acc===null?"—":`${Math.round(acc*100)}%`}</span>
+          </div>
+        );})}
+    </div>
+  );
+}
+
+function Drill({stats,record,addGrowth}){
+  const statsRef=useRef(stats);statsRef.current=stats;
+  const warm=useRef(0); // index into SYMBOLS during the one-pass warmup
+  const [target,setTarget]=useState(()=>SYMBOLS[0]); // begin on the easiest key
+  const [flash,setFlash]=useState(null);
+  const [hint,setHint]=useState(null);
+  const [cel,setCel]=useState(0);
+  const [celLvl,setCelLvl]=useState(1);
+  const shownAt=useRef(performance.now());
+  const streak=useRef(0);
+  const relax=useRelaxCue();
+  useEffect(()=>{audio.duck(relax.show);},[relax.show]);
+  const next=useCallback(()=>{
+    warm.current++;
+    setTarget(warm.current<SYMBOLS.length?SYMBOLS[warm.current]:pick(statsRef.current));
+    shownAt.current=performance.now();
+  },[]);
+  useEffect(()=>{
+    shownAt.current=performance.now();
+    const onKey=e=>{
+      if(e.metaKey||e.ctrlKey||e.altKey)return;
+      if(e.key.length!==1)return;
+      e.preventDefault();
+      const lat=performance.now()-shownAt.current;
+      const ok=e.key===target.ch;
+      record(target.ch,ok,lat);relax.report(ok,lat);audio.playKey(ok);
+      if(ok){
+        setHint(null);
+        const finishedWarmup=warm.current===SYMBOLS.length-1; // last warmup key just cleared
+        streak.current+=1;
+        if(finishedWarmup||streak.current%12===0){audio.milestone();setCelLvl(finishedWarmup?2:Math.min(Math.floor(streak.current/12),4));setCel(c=>c+1);addGrowth(1);}
+      }
+      else{setHint(diagnose(target.ch,e.key));streak.current=0;}
+      setFlash(ok?"ok":"miss");setTimeout(()=>setFlash(null),180);
+      if(ok)setTimeout(next,120);
+    };
+    window.addEventListener("keydown",onKey);
+    return ()=>window.removeEventListener("keydown",onKey);
+  },[target,record,next,relax,addGrowth]);
+  return (
+    <section className="kf-card kf-fade kf-center">
+      {relax.show&&<RelaxOverlay onClose={relax.dismiss}/>}
+      <Celebrate trigger={cel} level={celLvl}/>
+      <p className="kf-dim">{warm.current<SYMBOLS.length?`Warm-up · ${warm.current+1}/${SYMBOLS.length}`:"Adaptive practice"} — no timer, no penalty.</p>
+      <div className={"kf-bigkey "+(flash||"")}>{target.ch}</div>
+      <p className="kf-name">{target.name}</p>
+      <p className="kf-finger">{target.finger}</p>
+      {hint&&<p className="kf-hint" key={hint}>{hint}</p>}
+    </section>
+  );
+}
+
+function Snippet({record,addGrowth}){
+  const [track,setTrack]=useState("Mixed");
+  const pool=useMemo(()=>track==="Mixed"?SNIPPETS:SNIPPETS.filter(s=>s.track===track),[track]);
+  const [snip,setSnip]=useState(()=>pool[0]);
+  const [pos,setPos]=useState(0);
+  const [wrong,setWrong]=useState(false);
+  const [hint,setHint]=useState(null);
+  const [auto,setAuto]=useState(()=>new Set()); // indices the "editor" auto-filled
+  const [cel,setCel]=useState(0);
+  const [celLvl,setCelLvl]=useState(1);
+  const stack=useRef([]);
+  const lastAt=useRef(performance.now());
+  const errs=useRef(0);
+  const relax=useRelaxCue();
+  useEffect(()=>{audio.duck(relax.show);},[relax.show]);
+  const loadNext=useCallback(p=>{const list=p||pool;setSnip(list[Math.floor(Math.random()*list.length)]);setPos(0);setWrong(false);setHint(null);setAuto(new Set());stack.current=[];errs.current=0;lastAt.current=performance.now();},[pool]);
+  useEffect(()=>{loadNext(pool);},[track]); // eslint-disable-line
+  useEffect(()=>{
+    const onKey=e=>{
+      if(e.metaKey||e.ctrlKey||e.altKey)return;
+      if(e.key.length!==1)return;
+      e.preventDefault();
+      const want=snip.text[pos];
+      const lat=performance.now()-lastAt.current;
+      const ok=e.key===want;
+      if(SYMBOL_SET.has(want))record(want,ok,lat);
+      relax.report(ok,lat);audio.playKey(ok);
+      if(ok){
+        setWrong(false);setHint(null);lastAt.current=performance.now();
+        const top=stack.current[stack.current.length-1];
+        const closingQuote=(want==='"'||want==="'")&&top===want;
+        if(PAIRS[want]&&!closingQuote)stack.current.push(PAIRS[want]); // opener owes a closer
+        else if(closingQuote)stack.current.pop();                      // manual closing quote
+        let np=pos+1;const skipped=[];
+        while(np<snip.text.length&&stack.current.length&&snip.text[np]===stack.current[stack.current.length-1]){
+          stack.current.pop();skipped.push(np);np++; // closer auto-fills; you don't type it
+        }
+        if(skipped.length)setAuto(prev=>{const s=new Set(prev);skipped.forEach(i=>s.add(i));return s;});
+        setPos(np); // always advance, even off the end, so the line closes cleanly
+        if(np>=snip.text.length){if(errs.current===0){audio.milestone();setCelLvl(snip.text.length>=24?3:snip.text.length>=16?2:1);setCel(c=>c+1);addGrowth(1);}setTimeout(()=>loadNext(),380);}
+      }else{errs.current+=1;setWrong(true);setHint(diagnose(want,e.key));setTimeout(()=>setWrong(false),200);}
+    };
+    window.addEventListener("keydown",onKey);
+    return ()=>window.removeEventListener("keydown",onKey);
+  },[snip,pos,record,loadNext,relax,addGrowth]);
+  return (
+    <section className="kf-card kf-fade">
+      {relax.show&&<RelaxOverlay onClose={relax.dismiss}/>}
+      <Celebrate trigger={cel} level={celLvl}/>
+      <div className="kf-tracks">
+        {TRACKS.map(t=><button key={t} className={t===track?"on":""} onClick={()=>setTrack(t)}>{t}</button>)}
+      </div>
+      <p className="kf-dim">Closers auto-fill, like your editor — just type the openers. <code>{snip.track}</code></p>
+      <div className={"kf-snip "+(wrong?"wrong":"")}>
+        {snip.text.split("").map((c,i)=><span key={i} className={(i<pos?"done":i===pos?"cur":"pending")+(auto.has(i)?" auto":"")}>{c===" "?"\u00A0":c}</span>)}
+      </div>
+      {hint&&<p className="kf-hint" key={hint}>{hint}</p>}
+    </section>
+  );
+}
+
+// shared sensitivity, 0 (rarely) .. 1 (eager); default calm
+let RELAX_SENS = 0.4;
+function useRelaxCue(){
+  const [show,setShow]=useState(false);
+  const recent=useRef([]);const cooldown=useRef(0);const spikes=useRef(0);
+  const report=useCallback((ok,lat)=>{
+    const r=recent.current;r.push({ok,lat});if(r.length>16)r.shift();
+    if(performance.now()<cooldown.current)return;
+    // sensitivity maps to thresholds: low sens = needs more evidence
+    const errNeeded=Math.round(7-RELAX_SENS*4);      // 0→7 errors … 1→3 errors
+    const spikeMult=4.5-RELAX_SENS*1.5;              // 0→4.5× … 1→3× the median gap
+    const spikesNeeded=RELAX_SENS>0.66?1:2;          // only eager mode trips on a single pause
+    const med=median(r.map(x=>x.lat));
+    if(med>0 && lat>med*spikeMult && lat>450) spikes.current++; else spikes.current=Math.max(0,spikes.current-1);
+    const errCount=r.filter(x=>!x.ok).length;
+    if(r.length>=12 && (errCount>=errNeeded || spikes.current>=spikesNeeded)){
+      setShow(true);recent.current=[];spikes.current=0;cooldown.current=performance.now()+60000;
+    }
+  },[]);
+  const dismiss=useCallback(()=>setShow(false),[]);
+  return {show,report,dismiss};
+}
+const PRAISE=["Clean","Nice flow","Smooth","Locked in","Effortless","No misses","Flowing","Crisp"];
+const PRAISE_HI=["On fire","Unstoppable","Flawless run","In the zone","Masterful"];
+function Celebrate({trigger,level=1}){
+  const [state,setState]=useState(null);
+  useEffect(()=>{
+    if(!trigger)return;
+    const L=Math.max(1,Math.min(level,4));
+    const hi=L>=3;
+    const pool=hi?PRAISE_HI:PRAISE;
+    setState({L,hi,word:pool[Math.floor(Math.random()*pool.length)]});
+    const t=setTimeout(()=>setState(null),1100);
+    return ()=>clearTimeout(t);
+  },[trigger]);
+  if(!state)return null;
+  const {L,hi,word}=state;
+  const count=6+L*5;            // 11 → 26 particles
+  const radius=40+L*16;         // 56 → 104 px
+  const parts=Array.from({length:count},(_,i)=>{
+    const ang=(i/count)*Math.PI*2+(i%2?0.3:0);
+    const r=radius*(0.7+Math.random()*0.5);
+    return [Math.cos(ang)*r,Math.sin(ang)*r,i%2];
+  });
+  return (
+    <div className="kf-celebrate" key={trigger}>
+      <div className={"kf-check"+(hi?" hi":"")} style={{width:(48+L*8)+"px",height:(48+L*8)+"px",fontSize:(1.6+L*0.15)+"rem"}}>✓</div>
+      {parts.map((d,i)=><span key={i} className="kf-particle" style={{"--tx":d[0]+"px","--ty":d[1]+"px",background:d[2]?"var(--amber)":"var(--sage)",width:(7+L)+"px",height:(7+L)+"px"}}/>)}
+      <span className={"kf-praise"+(hi?" hi":"")}>{word}{hi?` ×${level}`:""}</span>
+    </div>
+  );
+}
+
+function RelaxOverlay({onClose}){
+  useEffect(()=>{const t=setTimeout(onClose,6000);return ()=>clearTimeout(t);},[onClose]);
+  return (
+    <div className="kf-relax" onClick={onClose}>
+      <div className="kf-breath"/>
+      <p>The garden rests with you.</p>
+      <p className="kf-dim">Birds settle, the light dims. Drop your shoulders, let your wrists float — one slow breath.</p>
+    </div>
+  );
+}
+
+/* ── Garden scene: ambient SVG wildlife over a breathing sky ── */
+const CRITTER_CFG={
+  bee:{top:24,anim:"flit"},butterfly:{top:32,anim:"flit"},dragonfly:{top:42,anim:"drift"},
+  frog:{top:74,anim:"hover"},bird:{top:18,anim:"drift"},ladybug:{top:82,anim:"hover"},
+  bat:{top:22,anim:"flit"},firefly:{top:52,anim:"firefly"},hummingbird:{top:34,anim:"flit"},
+};
+function critterArt(type){
+  const s=type==="firefly"?9:type==="ladybug"?15:type==="bat"?24:22;
+  switch(type){
+    case "bee": return <svg width={s} height={s} viewBox="0 0 24 24"><ellipse cx="13" cy="14" rx="6" ry="4.4" fill="#f3c33b" stroke="#3a2a10" strokeWidth=".8"/><path d="M11 10.2v7.6M14 10.6v6.6" stroke="#3a2a10" strokeWidth="1.4"/><ellipse cx="9" cy="10" rx="4" ry="2.6" fill="#dcecff" opacity=".85" transform="rotate(-25 9 10)"/></svg>;
+    case "butterfly": return <svg width={s} height={s} viewBox="0 0 24 24"><path d="M12 12C7 6 2 7 3 12s5 6 9 0" fill="#e08bb5" opacity=".9"/><path d="M12 12c5-6 10-5 9 0s-5 6-9 0" fill="#7aa6e8" opacity=".9"/><line x1="12" y1="7" x2="12" y2="17" stroke="#3a2a10" strokeWidth="1.2"/></svg>;
+    case "dragonfly": return <svg width={s} height={s} viewBox="0 0 24 24"><line x1="12" y1="4" x2="12" y2="20" stroke="#3b7d6e" strokeWidth="2"/><ellipse cx="7" cy="9" rx="5" ry="1.6" fill="#bfe6f5" opacity=".9"/><ellipse cx="17" cy="9" rx="5" ry="1.6" fill="#bfe6f5" opacity=".9"/><circle cx="12" cy="5" r="2.2" fill="#3b7d6e"/></svg>;
+    case "frog": return <svg width={s} height={s} viewBox="0 0 24 24"><ellipse cx="12" cy="15" rx="8" ry="6" fill="#5aa84b"/><circle cx="8" cy="8" r="3" fill="#5aa84b"/><circle cx="16" cy="8" r="3" fill="#5aa84b"/><circle cx="8" cy="8" r="1.3" fill="#1f2328"/><circle cx="16" cy="8" r="1.3" fill="#1f2328"/></svg>;
+    case "bird": return <svg width={s} height={s} viewBox="0 0 24 24"><path d="M3 13c4-1 6-4 9-4s5 2 9 1c-2 3-5 5-9 5s-7-1-9-2z" fill="#7a93b8"/><circle cx="18" cy="9.5" r="1.1" fill="#1f2328"/><path d="M21 9l3-1-3 2z" fill="#e0a45b"/></svg>;
+    case "ladybug": return <svg width={s} height={s} viewBox="0 0 24 24"><circle cx="12" cy="13" r="7" fill="#d23b32"/><path d="M12 6v14" stroke="#1f2328" strokeWidth="1.2"/><circle cx="9" cy="11" r="1.2" fill="#1f2328"/><circle cx="15" cy="11" r="1.2" fill="#1f2328"/><circle cx="12" cy="5" r="2.2" fill="#1f2328"/></svg>;
+    case "bat": return <svg width={s} height={s} viewBox="0 0 24 24"><path d="M12 9c-2-4-5-4-7-2 1 0 1 2 0 3 2-1 4 0 4 2 1-2 1-2 3-3 2 1 2 1 3 3 0-2 2-3 4-2-1-1-1-3 0-3-2-2-5-2-7 2z" fill="#2c2a3a"/></svg>;
+    case "firefly": return <svg width={s} height={s} viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="#f6f08a" opacity=".5"/><circle cx="6" cy="6" r="2.4" fill="#fff7b0"/></svg>;
+    case "hummingbird": return <svg width={s} height={s} viewBox="0 0 24 24"><ellipse cx="11" cy="12" rx="4.2" ry="3" fill="#3aa6a0"/><path d="M11 12L2 9l9 1z" fill="#3a2a10"/><path d="M13 11c4-2 7-1 8 1-3 1-5 2-8 1z" fill="#6fd0c8" opacity=".9"/><circle cx="8.5" cy="11" r=".9" fill="#1f2328"/></svg>;
+    default: return null;
+  }
+}
+function Critter({type,i}){
+  const cfg=CRITTER_CFG[type]||{top:30,anim:"drift"};
+  const stationary=cfg.anim==="hover"||cfg.anim==="firefly";
+  const dur=[23,29,20,26][i%4];
+  return (
+    <span className={"kf-critter kf-"+cfg.anim}
+      style={{top:cfg.top+"%",left:stationary?(15+(i*23)%60)+"%":"-30px",animationDuration:dur+"s",animationDelay:-((i*7)%30)+"s"}}>
+      {critterArt(type)}
+    </span>
+  );
+}
+function Garden({garden,plantNext,justReturned}){
+  const unlocked=garden.unlocked;
+  const planted=new Set(unlocked);
+  const ready=nextReady(garden);
+  const nightUnlocked=planted.has("bathouse")||planted.has("certified");
+  const phase=planted.has("certified")?"night":nightUnlocked?"dusk":"day";
+  const skyClass="kf-sky"+(phase==="night"?" night":phase==="dusk"?" dusk":"");
+  const NIGHT_ONLY=new Set(["bat","firefly"]);
+  const critters=[];
+  unlocked.forEach(id=>LADDER_BY_ID[id].critters.forEach(c=>{if(!critters.includes(c))critters.push(c);}));
+  const shown=critters.filter(c=>!NIGHT_ONLY.has(c)||nightUnlocked).slice(0,7);
+  const stars=useMemo(()=>Array.from({length:16},(_,i)=>({left:(i*61)%100,top:(i*37)%70,delay:-(i%5)})),[]);
+  // gentle, non-numeric progress sprig toward the next planting (never a score)
+  const nextTier=LADDER.find(e=>!planted.has(e.id));
+  const prevCost=nextTier?(LADDER[LADDER.indexOf(nextTier)-1]?LADDER[LADDER.indexOf(nextTier)-1].cost:0):150;
+  const frac=nextTier?Math.max(0,Math.min(1,(garden.growth-prevCost)/Math.max(1,nextTier.cost-prevCost))):1;
+  return (
+    <section className="kf-card kf-garden kf-fade">
+      <div className={skyClass}>
+        <div className={"kf-orb "+(phase==="day"?"sun":"moon")}/>
+        {phase==="night"&&stars.map((s,i)=><span key={i} className="kf-star" style={{left:s.left+"%",top:s.top+"%",animationDelay:s.delay+"s"}}/>)}
+        <div className="kf-ground"/>
+        {unlocked.map((id,i)=>{const e=LADDER_BY_ID[id];const p=garden.placements.find(q=>q.id===id);const x=p?p.x:12+i*11;
+          return <span key={id} className="kf-plant" style={{left:x+"%",fontSize:id==="oak"?"2.5rem":id==="certified"?"2rem":"1.7rem",animationDelay:-(i*0.7)+"s"}}>{e.icon}</span>;})}
+        {shown.map((c,i)=><Critter key={c+i} type={c} i={i}/>)}
+      </div>
+      <div className="kf-garden-body">
+        <p className="kf-eyebrow">Your garden</p>
+        {justReturned&&<div className="kf-welcome-back">🌿 Welcome back — the garden waited for you{garden.dayStreak>1?` · day ${garden.dayStreak}`:""}. Nothing wilts here.</div>}
+        {ready?(
+          <div className="kf-ready">
+            <p>Your garden is ready for <b>{ready.name.toLowerCase()}</b>. {ready.wild}.</p>
+            <button className="kf-plant-btn" onClick={plantNext}>Plant it 🌱</button>
+          </div>
+        ):unlocked.length<LADDER.length?(
+          <p className="kf-soil"><span>Keep practicing — the soil is getting richer.</span><span className="kf-sprout"><i style={{width:Math.round(frac*100)+"%"}}/></span></p>
+        ):(
+          <p className="kf-soil">A full, certified habitat. Every clean line keeps it humming. 🐝</p>
+        )}
+        {unlocked.length===0&&<p className="kf-dim">Type a clean line, or finish a clean streak in the drill, and your first wildflowers will be ready to plant. Practicing grows the garden — there's nothing to lose and nothing to catch.</p>}
+        <div className="kf-ladder">
+          {LADDER.map(e=>{const on=planted.has(e.id);
+            return (
+              <div key={e.id} className={"kf-eco"+(on?"":" locked")}>
+                <span className="kf-eco-icon">{on?e.icon:"🌱"}</span>
+                <div>
+                  <p className="kf-eco-name">{e.name}</p>
+                  <p className="kf-eco-wild">{e.wild}</p>
+                  <p className="kf-eco-fact">{on?e.fact:<span className="kf-locktag">Grows next as biodiversity builds.</span>}</p>
+                </div>
+              </div>
+            );})}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

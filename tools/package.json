@@ -1,0 +1,17 @@
+{
+  "name": "keyform-tools",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Build + headless test tooling for keyform",
+  "scripts": {
+    "build": "node build-offline.mjs",
+    "test": "node smoke.mjs && node smoke-offline.mjs"
+  },
+  "devDependencies": {
+    "@babel/standalone": "^7.24.0",
+    "jsdom": "^24.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}
