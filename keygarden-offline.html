@@ -338,9 +338,15 @@
     .kf-garden-progbar i{transition:none!important;}
   }
 
-  /* ── Field pill in topbar (click to open settings/switch field) ── */
-  .kf-field-pill{margin-left:.55rem;font-size:.66rem;font-weight:700;color:var(--accent-d);background:var(--accent-bg);border:1px solid var(--accent-bd);border-radius:999px;padding:.14rem .55rem;cursor:pointer;transition:.15s;user-select:none;white-space:nowrap;}
+  /* ── Field pill in topbar (click to re-open the field picker) ── */
+  .kf-field-pill{display:inline-flex;align-items:center;gap:.25rem;margin-left:.55rem;font-size:.66rem;font-weight:700;color:var(--accent-d);background:var(--accent-bg);border:1px solid var(--accent-bd);border-radius:999px;padding:.14rem .35rem .14rem .58rem;cursor:pointer;transition:.15s;user-select:none;white-space:nowrap;}
   .kf-field-pill:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .kf-field-pill-caret{font-size:.78rem;line-height:1;opacity:.7;}
+  /* Picker "Cancel" link when there's already a chosen field */
+  .kf-picker-back{display:inline-flex;align-items:center;gap:.3rem;font-family:inherit;font-size:.78rem;font-weight:600;color:var(--dim);background:transparent;border:1px solid var(--line);border-radius:8px;padding:.32rem .7rem;cursor:pointer;margin-bottom:.85rem;transition:.15s;}
+  .kf-picker-back:hover{color:var(--accent-d);border-color:var(--accent-bd);background:var(--accent-bg);}
+  .kf-pickbtn.current{border-color:var(--good)!important;background:var(--good-bg)!important;}
+  .kf-pickbtn.current::before{content:"✓ Currently active";display:block;font-size:.6rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--good);margin-bottom:.35rem;}
   /* ── First-run field picker grid ── */
   .kf-pickergrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.65rem;}
   .kf-pickbtn{display:flex;flex-direction:column;align-items:flex-start;text-align:left;font-family:inherit;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:.9rem 1rem .8rem;cursor:pointer;transition:.15s;box-shadow:var(--shadow);min-height:96px;}
@@ -2493,41 +2499,48 @@ function App() {
   const sensLabel = sens < 0.25 ? "Rarely" : sens < 0.55 ? "Calm" : sens < 0.8 ? "Attentive" : "Eager";
   const total = useMemo(() => Object.values(stats).reduce((s, x) => s + x.attempts, 0), [stats]);
 
-  // First-run picker — no template chosen yet
-  if (!tplId) return /*#__PURE__*/React.createElement("div", {
-    className: "kf-root"
-  }, /*#__PURE__*/React.createElement("header", {
-    className: "kf-topbar"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "kf-brand"
-  }, /*#__PURE__*/React.createElement("a", {
-    href: "https://michaelnocito.github.io/",
-    title: "Back to Michael Nocito's portfolio",
-    style: {
-      display: "inline-flex",
-      alignItems: "center",
-      textDecoration: "none",
-      fontSize: "13px",
-      fontWeight: 700,
-      color: "#5b6470",
-      marginRight: "10px",
-      whiteSpace: "nowrap"
-    }
-  }, "\u2190 Home"), /*#__PURE__*/React.createElement("span", {
-    className: "kf-glyph"
-  }, "{ }"), /*#__PURE__*/React.createElement("span", {
-    className: "kf-brandname"
-  }, "Keygarden"))), /*#__PURE__*/React.createElement("div", {
-    className: "kf-stage",
-    style: {
-      gridTemplateColumns: "1fr",
-      maxWidth: "720px"
-    }
-  }, /*#__PURE__*/React.createElement("main", {
-    className: "kf-work"
-  }, /*#__PURE__*/React.createElement(Picker, {
-    onPick: chooseTemplate
-  }))));
+  // Field picker view — shown on true first run OR when the user clicks the topbar field-pill.
+  // If they already have a saved field, the picker lets them cancel back to it.
+  if (!tplId) {
+    const saved = store.load().template;
+    const cancelTo = TPL_BY_ID[saved] ? saved : null;
+    return /*#__PURE__*/React.createElement("div", {
+      className: "kf-root"
+    }, /*#__PURE__*/React.createElement("header", {
+      className: "kf-topbar"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "kf-brand"
+    }, /*#__PURE__*/React.createElement("a", {
+      href: "https://michaelnocito.github.io/",
+      title: "Back to Michael Nocito's portfolio",
+      style: {
+        display: "inline-flex",
+        alignItems: "center",
+        textDecoration: "none",
+        fontSize: "13px",
+        fontWeight: 700,
+        color: "#5b6470",
+        marginRight: "10px",
+        whiteSpace: "nowrap"
+      }
+    }, "\u2190 Home"), /*#__PURE__*/React.createElement("span", {
+      className: "kf-glyph"
+    }, "{ }"), /*#__PURE__*/React.createElement("span", {
+      className: "kf-brandname"
+    }, "Keygarden"))), /*#__PURE__*/React.createElement("div", {
+      className: "kf-stage",
+      style: {
+        gridTemplateColumns: "1fr",
+        maxWidth: "720px"
+      }
+    }, /*#__PURE__*/React.createElement("main", {
+      className: "kf-work"
+    }, /*#__PURE__*/React.createElement(Picker, {
+      onPick: chooseTemplate,
+      current: cancelTo,
+      onCancel: cancelTo ? () => setTplId(cancelTo) : null
+    }))));
+  }
   return /*#__PURE__*/React.createElement("div", {
     className: "kf-root",
     key: tplId
@@ -2554,9 +2567,12 @@ function App() {
     className: "kf-brandname"
   }, "Keygarden"), /*#__PURE__*/React.createElement("span", {
     className: "kf-field-pill",
-    title: "your field \u2014 change in \u2699 Settings",
-    onClick: () => setShowSet(true)
-  }, ACTIVE_TPL.label)), /*#__PURE__*/React.createElement("nav", {
+    title: "Click to change field",
+    onClick: () => setTplId(null)
+  }, ACTIVE_TPL.label, /*#__PURE__*/React.createElement("span", {
+    className: "kf-field-pill-caret",
+    "aria-hidden": "true"
+  }, "\u25BE"))), /*#__PURE__*/React.createElement("nav", {
     className: "kf-nav"
   }, /*#__PURE__*/React.createElement("button", {
     className: mode === "drill" ? "on" : "",
@@ -4573,27 +4589,32 @@ function Garden({
    Pick your field; sets which symbols + snippets you'll practice. Everything else
    (keyboard diagram, sketch, garden, breathing) is shared across fields. */
 function Picker({
-  onPick
+  onPick,
+  current,
+  onCancel
 }) {
   return /*#__PURE__*/React.createElement("section", {
     className: "kf-card kf-fade"
-  }, /*#__PURE__*/React.createElement("h2", {
+  }, current && onCancel && /*#__PURE__*/React.createElement("button", {
+    className: "kf-picker-back",
+    onClick: onCancel
+  }, "\u2190 Keep ", TPL_BY_ID[current] ? TPL_BY_ID[current].label : "current field"), /*#__PURE__*/React.createElement("h2", {
     style: {
       margin: "0 0 .35rem",
       fontSize: "1.5rem"
     }
-  }, "Pick your field"), /*#__PURE__*/React.createElement("p", {
+  }, current ? "Switch field" : "Pick your field"), /*#__PURE__*/React.createElement("p", {
     className: "kf-dim",
     style: {
       fontSize: ".88rem",
       margin: "0 0 1.1rem",
       maxWidth: "560px"
     }
-  }, "Keygarden grows your typing for the symbols your field actually runs on. Pick one to start \u2014 you can switch anytime in ", /*#__PURE__*/React.createElement("code", null, "\u2699"), "."), /*#__PURE__*/React.createElement("div", {
+  }, "Keygarden grows your typing for the symbols your field actually runs on. ", current ? "Switching keeps each field's stats separate — your garden and sketches stay shared." : "Pick one to start — you can switch anytime by clicking the field name in the top bar."), /*#__PURE__*/React.createElement("div", {
     className: "kf-pickergrid"
   }, TEMPLATES.map(t => /*#__PURE__*/React.createElement("button", {
     key: t.id,
-    className: "kf-pickbtn",
+    className: "kf-pickbtn" + (t.id === current ? " current" : ""),
     onClick: () => onPick(t.id)
   }, /*#__PURE__*/React.createElement("span", {
     className: "kf-pickbtn-label"

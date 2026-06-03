@@ -318,6 +318,19 @@ try {
 } catch (e) { mutedNoThrow = false; console.error("MUTED ERROR:", e.message); }
 ok("no throw while typing with audio muted", mutedNoThrow && root.textContent.length > 0);
 
+// 11. field pill in topbar re-opens the picker; Cancel returns to current field
+const pill = $(".kf-field-pill")[0];
+ok("topbar shows a field pill", !!pill);
+pill && pill.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+await new Promise(r => setTimeout(r, 30));
+ok("clicking the pill re-opens the field picker", /Switch field/.test(root.textContent));
+ok("active field is marked in the picker", !!$(".kf-pickbtn.current")[0]);
+const backBtn = $(".kf-picker-back")[0];
+ok("picker offers a 'Keep current' cancel button", !!backBtn);
+backBtn && backBtn.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+await new Promise(r => setTimeout(r, 30));
+ok("cancel returns to the chosen field's drill", !!$(".kf-bigkey")[0] || !!$(".kf-rail")[0]);
+
 console.log("FIRST DRILL TARGET:", JSON.stringify(firstTarget));
 console.log("FIRST SNIPPET TEXT:", JSON.stringify(snipText));
 console.log("");
