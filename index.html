@@ -1165,6 +1165,21 @@ function App(){
               ))}
             </div>
             <p className="kf-dim" style={{margin:".4rem 0 .9rem"}}>Switching keeps each field's progress separate. Your garden and sketches stay shared.</p>
+            <label style={{display:"block",marginBottom:".15rem"}}>Mastery bar</label>
+            <div className="kf-diffgrid">
+              {DIFF_KEYS.map(k=>{
+                const p=DIFF_PRESETS[k];
+                return (
+                  <button key={k} className={"kf-diffbtn"+(diff===k?" on":"")} onClick={()=>setDiff(k)} title={`${p.attempts}+ attempts, ≤${Math.round(p.errorRate*100)}% errors, ≤${p.latMedian}ms median`}>
+                    <span className="kf-diffbtn-label">{p.label}</span>
+                    <span className="kf-diffbtn-blurb">{p.blurb}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="kf-dim" style={{margin:".35rem 0 .9rem"}}>How strict the "mastered" gate is for each symbol. Changing this re-evaluates your tier instantly — no progress lost.</p>
+            <label className="kf-toggle"><input type="checkbox" checked={autoAdvance} onChange={e=>setAutoAdvance(e.target.checked)}/> Auto-advance level <strong>{autoAdvance?"on":"off"}</strong></label>
+            <p className="kf-dim" style={{margin:".25rem 0 .9rem"}}>When you cross T2 you graduate Words → Phrases; T3 graduates to Lines. You can always pick the level yourself — manual choice wins.</p>
             <label className="kf-toggle"><input type="checkbox" checked={relaxOn} onChange={e=>setRelaxOn(e.target.checked)}/> Breathing breaks <strong>{relaxOn?"on":"off"}</strong></label>
             <p className="kf-dim">A gentle 3-breath reset when it senses tension or hesitation — never from typing fast. Visual only; turn it off to never be interrupted.</p>
             {relaxOn&&<>
