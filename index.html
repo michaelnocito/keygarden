@@ -390,10 +390,17 @@
   .kf-fieldbtn.on .kf-fieldbtn-label,.kf-fieldbtn.on .kf-fieldbtn-blurb{color:#fff;}
   .kf-fieldbtn-label{font-weight:700;font-size:.82rem;color:var(--ink);}
   .kf-fieldbtn-blurb{font-size:.66rem;color:var(--dim);margin-top:.1rem;}
-  /* ── Quiet portfolio footer ── */
+  /* ── Footer: kit links + portfolio ── */
   .kf-footer{max-width:var(--stage-max);margin:0 auto;padding:.6rem .9rem 1.2rem;text-align:center;}
   .kf-footer-link{font-size:.72rem;font-weight:600;color:var(--dim);text-decoration:none;border-bottom:1px solid transparent;transition:.15s;}
   .kf-footer-link:hover{color:var(--accent-d);border-bottom-color:var(--accent-bd);}
+  .kf-footer-kits{margin-bottom:.65rem;}
+  .kf-footer-kits-label{display:block;font-size:.63rem;font-weight:600;color:var(--dim);margin-bottom:.38rem;letter-spacing:.04em;text-transform:uppercase;}
+  .kf-footer-kits-row{display:flex;justify-content:center;flex-wrap:wrap;gap:.3rem .45rem;}
+  .kf-footer-kit{font-size:.7rem;font-weight:600;color:var(--accent-d);text-decoration:none;padding:.18rem .52rem;border-radius:5px;border:1px solid var(--accent-bd);background:var(--accent-bg);transition:.15s;}
+  .kf-footer-kit:hover{background:var(--accent-d);color:#fff;border-color:var(--accent-d);}
+  .kf-footer-kit-hub{color:var(--dim);border-color:var(--line);background:transparent;margin-left:.2rem;}
+  .kf-footer-kit-hub:hover{color:var(--accent-d);border-color:var(--accent-bd);background:var(--accent-bg);}
 </style>
 </head>
 <body>
@@ -1208,6 +1215,15 @@ function App(){
         </main>
       </div>
       <footer className="kf-footer">
+        <div className="kf-footer-kits">
+          <span className="kf-footer-kits-label">Test what you're learning → Analyst Prep Kit</span>
+          <div className="kf-footer-kits-row">
+            {[["SQL","sql"],["Excel","excel"],["Python","python"],["Tableau","tableau"],["Stats","stats"],["Power BI","powerbi"]].map(([label,slug])=>(
+              <a key={slug} className="kf-footer-kit" href={"https://michaelnocito.github.io/analyst-prep-kit/"+slug+"/"} target="_blank" rel="noopener">{label}</a>
+            ))}
+            <a className="kf-footer-kit kf-footer-kit-hub" href="https://michaelnocito.github.io/analyst-prep-kit/" target="_blank" rel="noopener">All kits ↗</a>
+          </div>
+        </div>
         <a className="kf-footer-link" href="https://michaelnocito.github.io/" target="_blank" rel="noopener">More tools by Michael Nocito →</a>
       </footer>
     </div>
