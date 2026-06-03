@@ -363,6 +363,25 @@
   .kf-pickbtn-label{font-weight:700;font-size:.98rem;color:var(--ink);margin:0 0 .15rem;}
   .kf-pickbtn-blurb{font-size:.72rem;color:var(--dim);line-height:1.4;margin:0 0 .45rem;}
   .kf-pickbtn-syms{font-family:var(--mono);font-size:.78rem;font-weight:700;color:var(--accent-d);letter-spacing:.18em;margin-top:auto;}
+  /* ── Skill-tier badge (top of progress rail) — calm, no failure framing ── */
+  .kf-tier-badge{background:linear-gradient(135deg,#eef4ff,#e6f0ff);border:1px solid var(--accent-bd);border-radius:10px;padding:.5rem .7rem;box-shadow:var(--shadow);}
+  .kf-tier-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;}
+  .kf-tier-eyebrow{font-size:.62rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-d);}
+  .kf-tier-num{font-family:var(--mono);font-size:.92rem;font-weight:800;color:#fff;background:var(--accent);border-radius:5px;padding:.05rem .35rem;letter-spacing:.04em;}
+  .kf-tier-name{font-weight:700;font-size:.92rem;color:var(--ink);margin:.18rem 0 .12rem;}
+  .kf-tier-meta{font-size:.66rem;color:var(--dim);margin-bottom:.3rem;}
+  .kf-tier-bar{height:5px;border-radius:999px;background:#fff;border:1px solid var(--accent-bd);overflow:hidden;}
+  .kf-tier-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#5b85e8);border-radius:999px;transition:width 1s ease;}
+  .kf-tier-next{font-size:.62rem;color:var(--dim);margin-top:.22rem;}
+  .kf-tier-next b{color:var(--accent-d);font-weight:700;}
+  /* ── Difficulty picker + auto-advance toggle inside settings ── */
+  .kf-diffgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.3rem;margin-top:.3rem;}
+  .kf-diffbtn{font-family:inherit;background:var(--sheet-head);border:1px solid var(--line);border-radius:8px;padding:.4rem .35rem;cursor:pointer;transition:.12s;display:flex;flex-direction:column;align-items:center;gap:.1rem;}
+  .kf-diffbtn:hover{background:var(--accent-bg);border-color:var(--accent-bd);}
+  .kf-diffbtn.on{background:var(--accent);border-color:var(--accent);box-shadow:0 2px 6px rgba(47,109,240,.25);}
+  .kf-diffbtn.on .kf-diffbtn-label,.kf-diffbtn.on .kf-diffbtn-blurb{color:#fff;}
+  .kf-diffbtn-label{font-weight:700;font-size:.72rem;color:var(--ink);}
+  .kf-diffbtn-blurb{font-size:.58rem;color:var(--dim);text-align:center;line-height:1.2;}
   /* ── Field switcher inside settings ── */
   .kf-fieldgrid{display:grid;grid-template-columns:1fr;gap:.3rem;margin-top:.35rem;}
   .kf-fieldbtn{display:flex;flex-direction:column;align-items:flex-start;text-align:left;font-family:inherit;background:var(--sheet-head);border:1px solid var(--line);border-radius:9px;padding:.5rem .7rem;cursor:pointer;transition:.12s;}
@@ -1159,7 +1178,7 @@ function App(){
       )}
       <div className="kf-stage">
         <aside className="kf-rail">
-          <ProgressRail stats={stats} attempts={total} sketch={sketch} streak={streak} onFocus={startFocus} onSave={saveSketch} onDiscard={discardSketch}/>
+          <ProgressRail stats={stats} attempts={total} sketch={sketch} streak={streak} onFocus={startFocus} onSave={saveSketch} onDiscard={discardSketch} tier={tier} mastered={mastered} diff={diff} fieldLabel={ACTIVE_TPL.label}/>
         </aside>
         <main className="kf-work">
           {mode==="garden"
@@ -1191,7 +1210,7 @@ function Collapsible({title,defaultOpen=false,subtitle,children}){
   );
 }
 
-function ProgressRail({stats,attempts,sketch,streak,onFocus,onSave,onDiscard}){
+function ProgressRail({stats,attempts,sketch,streak,onFocus,onSave,onDiscard,tier,mastered,diff,fieldLabel}){
   const finished=sketch?sketch.finished:[];
   const recent=[...finished].reverse().slice(0,9);
   const streakWord=streak&&streak.streak>1?`${streak.streak} days in a row`:"a fresh start";
@@ -1201,6 +1220,15 @@ function ProgressRail({stats,attempts,sketch,streak,onFocus,onSave,onDiscard}){
     .map(s=>({...s,miss:s.st.errors/s.st.attempts}))
     .sort((a,b)=>b.miss-a.miss).slice(0,5);
   const focusSet=missed.map(s=>s.ch);
+  // Tier badge: uses `best` for display (never decreases — handoff guardrail), and shows
+  // progress to the next tier so users see what's coming without any failure framing.
+  const tierObj = tier || {current:1,best:1};
+  const tierShown = TIER_BY_ID[Math.max(tierObj.current||1, tierObj.best||1)] || TIERS[0];
+  const masteredCount = mastered ? Object.keys(mastered).length : 0;
+  const totalSyms = SYMBOLS.length || 1;
+  const pct = masteredCount / totalSyms;
+  const nextTier = TIERS.find(t=>t.threshold>pct);
+  const toNextPct = nextTier ? Math.max(0, Math.min(1, (pct - (TIERS[nextTier.id-2]?.threshold||0)) / (nextTier.threshold - (TIERS[nextTier.id-2]?.threshold||0)))) : 1;
   return (
     <>
       {streak&&streak.sessions>0&&(
@@ -1212,6 +1240,21 @@ function ProgressRail({stats,attempts,sketch,streak,onFocus,onSave,onDiscard}){
           </span>
         </div>
       )}
+      <div className="kf-tier-badge" title={`Tier ${tierShown.id} — ${tierShown.blurb}`}>
+        <div className="kf-tier-head">
+          <span className="kf-tier-eyebrow">Your skill tier{fieldLabel?` · ${fieldLabel}`:""}</span>
+          <span className="kf-tier-num">T{tierShown.id}</span>
+        </div>
+        <div className="kf-tier-name">{tierShown.name}</div>
+        <div className="kf-tier-meta">{masteredCount}/{totalSyms} symbols mastered{diff&&diff!=="normal"?` · ${DIFF_PRESETS[diff].label}`:""}</div>
+        {nextTier && (
+          <>
+            <div className="kf-tier-bar"><i style={{width:Math.round(toNextPct*100)+"%"}}/></div>
+            <div className="kf-tier-next">→ <b>T{nextTier.id} {nextTier.name}</b> at {Math.round(nextTier.threshold*100)}% mastered</div>
+          </>
+        )}
+        {!nextTier && <div className="kf-tier-next" style={{color:"var(--good)"}}>✓ Full set mastered for this field.</div>}
+      </div>
       <Collapsible title="Your most-missed keys" defaultOpen={true} subtitle={attempts===0?null:missed.length>0?`${missed.length} ${missed.length===1?"key":"keys"} fumbled`:"clean so far"}>
         {attempts===0
           ? <p className="kf-dim" style={{margin:0}}>No keystrokes yet. Start the warm-up — the keys you fumble surface here, with a button to drill just those.</p>
