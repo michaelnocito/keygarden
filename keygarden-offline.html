@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Keygarden — symbol typing trainer (offline)</title>
+<title>keyform — symbol typing trainer (offline)</title>
 <style>
-  /* ── Nocito calm-analyst design system (canonical: spreadsheet-archaeology/DESIGN_SYSTEM.md) ──
-     Light theme, soft shadows, restrained color. System-ui for chrome; monospace only for code/keys. */
+  /* ── Nocito calm-analyst design system (spreadsheet-archaeology/DESIGN_SYSTEM.md) ──
+     Light theme · system-ui chrome · monospace only for keys/code · no external fonts */
   *{box-sizing:border-box;}
   body{margin:0;}
   #root{
@@ -19,316 +19,139 @@
     --warm:#9a6700;--warm-bg:#fbf7ec;--warm-bd:#e3d7a5;
     --sheet-head:#f3f5f8;
     --mono:"Consolas",ui-monospace,SFMono-Regular,Menlo,monospace;
-    /* Responsive scaling: small laptop/high-zoom defaults; bumped at 1100px and 1400px breakpoints */
-    --rail-w:220px;
-    --kbd-key:26px;
-    --kbd-font:8px;
-    --kbd-max:460px;
-    --bigkey:3.1rem;
-    --place-where:.92rem;
-    --place-finger:.72rem;
-    --name-size:.82rem;
-    --sketch-canvas:92px;
-    --sketch-w:100px;
-    --slot-size:1.4rem;
-    --slot-font:.88rem;
-    --stage-max:1180px;
-    min-height:100vh;background:radial-gradient(120% 120% at 50% 0%,#f6f8fb 0%,#eef1f5 62%);
-    color:var(--ink);font:15px/1.55 -apple-system,"Segoe UI",Roboto,system-ui,sans-serif;-webkit-font-smoothing:antialiased;
-    padding:0;display:block;}
-  /* Responsive scaling overrides — use more real estate on bigger displays */
-  @media (min-width:1100px){
-    #root{--rail-w:260px;--kbd-key:32px;--kbd-font:10px;--kbd-max:600px;--bigkey:4.4rem;--place-where:1.1rem;--place-finger:.82rem;--name-size:.95rem;--sketch-canvas:130px;--sketch-w:144px;--slot-size:1.7rem;--slot-font:1.05rem;--stage-max:1380px;}
+    min-height:100vh;background:var(--bg);color:var(--ink);
+    font:15px/1.55 -apple-system,"Segoe UI",Roboto,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex;flex-direction:column;align-items:center;padding:1.6rem 1rem 3.5rem;
   }
-  @media (min-width:1400px){
-    #root{--rail-w:300px;--kbd-key:38px;--kbd-font:11px;--kbd-max:760px;--bigkey:5.6rem;--place-where:1.3rem;--place-finger:.92rem;--name-size:1.05rem;--sketch-canvas:172px;--sketch-w:188px;--slot-size:1.95rem;--slot-font:1.2rem;--stage-max:1560px;}
-  }
-  /* ── Desktop shell: sticky top bar + two-column stage (progress rail + work area) ── */
-  .kf-topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:.5rem;padding:.3rem .9rem;background:var(--panel);border-bottom:1px solid var(--line);box-shadow:0 1px 0 rgba(20,30,50,.03);}
-  .kf-brand{display:flex;align-items:center;gap:.5rem;}
-  .kf-glyph{font-family:var(--mono);color:var(--accent);font-size:.82rem;letter-spacing:-2px;background:linear-gradient(135deg,#eaf1ff,#dbe7ff);padding:.1rem .3rem;border-radius:6px;}
-  .kf-brandname{font-weight:700;font-size:.88rem;letter-spacing:-.4px;color:var(--ink);}
-  .kf-nav{display:flex;gap:.4rem;margin-left:.8rem;align-items:center;}
-  .kf-nav button{font-family:inherit;font-size:.72rem;font-weight:600;color:var(--dim);background:var(--sheet-head);border:1px solid var(--line);padding:.25rem .7rem;border-radius:999px;cursor:pointer;transition:.18s;}
+  /* ── Brand header ── */
+  .kf-head{text-align:center;margin-bottom:1.1rem;}
+  .kf-brand{display:flex;align-items:center;justify-content:center;gap:.5rem;}
+  .kf-glyph{font-family:var(--mono);color:var(--accent);font-size:.82rem;background:linear-gradient(135deg,#eaf1ff,#dbe7ff);padding:.1rem .38rem;border-radius:6px;}
+  .kf-head h1{font-weight:800;font-size:1.9rem;margin:0;letter-spacing:-.4px;color:var(--ink);}
+  .kf-tag{color:var(--dim);font-size:.8rem;margin:.3rem 0 0;}
+  .kf-field-chip{display:inline-block;margin:.4rem 0 0;font-size:.72rem;font-weight:700;color:var(--accent-d);background:var(--accent-bg);border:1px solid var(--accent-bd);border-radius:999px;padding:.18rem .6rem;}
+  /* ── Nav ── */
+  .kf-nav{display:flex;gap:.32rem;margin-bottom:1.1rem;flex-wrap:wrap;justify-content:center;align-items:center;}
+  .kf-nav button{font-family:inherit;font-size:.72rem;font-weight:600;color:var(--dim);background:var(--sheet-head);border:1px solid var(--line);padding:.26rem .7rem;border-radius:999px;cursor:pointer;transition:.18s;}
   .kf-nav button:hover{color:var(--accent-d);border-color:var(--accent-bd);}
-  .kf-nav button.on{color:#fff;background:var(--accent);border-color:var(--accent);box-shadow:0 2px 8px rgba(47,109,240,.3);}
-  .kf-controls{margin-left:auto;display:flex;gap:.4rem;align-items:center;}
-  /* PWA install pill — surfaces the browser's install action in a place users actually see */
-  .kf-install{display:inline-flex;align-items:center;gap:.3rem;font-family:inherit;font-size:.7rem;font-weight:700;color:var(--accent-d);background:var(--accent-bg);border:1px solid var(--accent-bd);padding:.25rem .35rem .25rem .6rem;border-radius:999px;cursor:pointer;transition:background .15s,color .15s,transform .12s;user-select:none;}
-  .kf-install:hover{background:var(--accent);color:#fff;border-color:var(--accent);transform:translateY(-1px);}
-  .kf-install-arrow{font-size:.78rem;line-height:1;}
-  .kf-install-label{white-space:nowrap;}
-  .kf-install-x{display:inline-flex;align-items:center;justify-content:center;width:1rem;height:1rem;border-radius:50%;color:var(--dim);font-size:.92rem;line-height:1;margin-left:.1rem;transition:background .12s,color .12s;}
-  .kf-install:hover .kf-install-x{color:rgba(255,255,255,.85);}
-  .kf-install-x:hover{background:rgba(0,0,0,.12);color:var(--ink);}
-  .kf-install:hover .kf-install-x:hover{background:rgba(255,255,255,.25);color:#fff;}
-  @media (max-width:520px){ .kf-install-label{display:none;} }
-  .kf-mute{width:1.65rem;height:1.65rem;padding:0!important;border-radius:50%!important;font-size:.78rem;font-family:inherit;font-weight:700;color:var(--dim);background:var(--sheet-head);border:1px solid var(--line);cursor:pointer;transition:.18s;}
+  .kf-nav button.on{color:#fff;background:var(--accent);border-color:var(--accent);box-shadow:0 2px 8px rgba(47,109,240,.28);}
+  .kf-mute{width:1.8rem;height:1.8rem;padding:0!important;border-radius:50%!important;font-size:.78rem;font-family:inherit;font-weight:600;color:var(--dim);background:var(--sheet-head);border:1px solid var(--line);cursor:pointer;transition:.18s;}
   .kf-mute:hover{color:var(--accent-d);border-color:var(--accent-bd);}
-  .kf-mute.on{color:#fff;background:var(--accent);border-color:var(--accent);}
   .kf-mute.off{opacity:.4;text-decoration:line-through;}
-  .kf-stage{max-width:var(--stage-max);margin:.6rem auto;padding:0 .9rem 1.5rem;display:grid;grid-template-columns:var(--rail-w) 1fr;gap:.9rem;align-items:start;}
-  .kf-rail{position:sticky;top:50px;align-self:start;max-height:calc(100vh - 60px);overflow-y:auto;display:flex;flex-direction:column;gap:.4rem;padding-bottom:.4rem;}
-  .kf-work{min-width:0;}
-  .kf-railcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:.5rem .7rem;}
-  @media (max-width:880px){
-    .kf-stage{grid-template-columns:1fr;gap:1rem;margin-top:1rem;}
-    .kf-rail{position:static;max-height:none;overflow:visible;order:1;}
-    .kf-work{order:2;}
-    .kf-nav{margin-left:0;}
-    .kf-topbar{flex-wrap:wrap;}
-  }
-  /* settings as a dropdown panel from the top-right */
-  .kf-settings-wrap{position:fixed;inset:0;z-index:30;display:flex;justify-content:flex-end;padding:3.6rem 1.5rem 1rem;background:rgba(20,30,50,.12);}
-  .kf-settings{width:100%;max-width:380px;align-self:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 50px -18px rgba(20,30,50,.45);padding:1.1rem 1.3rem;max-height:82vh;overflow:auto;}
-  .kf-settings label{font-size:.9rem;color:var(--ink);}
+  /* ── Settings ── */
+  .kf-settings{width:100%;max-width:600px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1rem 1.2rem;margin-bottom:.9rem;box-shadow:var(--shadow);}
+  .kf-settings label{font-size:.88rem;color:var(--ink);}
   .kf-settings label strong{color:var(--accent-d);}
   .kf-settings input[type=range]{width:100%;margin:.7rem 0 .2rem;accent-color:var(--accent);cursor:pointer;}
-  .kf-slabels{display:flex;justify-content:space-between;font-size:.66rem;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;}
-  .kf-settings .kf-dim{margin:.6rem 0 0;}
-  .kf-reset{margin-top:.9rem;font-family:inherit;font-size:.72rem;font-weight:600;color:var(--bad);background:transparent;border:1px solid rgba(207,34,46,.3);padding:.4rem .8rem;border-radius:8px;cursor:pointer;transition:.15s;}
+  .kf-slabels{display:flex;justify-content:space-between;font-size:.64rem;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;}
+  .kf-settings .kf-dim{margin:.5rem 0 0;}
+  .kf-reset{margin-top:.85rem;font-family:inherit;font-size:.72rem;font-weight:600;color:var(--bad);background:transparent;border:1px solid rgba(207,34,46,.3);padding:.35rem .75rem;border-radius:8px;cursor:pointer;transition:.15s;}
   .kf-reset:hover{background:var(--bad-bg);}
-  .kf-main{width:100%;}
-  .kf-card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:.85rem 1.1rem 1rem;box-shadow:var(--shadow);}
-  .kf-eyebrow{font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--accent-d);margin:0 0 .25rem;}
+  /* ── Field picker ── */
+  .kf-picker{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;}
+  .kf-pick{font-family:inherit;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:.8rem .95rem;cursor:pointer;transition:.15s;box-shadow:var(--shadow);}
+  .kf-pick:hover{border-color:var(--accent-bd);background:var(--accent-bg);transform:translateY(-2px);}
+  .kf-pick-label{display:block;font-weight:700;font-size:.9rem;color:var(--ink);}
+  .kf-pick-blurb{display:block;font-size:.68rem;color:var(--dim);margin-top:.2rem;}
+  /* ── Cards ── */
+  .kf-main{width:100%;max-width:600px;}
+  .kf-card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.3rem 1.2rem;box-shadow:var(--shadow);margin-bottom:.6rem;}
+  .kf-eyebrow{font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--accent-d);margin:0 0 .3rem;}
+  /* ── Celebration ── */
   .kf-celebrate{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:6;}
   .kf-check{border-radius:50%;background:var(--good);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 8px 24px -6px rgba(26,127,55,.5);animation:pop .55s cubic-bezier(.2,1.5,.4,1),celebfade .35s ease-out .7s forwards;}
   .kf-check.hi{background:var(--accent);box-shadow:0 8px 30px -4px rgba(47,109,240,.55);}
   .kf-praise.hi{color:var(--accent-d);font-weight:700;}
   @keyframes pop{0%{transform:scale(0);}60%{transform:scale(1.18);}100%{transform:scale(1);}}
   @keyframes celebfade{to{opacity:0;transform:scale(.9);}}
-  .kf-praise{position:absolute;top:calc(50% + 44px);font-weight:700;color:var(--good);font-size:1.1rem;white-space:nowrap;animation:praise 1s ease-out forwards;}
+  .kf-praise{position:absolute;top:calc(50% + 44px);font-weight:700;color:var(--good);font-size:1.05rem;white-space:nowrap;animation:praise 1s ease-out forwards;}
   @keyframes praise{0%{opacity:0;transform:translateY(6px);}25%{opacity:1;transform:none;}80%{opacity:1;}100%{opacity:0;}}
   .kf-particle{position:absolute;width:9px;height:9px;border-radius:50%;animation:burst .85s cubic-bezier(.25,.6,.3,1) forwards;}
   @keyframes burst{0%{transform:translate(0,0) scale(1);opacity:1;}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0;}}
+  @media(prefers-reduced-motion:reduce){.kf-particle,.kf-check,.kf-praise{animation:none!important;opacity:0;}}
+  /* ── Drill ── */
   .kf-center{text-align:center;}
-  /* Typed history: a clean row of slot-boxes (matches the kf-bigkey guide aesthetic).
-     Each keystroke fills the next box with the character — correct = blue, wrong = red. */
-  .kf-term{display:flex;flex-wrap:wrap;justify-content:center;gap:.25rem;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:.35rem .6rem;margin:.4rem auto 0;max-width:560px;min-height:2.2rem;box-shadow:inset 0 1px 3px rgba(20,30,50,.04);}
-  .kf-term-label{font-family:inherit;font-size:.66rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--accent-d);margin-right:.4rem;user-select:none;}
-  .kf-slot{font-family:var(--mono);font-size:var(--slot-font);font-weight:700;line-height:1;width:var(--slot-size);height:var(--slot-size);display:inline-flex;align-items:center;justify-content:center;border-radius:5px;background:var(--accent-bg);color:var(--accent-d);border:1px solid var(--accent-bd);box-shadow:0 1px 0 rgba(47,109,240,.08);animation:slotpop .35s cubic-bezier(.2,1.6,.4,1);position:relative;}
-  .kf-slot.bad{background:var(--bad-bg);color:var(--bad);border-color:rgba(207,34,46,.3);}
-  .kf-slot::after{content:"";position:absolute;left:50%;top:50%;width:130%;height:130%;border-radius:50%;border:2px solid var(--accent);opacity:0;transform:translate(-50%,-50%) scale(.5);animation:slotring .5s ease-out forwards;}
-  .kf-slot.bad::after{border-color:var(--bad);}
-  @keyframes slotpop{0%{transform:scale(0);opacity:0;}55%{transform:scale(1.18);opacity:1;}100%{transform:scale(1);opacity:1;}}
-  @keyframes slotring{0%{opacity:.55;transform:translate(-50%,-50%) scale(.6);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.7);}}
-  .kf-slot-empty{width:var(--slot-size);height:var(--slot-size);border-radius:5px;border:1.5px dashed var(--accent-bd);background:transparent;animation:caret 1.15s ease-in-out infinite;}
-  @keyframes caret{0%,100%{opacity:.5;}50%{opacity:.85;}}
-  .kf-newkey{display:inline-block;font-size:.62rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--good);border-radius:999px;padding:.15rem .55rem;margin-bottom:.35rem;animation:fade .3s ease;}
   .kf-fade{animation:fade .4s ease;}
   @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
-  .kf-dim{color:var(--dim);font-size:.72rem;}
+  .kf-dim{color:var(--dim);font-size:.78rem;}
   .kf-dim code,.kf-focus code{font-family:var(--mono);color:var(--accent-d);background:var(--accent-bg);border:1px solid var(--accent-bd);padding:.05rem .35rem;border-radius:5px;}
-  .kf-place{margin:0 auto .35rem;max-width:480px;}
-  .kf-place-where{font-size:var(--place-where);line-height:1.25;font-weight:700;color:var(--ink);margin:0;}
-  .kf-place-finger{font-size:var(--place-finger);font-weight:600;color:var(--accent-d);margin:.15rem 0 0;letter-spacing:.3px;}
-  .kf-focusbar{font-size:.85rem;color:var(--ink);background:var(--warm-bg);border:1px solid var(--warm-bd);border-radius:8px;padding:.35rem .7rem;margin:0 auto .5rem;display:inline-block;}
-  .kf-focusbar code{font-family:var(--mono);color:var(--warm);background:#fff;border:1px solid var(--warm-bd);padding:.02rem .3rem;border-radius:5px;margin:0 .08rem;font-size:.95em;}
-  .kf-linkbtn{font-family:inherit;font-size:.78rem;font-weight:600;color:var(--accent-d);background:none;border:0;border-bottom:1px solid var(--accent-bd);cursor:pointer;padding:0 0 1px;margin-left:.4rem;}
-  .kf-linkbtn:hover{color:var(--accent);}
-  .kf-bigkey{font-family:var(--mono);position:relative;font-size:var(--bigkey);font-weight:700;line-height:1;margin:.05rem 0 .2rem;color:var(--ink);transition:.12s;display:inline-block;}
+  .kf-bigkey{font-family:var(--mono);position:relative;font-size:5.5rem;font-weight:700;line-height:1;margin:1rem 0 .5rem;color:var(--ink);transition:.12s;display:inline-block;}
   .kf-bigkey.ok{color:var(--good);transform:scale(.92);}
   .kf-bigkey.ok::after{content:"";position:absolute;left:50%;top:50%;width:1.2em;height:1.2em;border:2px solid var(--good);border-radius:50%;transform:translate(-50%,-50%);animation:ring .45s ease-out forwards;}
   @keyframes ring{0%{opacity:.6;transform:translate(-50%,-50%) scale(.6);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.8);}}
   .kf-bigkey.miss{color:var(--bad);animation:nudge .18s;}
   @keyframes nudge{0%,100%{transform:none;}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
-  .kf-name{font-weight:700;font-size:var(--name-size);margin:.05rem 0 0;color:var(--ink);}
-  .kf-finger{color:var(--accent-d);font-size:.7rem;font-weight:600;letter-spacing:.5px;}
-  .kf-hint{margin:.35rem auto 0;color:var(--warm);font-size:.78rem;background:var(--warm-bg);border:1px solid var(--warm-bd);border-left:3px solid var(--warm);border-radius:6px;padding:.3rem .6rem;display:inline-block;animation:fade .25s ease;max-width:520px;}
-  /* keystroke counter (drill + snippet) */
-  .kf-counter{font-family:var(--mono);font-size:.62rem;color:var(--dim);letter-spacing:.04em;margin-bottom:.2rem;}
-  .kf-counter b{color:var(--ink);}
-  /* speech toggle in controls */
-  .kf-mute.speech{font-size:.9rem;}
-  /* on-screen keyboard diagram */
-  .kf-kbd{flex:1 1 auto;min-width:0;max-width:var(--kbd-max);user-select:none;}
-  /* keyboard + drawing side-by-side inside the typing card */
-  .kf-kbdrow{display:flex;align-items:flex-start;justify-content:center;gap:.6rem;margin:.45rem auto 0;flex-wrap:wrap;}
-  /* inline LiveSketch — compact, sits next to the keyboard */
-  .kf-sketch-row.inline{flex:0 0 auto;flex-direction:column;align-items:center;gap:.25rem;width:var(--sketch-w);}
-  .kf-sketch-row.inline .kf-sketch-canvas{width:var(--sketch-canvas);height:var(--sketch-canvas);border-radius:8px;}
-  .kf-sketch-row.inline .kf-sketch-name{font-size:.65rem;margin:.05rem 0 .12rem;text-align:center;line-height:1.1;}
-  .kf-sketch-row.inline .kf-sketch-prog{height:4px;margin-bottom:.1rem;}
-  .kf-sketch-row.inline.done{background:var(--good-bg);border:1px solid var(--good-bd);border-radius:8px;padding:.3rem;}
-  .kf-sketch-row.inline .kf-save,.kf-sketch-row.inline .kf-del{font-size:.62rem;padding:.18rem .45rem;}
-  .kf-kbd svg{width:100%;height:auto;display:block;}
-  .kf-krow{display:flex;gap:2px;margin-bottom:2px;justify-content:center;}
-  .kf-key{font-family:var(--mono);font-size:var(--kbd-font);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:default;transition:background .12s,transform .12s;line-height:1.05;}
-  .kf-key.std{height:var(--kbd-key);width:var(--kbd-key);background:var(--sheet-head);border:1px solid var(--line);color:var(--dim);}
-  .kf-key.wide{height:var(--kbd-key);width:calc(var(--kbd-key) * 1.55);background:var(--sheet-head);border:1px solid var(--line);color:var(--dim);}
-  .kf-key.xwide{height:var(--kbd-key);width:calc(var(--kbd-key) * 2.1);background:var(--sheet-head);border:1px solid var(--line);color:var(--dim);}
-  .kf-key.spc{height:var(--kbd-key);width:calc(var(--kbd-key) * 5.4);background:var(--sheet-head);border:1px solid var(--line);color:var(--dim);}
-  .kf-key .kf-shifted{font-size:calc(var(--kbd-font) * 0.92);color:var(--dim);opacity:.75;margin-bottom:0;}
-  .kf-key .kf-base{font-weight:600;color:var(--ink);}
-  .kf-key.finger-lp{background:#eaf3ee;}
-  .kf-key.finger-lr{background:#fef3ec;}
-  .kf-key.finger-lm{background:#fff8e6;}
-  .kf-key.finger-li{background:#fdf2e0;}
-  .kf-key.finger-ri{background:#eef4ff;}
-  .kf-key.finger-rm{background:#f3eeff;}
-  .kf-key.finger-rr{background:#f9eeff;}
-  .kf-key.finger-rp{background:#fef0f0;}
-  .kf-key.target{background:var(--accent)!important;border-color:var(--accent-d)!important;box-shadow:0 2px 10px rgba(47,109,240,.4);transform:scale(1.08);}
-  .kf-key.target .kf-base,.kf-key.target .kf-shifted{color:#fff!important;}
-  .kf-key.target-shift{background:#7b68ee!important;border-color:#6a5bc4!important;}
-  .kf-key.target-shift .kf-base{color:#fff!important;}
-  .kf-key.wrong{background:var(--bad)!important;border-color:#b01a24!important;animation:nudge .18s;}
-  .kf-key.wrong .kf-base,.kf-key.wrong .kf-shifted{color:#fff!important;}
-  /* sketch — sits at top of the progress rail; vertical stack in narrow column */
-  .kf-sketch-row{display:flex;flex-direction:column;align-items:center;gap:.4rem;}
-  .kf-sketch-canvas{width:110px;height:110px;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;}
-  .kf-sketch-canvas svg{width:88%;height:88%;}
-  .kf-sketch-info{width:100%;text-align:center;}
-  .kf-art{display:block;width:100%;height:100%;}
-  .kf-art .ghost{fill:none;stroke:var(--accent-bd);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;}
-  .kf-art .ink{fill:none;stroke:var(--accent);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;transition:stroke-dashoffset .28s ease-out;}
-  .kf-pen-tip{transition:cx .28s ease-out,cy .28s ease-out;}
-  /* collapsible rail cards */
-  .kf-coll{padding:0;overflow:hidden;}
-  .kf-coll-head{display:flex;align-items:center;justify-content:space-between;width:100%;background:transparent;border:0;cursor:pointer;font-family:inherit;text-align:left;padding:.4rem .7rem;transition:background .12s;}
-  .kf-coll-head:hover{background:var(--accent-bg);}
-  .kf-coll.open .kf-coll-head{border-bottom:1px solid var(--line);}
-  .kf-coll-title{display:flex;align-items:baseline;gap:.45rem;}
-  .kf-coll-sub{font-size:.65rem;color:var(--dim);font-weight:500;}
-  .kf-coll-chev{font-size:.82rem;color:var(--dim);transition:transform .18s ease;display:inline-block;}
-  .kf-coll.open .kf-coll-chev{transform:rotate(180deg);color:var(--accent-d);}
-  .kf-coll-body{padding:.45rem .7rem .6rem;animation:fade .25s ease;max-height:240px;overflow-y:auto;}
-  .kf-coll-body::-webkit-scrollbar{width:6px;}
-  .kf-coll-body::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
-  .kf-coll-body::-webkit-scrollbar-thumb:hover{background:var(--dim);}
-  .kf-sketch-info{flex:1 1 auto;min-width:0;}
-  .kf-sketch-status{font-size:.62rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-d);margin:0 0 .1rem;}
-  .kf-sketch-name{font-size:.82rem;font-weight:700;color:var(--ink);margin:0 0 .25rem;}
-  .kf-sketch-prog{height:5px;border-radius:999px;background:var(--sheet-head);border:1px solid var(--line);overflow:hidden;margin-bottom:.25rem;}
-  .kf-sketch-prog i{display:block;height:100%;background:var(--accent);border-radius:999px;transition:width .28s ease-out;}
-  .kf-pen-tip{transition:transform .32s ease-out;pointer-events:none;}
-  .kf-snip{font-family:var(--mono);font-size:1.05rem;line-height:1.75;letter-spacing:.3px;margin:.4rem 0 .25rem;word-break:break-word;border-radius:7px;padding:.4rem;transition:.15s;}
+  .kf-name{font-weight:700;font-size:1rem;margin:.15rem 0 .05rem;color:var(--ink);}
+  .kf-finger{color:var(--accent-d);font-size:.75rem;font-weight:600;letter-spacing:.4px;}
+  .kf-hint{margin:.6rem auto 0;color:var(--warm);font-size:.8rem;background:var(--warm-bg);border:1px solid var(--warm-bd);border-left:3px solid var(--warm);border-radius:6px;padding:.35rem .65rem;display:inline-block;animation:fade .25s ease;max-width:520px;}
+  .kf-newkey{display:inline-block;font-size:.6rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--good);border-radius:999px;padding:.15rem .55rem;margin-bottom:.4rem;animation:fade .3s ease;}
+  /* ── Snippet ── */
+  .kf-snip{font-family:var(--mono);font-size:1.1rem;line-height:1.85;letter-spacing:.3px;margin:.5rem 0 .4rem;word-break:break-word;border-radius:8px;padding:.45rem .6rem;transition:.15s;}
   .kf-snip.wrong{background:var(--bad-bg);}
   .kf-snip .done{color:var(--good);}
   .kf-snip .auto{color:var(--good);opacity:.6;font-style:italic;border-bottom:1px dotted var(--good);}
-  .kf-snip .pending{color:var(--dim);opacity:.55;}
+  .kf-snip .pending{color:var(--dim);opacity:.5;}
   .kf-snip .cur{color:#fff;background:var(--accent);border-radius:4px;padding:.05rem .12rem;box-shadow:0 0 0 2px rgba(47,109,240,.25);}
-  .kf-tracks{display:flex;gap:.25rem;flex-wrap:wrap;margin-bottom:.4rem;align-items:center;}
-  .kf-tracks-label{font-size:.56rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-right:.15rem;}
-  .kf-tracks button{font-family:inherit;font-size:.62rem;font-weight:600;color:var(--dim);background:var(--sheet-head);border:1px solid var(--line);padding:.15rem .5rem;border-radius:999px;cursor:pointer;transition:.15s;}
+  .kf-tracks{display:flex;gap:.28rem;flex-wrap:wrap;margin-bottom:.5rem;}
+  .kf-tracks button{font-family:inherit;font-size:.68rem;font-weight:600;color:var(--dim);background:var(--sheet-head);border:1px solid var(--line);padding:.2rem .55rem;border-radius:999px;cursor:pointer;transition:.15s;}
   .kf-tracks button:hover{color:var(--accent-d);border-color:var(--accent-bd);}
   .kf-tracks button.on{color:#fff;background:var(--accent);border-color:var(--accent);}
-  .kf-card h2{font-weight:700;margin:0 0 1rem;font-size:1.4rem;color:var(--ink);}
-  .kf-focus{font-size:.85rem;margin:0 0 1.3rem;}
-  .kf-focus code{margin-right:.3rem;font-size:1rem;}
-  .kf-heat{display:grid;grid-template-columns:repeat(auto-fill,minmax(36px,1fr));gap:.22rem;}
-  .kf-cell{border-radius:6px;padding:.25rem .1rem;text-align:center;border:1px solid var(--line);}
-  .kf-cell-ch{font-family:var(--mono);display:block;font-size:.78rem;font-weight:600;color:var(--ink);}
-  .kf-cell-meta{display:block;font-size:.5rem;color:var(--dim);margin-top:.05rem;}
-  .kf-empty{text-align:center;}
-  .kf-empty p{margin:.5rem 0;}
-  .kf-empty p:first-child{font-weight:700;font-size:1.25rem;color:var(--ink);}
+  .kf-card h2{font-weight:700;margin:0 0 .8rem;font-size:1.2rem;color:var(--ink);}
+  .kf-focus{font-size:.85rem;margin:0 0 .9rem;}
+  .kf-focus code{margin-right:.3rem;font-size:.92rem;}
+  /* ── Progress / heatmap ── */
+  .kf-heat{display:grid;grid-template-columns:repeat(auto-fill,minmax(42px,1fr));gap:.25rem;}
+  .kf-cell{border-radius:7px;padding:.28rem .1rem;text-align:center;border:1px solid var(--line);}
+  .kf-cell-ch{font-family:var(--mono);display:block;font-size:.82rem;font-weight:600;color:var(--ink);}
+  .kf-cell-meta{display:block;font-size:.52rem;color:var(--dim);margin-top:.05rem;}
+  .kf-empty{text-align:center;padding:.4rem 0;}
+  .kf-empty p{margin:.4rem 0;}
+  .kf-empty p:first-child{font-weight:700;font-size:1.15rem;color:var(--ink);}
+  /* ── Relax overlay ── */
   .kf-relax{position:fixed;inset:0;background:linear-gradient(180deg,#1b2a44 0%,#243a5e 55%,#33506f 100%);color:#eaf0fb;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;cursor:pointer;text-align:center;padding:2rem;animation:fade .5s ease;}
-  .kf-relax p{font-weight:700;font-size:2rem;margin:.5rem 0 0;}
-  .kf-relax .kf-dim{color:#cdddf5;font-size:1.15rem;line-height:1.5;max-width:420px;margin-top:.6rem;}
-  .kf-relax .kf-skip{position:absolute;bottom:1.4rem;font-size:.72rem;color:#8fa3c4;letter-spacing:.04em;}
-  .kf-bcount{font-size:.74rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#9fb6da;margin:0 0 1.1rem;}
-  .kf-borb{width:130px;height:130px;border-radius:50%;border:2px solid #cfe0ff;background:radial-gradient(circle at 50% 42%,rgba(207,224,255,.4),rgba(207,224,255,.05));box-shadow:0 0 60px rgba(188,208,240,.45);margin-bottom:1.6rem;transform:scale(.55);transition:transform 4s ease-in-out;}
-  @media (prefers-reduced-motion:reduce){ .kf-borb{transition:opacity .4s ease!important;transform:scale(.9)!important;} }
-
-  /* ── Welcome / orientation screen (first visit; reopen via ?) ── */
-  .kf-welcome-backdrop{position:fixed;inset:0;z-index:40;background:rgba(20,30,50,.45);display:flex;align-items:flex-start;justify-content:center;padding:3rem 1.25rem;overflow:auto;animation:fade .3s ease;}
-  .kf-welcome{width:100%;max-width:640px;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 24px 60px -24px rgba(20,30,50,.5);padding:1.5rem 1.6rem 1.6rem;animation:fade .4s ease;}
-  .kf-welcome-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;}
-  .kf-welcome h2{font-weight:700;font-size:1.45rem;margin:0;color:var(--ink);}
-  .kf-welcome-sub{color:var(--dim);font-size:.88rem;margin:.25rem 0 0;}
-  .kf-welcome-x{flex:0 0 auto;font-family:inherit;font-size:.72rem;font-weight:600;color:var(--dim);background:var(--sheet-head);border:1px solid var(--line);border-radius:7px;padding:.3rem .65rem;cursor:pointer;transition:.15s;}
-  .kf-welcome-x:hover{color:var(--accent-d);border-color:var(--accent-bd);}
-  .kf-premise{font-size:.92rem;line-height:1.55;color:#2b3240;margin:1rem 0 1.1rem;}
-  .kf-premise b{color:var(--accent-d);}
-  .kf-feats{display:flex;flex-direction:column;gap:.55rem;margin:0 0 1.2rem;}
-  .kf-feat{display:flex;gap:.8rem;align-items:flex-start;background:var(--sheet-head);border:1px solid var(--line);border-radius:11px;padding:.7rem .85rem;}
-  .kf-feat-ic{flex:0 0 auto;width:2rem;height:2rem;border-radius:8px;display:grid;place-items:center;font-family:var(--mono);font-size:1rem;font-weight:700;background:var(--accent-bg);color:var(--accent-d);border:1px solid var(--accent-bd);}
-  .kf-feat-b{flex:1 1 auto;min-width:0;}
-  .kf-feat-b h4{margin:0 0 .15rem;font-size:.92rem;font-weight:700;color:var(--ink);}
-  .kf-feat-step{font-weight:700;color:var(--accent-d);}
-  .kf-feat-b p{margin:0;font-size:.82rem;line-height:1.45;color:#41505f;}
-  .kf-welcome-cta{display:flex;align-items:center;gap:.95rem;flex-wrap:wrap;}
-  .kf-start{font-family:inherit;font-size:.95rem;font-weight:700;color:#fff;background:var(--accent);border:0;border-radius:10px;padding:.7rem 1.4rem;cursor:pointer;box-shadow:0 2px 8px rgba(47,109,240,.3);transition:.15s;}
-  .kf-start:hover{background:var(--accent-d);}
-  .kf-start:active{transform:translateY(1px);}
-  .kf-welcome-cta span{font-size:.82rem;color:var(--dim);}
-  .kf-welcome code,.kf-toggle code{font-family:var(--mono);color:var(--accent-d);background:var(--accent-bg);border:1px solid var(--accent-bd);padding:.02rem .3rem;border-radius:5px;font-size:.82em;}
-  .kf-toggle{display:flex;align-items:center;gap:.5rem;font-size:.88rem;color:var(--ink);cursor:pointer;margin:.2rem 0 .3rem;}
-  .kf-toggle input{accent-color:var(--accent);cursor:pointer;width:1rem;height:1rem;}
-
-  /* ── Charcoal drawing: soft graphite stroke on paper, one muted color accent ── */
-  .kf-art{display:block;width:100%;height:100%;}
-  .kf-art .ghost{fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
-  .kf-art .ink{fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke-dashoffset .85s ease;}
-
-  /* live sketch panel — sits under the typing card on Drill + Type snippets */
-  .kf-live{display:flex;align-items:center;gap:1rem;width:100%;margin:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:.8rem 1rem;animation:fade .4s ease;}
-  .kf-live-paper{flex:0 0 auto;width:118px;height:94px;background:linear-gradient(160deg,#f4f3ef,#e7e8ea);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
-  .kf-live-meta{flex:1 1 auto;min-width:0;}
-  .kf-live-eyebrow{font-size:.64rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-d);margin:0 0 .15rem;}
-  .kf-live-title{font-weight:700;font-size:.95rem;color:var(--ink);margin:0 0 .4rem;}
-  .kf-live-bar{height:6px;border-radius:999px;background:var(--sheet-head);border:1px solid var(--line);overflow:hidden;}
-  .kf-live-bar i{display:block;height:100%;background:linear-gradient(90deg,#9aa0a6,#46443f);border-radius:999px;transition:width .8s ease;}
-  .kf-live-note{font-size:.74rem;color:var(--dim);margin:.4rem 0 0;}
-  .kf-live-note b{color:var(--ink);}
-
-  /* Progress: returning-streak banner + finished-sketch collection */
-  .kf-streak{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap;background:var(--accent-bg);border:1px solid var(--accent-bd);border-radius:9px;padding:.35rem .6rem;margin:0;}
-  .kf-streak-num{font-size:1.05rem;font-weight:800;color:var(--accent-d);line-height:1;}
-  .kf-streak-txt{flex:1 1 140px;font-size:.7rem;color:#2b3240;line-height:1.35;}
-  .kf-streak-txt b{color:var(--accent-d);}
-  .kf-collection-label{margin:1.5rem 0 .6rem;}
-  .kf-collection{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:.25rem;}
-  .kf-frame{aspect-ratio:1;background:#fff;border:1px solid var(--line);border-radius:6px;padding:.2rem;overflow:hidden;display:flex;align-items:center;justify-content:center;}
-  .kf-frame.empty{border-style:dashed;color:var(--line);font-size:1.2rem;}
-
-  /* status report: most-missed keys + "drill just these" */
-  .kf-report{background:var(--sheet-head);border:1px solid var(--line);border-radius:12px;padding:.9rem 1rem 1rem;margin:0 0 1.2rem;}
-  .kf-missed{display:flex;flex-direction:column;gap:.25rem;margin:.05rem 0 .45rem;}
-  .kf-missed-row{display:flex;align-items:center;gap:.35rem;}
-  .kf-missed-ch{font-family:var(--mono);font-size:.75rem;font-weight:700;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:4px;width:1.2rem;text-align:center;padding:.03rem 0;flex:0 0 auto;}
-  .kf-missed-bar{flex:1 1 auto;height:6px;border-radius:999px;background:#fff;border:1px solid var(--line);overflow:hidden;}
-  .kf-missed-bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#e0a45b,var(--bad));transition:width .8s ease;}
-  .kf-missed-pct{flex:0 0 auto;width:2rem;text-align:right;font-size:.66rem;font-weight:700;color:var(--bad);}
-  .kf-drillthese{font-family:inherit;font-size:.7rem;font-weight:700;color:#fff;background:var(--accent);border:0;border-radius:7px;padding:.3rem .7rem;cursor:pointer;box-shadow:0 2px 6px rgba(47,109,240,.25);transition:.15s;}
-  .kf-drillthese:hover{background:var(--accent-d);}
-  .kf-drillthese code{font-family:var(--mono);background:rgba(255,255,255,.22);border-radius:4px;padding:.02rem .28rem;margin:0 .08rem;font-size:.92em;}
-
-  /* art-style picker (in settings) + the save/delete moment when a sketch finishes */
-  .kf-live.done{border-color:var(--good-bd);background:var(--good-bg);}
-  .kf-save-row{display:flex;gap:.5rem;margin-top:.5rem;}
-  .kf-save,.kf-del{font-family:inherit;font-size:.78rem;font-weight:700;border-radius:8px;padding:.4rem 1rem;cursor:pointer;border:1px solid transparent;transition:.15s;}
-  .kf-save{background:var(--good);color:#fff;box-shadow:0 2px 8px rgba(26,127,55,.25);}
-  .kf-save:hover{filter:brightness(1.06);}
-  .kf-del{background:#fff;color:var(--bad);border-color:rgba(207,34,46,.3);}
-  .kf-del:hover{background:var(--bad-bg);}
-  @media (prefers-reduced-motion:reduce){
-    .kf-art .ink{transition:none!important;}
-  }
-
-  /* ── Biodiversity garden ── */
-  .kf-garden-wrap{width:100%;}
-  .kf-garden-svg{width:100%;display:block;border-radius:12px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow);}
-  .kf-garden-prog-wrap{display:flex;align-items:center;gap:.5rem;margin:.5rem 0 .15rem;}
+  .kf-relax p{font-weight:700;font-size:1.6rem;margin:.4rem 0 0;}
+  .kf-relax .kf-dim{color:#cdddf5;font-size:.85rem;max-width:300px;}
+  .kf-breath{width:90px;height:90px;border-radius:50%;border:2px solid #7ea8d8;margin-bottom:1.5rem;animation:breath 4s ease-in-out infinite;}
+  @keyframes breath{0%,100%{transform:scale(.7);opacity:.4;}50%{transform:scale(1.15);opacity:1;}}
+  /* ── PWA install pill ── */
+  .kf-install{display:inline-flex;align-items:center;gap:.3rem;font-family:inherit;font-size:.7rem;font-weight:700;color:var(--accent-d);background:var(--accent-bg);border:1px solid var(--accent-bd);padding:.22rem .32rem .22rem .58rem;border-radius:999px;cursor:pointer;transition:background .15s,color .15s;user-select:none;}
+  .kf-install:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .kf-install-x{display:inline-flex;align-items:center;justify-content:center;width:.95rem;height:.95rem;border-radius:50%;color:var(--dim);font-size:.9rem;line-height:1;margin-left:.08rem;transition:background .12s;}
+  .kf-install:hover .kf-install-x{color:rgba(255,255,255,.85);}
+  /* ── Touch / no-keyboard notice ── */
+  .kf-touch-notice{width:100%;max-width:520px;text-align:center;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:2.2rem 1.8rem;box-shadow:var(--shadow);}
+  .kf-touch-notice h2{font-weight:700;font-size:1.2rem;margin:0 0 .5rem;color:var(--ink);}
+  .kf-touch-notice p{font-size:.88rem;color:var(--dim);margin:0;}
+  /* ── 60-second onboarding overlay ── */
+  .kf-onboard-wrap{position:fixed;inset:0;z-index:40;background:rgba(20,30,50,.45);display:flex;align-items:flex-start;justify-content:center;padding:2.5rem 1.2rem;overflow:auto;animation:fade .3s ease;}
+  .kf-onboard{width:100%;max-width:520px;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 24px 60px -24px rgba(20,30,50,.5);padding:1.4rem 1.5rem 1.5rem;}
+  .kf-onboard h3{font-weight:700;font-size:1.1rem;margin:0 0 .45rem;color:var(--ink);}
+  .kf-onboard p{font-size:.88rem;line-height:1.55;color:#2b3240;margin:0 0 .9rem;}
+  .kf-onboard b{color:var(--accent-d);}
+  .kf-onboard-cta{font-family:inherit;font-size:.9rem;font-weight:700;color:#fff;background:var(--accent);border:0;border-radius:10px;padding:.6rem 1.3rem;cursor:pointer;box-shadow:0 2px 8px rgba(47,109,240,.28);transition:.15s;}
+  .kf-onboard-cta:hover{background:var(--accent-d);}
+  /* ── Garden ── */
+  .kf-garden-svg{width:100%;display:block;border-radius:10px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow);}
+  .kf-garden-prog-wrap{display:flex;align-items:center;gap:.5rem;margin:.45rem 0 .1rem;}
   .kf-garden-progbar{flex:1 1 auto;height:6px;border-radius:999px;background:var(--sheet-head);border:1px solid var(--line);overflow:hidden;}
   .kf-garden-progbar i{display:block;height:100%;background:linear-gradient(90deg,var(--good),#5aaf44);border-radius:999px;transition:width 1.2s ease;}
   .kf-garden-next-label{font-size:.72rem;font-weight:600;color:var(--good);white-space:nowrap;}
-  .kf-garden-empty{text-align:center;padding:1.2rem .5rem 0;color:var(--dim);font-size:.85rem;}
-  .kf-garden-ladder{display:flex;flex-direction:column;gap:.22rem;margin:.5rem 0 0;}
-  .kf-ladder-step{display:flex;align-items:flex-start;gap:.45rem;padding:.28rem .5rem;border-radius:8px;}
+  .kf-garden-empty{text-align:center;padding:1rem .5rem 0;color:var(--dim);font-size:.84rem;}
+  .kf-garden-ladder{display:flex;flex-direction:column;gap:.2rem;margin:.45rem 0 0;}
+  .kf-ladder-step{display:flex;align-items:flex-start;gap:.4rem;padding:.25rem .5rem;border-radius:8px;}
   .kf-ladder-step.done{background:var(--good-bg);border:1px solid var(--good-bd);}
   .kf-ladder-step.next{background:var(--accent-bg);border:1px dashed var(--accent-bd);}
-  .kf-ladder-step.locked{opacity:.35;background:var(--sheet-head);border:1px solid transparent;}
-  .kf-ladder-ic{flex:0 0 1.1rem;font-size:.88rem;text-align:center;line-height:1.4;}
-  .kf-ladder-name{font-weight:700;font-size:.78rem;color:var(--ink);}
-  .kf-ladder-fact{font-size:.67rem;color:var(--dim);margin:.05rem 0 0;line-height:1.4;font-style:italic;}
-  /* Unlock toast (bottom-right, auto-dismisses) */
-  .kf-unlock-toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:60;background:var(--panel);border:1px solid var(--good-bd);border-left:4px solid var(--good);border-radius:12px;box-shadow:0 8px 28px -8px rgba(26,127,55,.3);padding:.6rem .85rem .55rem;max-width:270px;cursor:pointer;animation:fade .4s ease;}
-  .kf-unlock-head{font-weight:700;font-size:.82rem;color:var(--good);margin:0 0 .12rem;}
-  .kf-unlock-body{font-size:.76rem;color:var(--ink);margin:0 0 .12rem;}
-  .kf-unlock-fact{font-size:.66rem;color:var(--dim);margin:0;line-height:1.4;font-style:italic;}
-  /* Wildlife CSS animations — subtle motion only */
+  .kf-ladder-step.locked{opacity:.33;background:var(--sheet-head);border:1px solid transparent;}
+  .kf-ladder-ic{flex:0 0 1.05rem;font-size:.86rem;text-align:center;line-height:1.4;}
+  .kf-ladder-name{font-weight:700;font-size:.76rem;color:var(--ink);}
+  .kf-ladder-fact{font-size:.65rem;color:var(--dim);margin:.04rem 0 0;line-height:1.4;font-style:italic;}
+  /* ── Unlock toast ── */
+  .kf-unlock-toast{position:fixed;bottom:1.4rem;right:1.4rem;z-index:60;background:var(--panel);border:1px solid var(--good-bd);border-left:4px solid var(--good);border-radius:12px;box-shadow:0 8px 28px -8px rgba(26,127,55,.3);padding:.55rem .8rem .5rem;max-width:265px;cursor:pointer;animation:fade .4s ease;}
+  .kf-unlock-head{font-weight:700;font-size:.8rem;color:var(--good);margin:0 0 .1rem;}
+  .kf-unlock-body{font-size:.74rem;color:var(--ink);margin:0 0 .1rem;}
+  .kf-unlock-fact{font-size:.64rem;color:var(--dim);margin:0;line-height:1.4;font-style:italic;}
+  /* ── Wildlife animations ── */
   @keyframes beefloat{0%,100%{transform:translate(0,0);}33%{transform:translate(5px,-4px);}66%{transform:translate(-3px,2px);}}
   @keyframes flutter{0%,100%{transform:scaleX(1);}50%{transform:scaleX(.2)scaleY(1.1);}}
   @keyframes glow{0%,100%{opacity:.18;}50%{opacity:.9;}}
@@ -649,336 +472,207 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
   useMemo
 } = React;
 
-/* ── Data ── */
-const SYMBOLS = [{
-  ch: "=",
-  name: "equals",
-  finger: "right pinky",
-  where: "Top row, far right — just left of Backspace",
-  physKey: "=",
-  shift: false
-}, {
-  ch: ";",
-  name: "semicolon",
-  finger: "right pinky",
-  where: "Home row, just right of L",
-  physKey: ";",
-  shift: false
-}, {
-  ch: "[",
-  name: "left bracket",
-  finger: "right pinky",
-  where: "Top-letter row, two keys right of P",
-  physKey: "[",
-  shift: false
-}, {
-  ch: ":",
-  name: "colon",
-  finger: "right pinky + Shift",
-  where: "Home row, right of L — with Shift",
-  physKey: ";",
-  shift: true
-}, {
-  ch: "_",
-  name: "underscore",
-  finger: "right pinky + Shift",
-  where: "Top number row, right of the 0 — with Shift",
-  physKey: "-",
-  shift: true
-}, {
-  ch: '"',
-  name: "double quote",
-  finger: "right pinky + Shift",
-  where: "Home row, right of the ; key — with Shift",
-  physKey: "'",
-  shift: true
-}, {
-  ch: "(",
-  name: "left paren",
-  finger: "right ring + Shift",
-  where: "Top number row, above the 9 — with Shift",
-  physKey: "9",
-  shift: true
-}, {
-  ch: "{",
-  name: "left brace",
-  finger: "right pinky + Shift",
-  where: "Right of P — with Shift",
-  physKey: "[",
-  shift: true
-}, {
-  ch: "*",
-  name: "asterisk",
-  finger: "right middle + Shift",
-  where: "Top number row, above the 8 — with Shift",
-  physKey: "8",
-  shift: true
-}, {
-  ch: "<",
-  name: "less than",
-  finger: "right middle + Shift",
-  where: "Bottom row, just right of M — with Shift",
-  physKey: ",",
-  shift: true
-}, {
-  ch: ">",
-  name: "greater than",
-  finger: "right ring + Shift",
-  where: "Bottom row, two right of M — with Shift",
-  physKey: ".",
-  shift: true
-}, {
-  ch: "#",
-  name: "hash",
-  finger: "left middle + Shift",
-  where: "Top number row, above the 3 — with Shift",
-  physKey: "3",
-  shift: true
-}, {
-  ch: "%",
-  name: "percent",
-  finger: "left index + Shift",
-  where: "Top number row, above the 5 — with Shift",
-  physKey: "5",
-  shift: true
-}, {
-  ch: "&",
-  name: "ampersand",
-  finger: "right index + Shift",
-  where: "Top number row, above the 7 — with Shift",
-  physKey: "7",
-  shift: true
-}, {
-  ch: "@",
-  name: "at",
-  finger: "left ring + Shift",
-  where: "Top number row, above the 2 — with Shift",
-  physKey: "2",
-  shift: true
-}, {
-  ch: "|",
-  name: "pipe",
-  finger: "right pinky + Shift",
-  where: "Top right, above Enter (right of ]) — with Shift",
-  physKey: "\\",
-  shift: true
-}];
-const SYMBOL_SET = new Set(SYMBOLS.map(s => s.ch));
-const SYM_BY_CH = Object.fromEntries(SYMBOLS.map(s => [s.ch, s]));
-
-/* ── Keyboard layout (QWERTY) — drives the on-screen diagram ── */
-const KROWS = [{
-  row: 0,
-  keys: [{
-    k: "`",
-    s: "~",
-    f: "lp"
-  }, {
-    k: "1",
-    s: "!",
-    f: "lp"
-  }, {
-    k: "2",
-    s: "@",
-    f: "lr"
-  }, {
-    k: "3",
-    s: "#",
-    f: "lm"
-  }, {
-    k: "4",
-    s: "$",
-    f: "li"
-  }, {
-    k: "5",
-    s: "%",
-    f: "li"
-  }, {
-    k: "6",
-    s: "^",
-    f: "ri"
-  }, {
-    k: "7",
-    s: "&",
-    f: "ri"
-  }, {
-    k: "8",
-    s: "*",
-    f: "rm"
-  }, {
-    k: "9",
-    s: "(",
-    f: "rr"
-  }, {
-    k: "0",
-    s: ")",
-    f: "rp"
-  }, {
-    k: "-",
-    s: "_",
-    f: "rp"
-  }, {
-    k: "=",
-    s: "+",
-    f: "rp"
-  }]
-}, {
-  row: 1,
-  keys: [{
-    k: "q",
-    s: "",
-    f: "lp"
-  }, {
-    k: "w",
-    s: "",
-    f: "lr"
-  }, {
-    k: "e",
-    s: "",
-    f: "lm"
-  }, {
-    k: "r",
-    s: "",
-    f: "li"
-  }, {
-    k: "t",
-    s: "",
-    f: "li"
-  }, {
-    k: "y",
-    s: "",
-    f: "ri"
-  }, {
-    k: "u",
-    s: "",
-    f: "ri"
-  }, {
-    k: "i",
-    s: "",
-    f: "rm"
-  }, {
-    k: "o",
-    s: "",
-    f: "rr"
-  }, {
-    k: "p",
-    s: "",
-    f: "rp"
-  }, {
-    k: "[",
-    s: "{",
-    f: "rp"
-  }, {
-    k: "]",
-    s: "}",
-    f: "rp"
-  }, {
-    k: "\\",
-    s: "|",
-    f: "rp"
-  }]
-}, {
-  row: 2,
-  keys: [{
-    k: "a",
-    s: "",
-    f: "lp"
-  }, {
-    k: "s",
-    s: "",
-    f: "lr"
-  }, {
-    k: "d",
-    s: "",
-    f: "lm"
-  }, {
-    k: "f",
-    s: "",
-    f: "li"
-  }, {
-    k: "g",
-    s: "",
-    f: "li"
-  }, {
-    k: "h",
-    s: "",
-    f: "ri"
-  }, {
-    k: "j",
-    s: "",
-    f: "ri"
-  }, {
-    k: "k",
-    s: "",
-    f: "rm"
-  }, {
-    k: "l",
-    s: "",
-    f: "rr"
-  }, {
-    k: ";",
-    s: ":",
-    f: "rp"
-  }, {
-    k: "'",
-    s: '"',
-    f: "rp"
-  }]
-}, {
-  row: 3,
-  keys: [{
-    k: "z",
-    s: "",
-    f: "lp"
-  }, {
-    k: "x",
-    s: "",
-    f: "lr"
-  }, {
-    k: "c",
-    s: "",
-    f: "lm"
-  }, {
-    k: "v",
-    s: "",
-    f: "li"
-  }, {
-    k: "b",
-    s: "",
-    f: "li"
-  }, {
-    k: "n",
-    s: "",
-    f: "ri"
-  }, {
-    k: "m",
-    s: "",
-    f: "ri"
-  }, {
-    k: ",",
-    s: "<",
-    f: "rm"
-  }, {
-    k: ".",
-    s: ">",
-    f: "rr"
-  }, {
-    k: "/",
-    s: "?",
-    f: "rp"
-  }]
-}];
-
-/* ── Speech synthesis: read the coaching hint + key name aloud (toggle in settings) ── */
-let VOICE_ON = false;
-const speak = (text, rate = 0.92) => {
-  if (!VOICE_ON || !window.speechSynthesis) return;
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate = rate;
-  u.volume = 0.95;
-  speechSynthesis.speak(u);
+/* ── Templates: each field retargets which keys you drill + the snippets ──
+   keygarden is one product; a template swaps only the practice content.
+   The garden, audio, relax system, coaching, and persistence are shared. */
+const SYMBOL_META = {
+  "=": ["equals", "right pinky"],
+  ";": ["semicolon", "right pinky"],
+  ":": ["colon", "right pinky + Shift"],
+  "[": ["left bracket", "right pinky"],
+  "]": ["right bracket", "right pinky"],
+  "{": ["left brace", "right pinky + Shift"],
+  "}": ["right brace", "right pinky + Shift"],
+  "(": ["left paren", "right ring + Shift"],
+  ")": ["right paren", "right pinky + Shift"],
+  "_": ["underscore", "right pinky + Shift"],
+  '"': ["double quote", "right pinky + Shift"],
+  "'": ["apostrophe", "right pinky"],
+  "*": ["asterisk", "right middle + Shift"],
+  "#": ["hash", "left middle + Shift"],
+  "%": ["percent", "left index + Shift"],
+  "&": ["ampersand", "right index + Shift"],
+  "@": ["at", "left ring + Shift"],
+  "$": ["dollar", "left index + Shift"],
+  "<": ["less than", "right middle + Shift"],
+  ">": ["greater than", "right ring + Shift"],
+  "|": ["pipe", "right pinky + Shift"],
+  "/": ["slash", "right ring"],
+  "\\": ["backslash", "right pinky"],
+  "-": ["hyphen", "right pinky"],
+  "+": ["plus", "right pinky + Shift"],
+  ".": ["period", "right ring"],
+  ",": ["comma", "right middle"],
+  "!": ["exclamation", "left pinky + Shift"],
+  "?": ["question mark", "right pinky + Shift"],
+  "~": ["tilde", "left pinky + Shift"]
 };
+const mk = chars => chars.map(ch => ({
+  ch,
+  name: SYMBOL_META[ch][0],
+  finger: SYMBOL_META[ch][1]
+}));
+const TEMPLATES = [{
+  id: "general",
+  label: "General",
+  blurb: "Everyday writing & email punctuation",
+  symbols: mk([".", ",", "'", "-", "/", ":", "?", "!", '"', "(", ")", "@"]),
+  snippets: [{
+    track: "Everyday",
+    text: "See you @ 5:30 - don't be late!"
+  }, {
+    track: "Everyday",
+    text: "Re: Friday's meeting (rescheduled)"
+  }, {
+    track: "Everyday",
+    text: "It's a 24/7 service, right?"
+  }, {
+    track: "Everyday",
+    text: "Email me: sam@work.com"
+  }, {
+    track: "Everyday",
+    text: "Q: What's next? A: We'll see."
+  }, {
+    track: "Everyday",
+    text: "Notes: bring ID, keys, phone."
+  }]
+}, {
+  id: "healthcare",
+  label: "Healthcare",
+  blurb: "Charting: doses, units, vitals",
+  symbols: mk([".", "-", "/", ":", "(", ")", "%", '"']),
+  snippets: [{
+    track: "Charting",
+    text: "BP 120/80 mmHg, HR 72"
+  }, {
+    track: "Charting",
+    text: "Amoxicillin 500 mg PO q8h"
+  }, {
+    track: "Charting",
+    text: "O2 sat 98% on room air"
+  }, {
+    track: "Charting",
+    text: "Pt c/o chest pain x2 days"
+  }, {
+    track: "Charting",
+    text: "Dx: J45.909 (asthma)"
+  }, {
+    track: "Charting",
+    text: "1-2 tabs q6h PRN pain"
+  }]
+}, {
+  id: "software",
+  label: "Software / Web Dev",
+  blurb: "Code: brackets, arrows, operators",
+  symbols: mk([";", "=", "/", "*", "[", "]", "(", ")", '"', "<", ">", "{", "}"]),
+  snippets: [{
+    track: "JavaScript",
+    text: "const total = sum(items);"
+  }, {
+    track: "JavaScript",
+    text: "arr.map(x => x * 2)"
+  }, {
+    track: "JavaScript",
+    text: "if (x > 0) { return x; }"
+  }, {
+    track: "JavaScript",
+    text: "items.filter(n => n >= 10)"
+  }, {
+    track: "HTML",
+    text: '<div class="card"></div>'
+  }, {
+    track: "HTML",
+    text: "<a href=\"/home\">Home</a>"
+  }]
+}, {
+  id: "cyber",
+  label: "Cybersecurity / IT",
+  blurb: "Shell, configs, addresses",
+  symbols: mk([".", "-", "/", ":", "@", "=", "*", "|", "~", "\\"]),
+  snippets: [{
+    track: "Shell",
+    text: "nmap -sV 192.168.1.0/24"
+  }, {
+    track: "Shell",
+    text: "chmod 755 ./run.sh"
+  }, {
+    track: "Shell",
+    text: "grep -i error log.txt | wc -l"
+  }, {
+    track: "Shell",
+    text: "ssh user@host -p 22"
+  }, {
+    track: "Shell",
+    text: "cat /etc/passwd | grep root"
+  }, {
+    track: "Shell",
+    text: "curl -X POST api/v1/login"
+  }]
+}, {
+  id: "finance",
+  label: "Finance / Accounting",
+  blurb: "Spreadsheets, figures, formulas",
+  symbols: mk([".", ",", "-", ":", "=", "(", ")", "%", "$", "*", "+"]),
+  snippets: [{
+    track: "Spreadsheet",
+    text: "=SUM(B2:B12)"
+  }, {
+    track: "Spreadsheet",
+    text: "=B2*1.05"
+  }, {
+    track: "Spreadsheet",
+    text: "Net margin = 12.4%"
+  }, {
+    track: "Spreadsheet",
+    text: "($1,250.00)"
+  }, {
+    track: "Spreadsheet",
+    text: "Q3 EPS: $1.07 (+8%)"
+  }, {
+    track: "Spreadsheet",
+    text: "Revenue: $48,200 (-3%)"
+  }]
+}, {
+  id: "data",
+  label: "Data & Analytics",
+  blurb: "SQL, Python, Tableau (the original)",
+  symbols: mk(["=", ";", "[", ":", "_", '"', "(", "{", "*", "<", ">", "#", "%", "&", "@", "|"]),
+  snippets: [{
+    track: "SQL",
+    text: "SELECT * FROM users;"
+  }, {
+    track: "SQL",
+    text: "WHERE id = 1 AND active = TRUE;"
+  }, {
+    track: "SQL",
+    text: "GROUP BY dept HAVING COUNT(*) > 5;"
+  }, {
+    track: "Python",
+    text: 'df[df["age"] > 21]'
+  }, {
+    track: "Python",
+    text: 'data = {"key": [1, 2, 3]}'
+  }, {
+    track: "Python",
+    text: "result = sum(x for x in nums)"
+  }, {
+    track: "Excel",
+    text: "=VLOOKUP(A2, B:C, 2, FALSE)"
+  }, {
+    track: "Excel",
+    text: '=IF(B2 > 0, "yes", "no")'
+  }, {
+    track: "Tableau",
+    text: 'IF [Sales] > 1000 THEN "High" END'
+  }, {
+    track: "Stats",
+    text: "z = (x - mu) / sigma"
+  }, {
+    track: "Power BI",
+    text: "Total = SUM(Sales[Amount])"
+  }]
+}];
+const TPL_BY_ID = Object.fromEntries(TEMPLATES.map(t => [t.id, t]));
 const PAIRS = {
   "(": ")",
   "[": "]",
@@ -986,222 +680,30 @@ const PAIRS = {
   '"': '"',
   "'": "'"
 }; // editor-style auto-close
-// Progression: Word (single token) → Phrase (mid-length) → Line (full statement).
-// Lets a beginner ramp up from a 5-key token to a 35-key full line.
-const SNIPPETS = [
-// ── Words: short single tokens, the foundational symbol+letter patterns ──
-{
-  level: "Word",
-  track: "SQL",
-  text: "SELECT"
-}, {
-  level: "Word",
-  track: "SQL",
-  text: "WHERE"
-}, {
-  level: "Word",
-  track: "SQL",
-  text: "GROUP BY"
-}, {
-  level: "Word",
-  track: "SQL",
-  text: "HAVING"
-}, {
-  level: "Word",
-  track: "SQL",
-  text: "COUNT(*)"
-}, {
-  level: "Word",
-  track: "Python",
-  text: "df[]"
-}, {
-  level: "Word",
-  track: "Python",
-  text: "len(x)"
-}, {
-  level: "Word",
-  track: "Python",
-  text: "sum(x)"
-}, {
-  level: "Word",
-  track: "Python",
-  text: "lambda"
-}, {
-  level: "Word",
-  track: "Python",
-  text: "{key:1}"
-}, {
-  level: "Word",
-  track: "Excel",
-  text: "=SUM("
-}, {
-  level: "Word",
-  track: "Excel",
-  text: "=IF("
-}, {
-  level: "Word",
-  track: "Excel",
-  text: "A:A"
-}, {
-  level: "Word",
-  track: "Excel",
-  text: '"yes"'
-}, {
-  level: "Word",
-  track: "Tableau",
-  text: "SUM()"
-}, {
-  level: "Word",
-  track: "Tableau",
-  text: "[Sales]"
-}, {
-  level: "Word",
-  track: "Tableau",
-  text: "THEN"
-}, {
-  level: "Word",
-  track: "Stats",
-  text: "sigma"
-}, {
-  level: "Word",
-  track: "Stats",
-  text: "p < .05"
-}, {
-  level: "Word",
-  track: "Power BI",
-  text: "DIVIDE("
-}, {
-  level: "Word",
-  track: "Power BI",
-  text: "[Amount]"
-},
-// ── Phrases: mid-length — putting symbols together ──
-{
-  level: "Phrase",
-  track: "SQL",
-  text: "id = 1 AND"
-}, {
-  level: "Phrase",
-  track: "SQL",
-  text: "COUNT(*) > 5"
-}, {
-  level: "Phrase",
-  track: "SQL",
-  text: "IS NOT NULL"
-}, {
-  level: "Phrase",
-  track: "Python",
-  text: 'df["age"] > 21'
-}, {
-  level: "Phrase",
-  track: "Python",
-  text: "x for x in nums"
-}, {
-  level: "Phrase",
-  track: "Python",
-  text: '{"key": [1, 2]}'
-}, {
-  level: "Phrase",
-  track: "Excel",
-  text: '=IF(B2 > 0,'
-}, {
-  level: "Phrase",
-  track: "Excel",
-  text: '=SUMIF(A:A, ">100")'
-}, {
-  level: "Phrase",
-  track: "Tableau",
-  text: "SUM([Profit])"
-}, {
-  level: "Phrase",
-  track: "Tableau",
-  text: '[Sales] > 1000'
-}, {
-  level: "Phrase",
-  track: "Stats",
-  text: "(x - mu) / sigma"
-}, {
-  level: "Phrase",
-  track: "Stats",
-  text: "sum(x) / len(x)"
-}, {
-  level: "Phrase",
-  track: "Power BI",
-  text: "SUM(Sales[A])"
-}, {
-  level: "Phrase",
-  track: "Power BI",
-  text: "[Profit] / [Rev]"
-},
-// ── Lines: full statements ──
-{
-  level: "Line",
-  track: "SQL",
-  text: "SELECT * FROM users;"
-}, {
-  level: "Line",
-  track: "SQL",
-  text: "WHERE id = 1 AND active = TRUE;"
-}, {
-  level: "Line",
-  track: "SQL",
-  text: "GROUP BY dept HAVING COUNT(*) > 5;"
-}, {
-  level: "Line",
-  track: "Python",
-  text: 'df[df["age"] > 21]'
-}, {
-  level: "Line",
-  track: "Python",
-  text: 'data = {"key": [1, 2, 3]}'
-}, {
-  level: "Line",
-  track: "Python",
-  text: "result = sum(x for x in nums)"
-}, {
-  level: "Line",
-  track: "Excel",
-  text: "=VLOOKUP(A2, B:C, 2, FALSE)"
-}, {
-  level: "Line",
-  track: "Excel",
-  text: '=IF(B2 > 0, "yes", "no")'
-}, {
-  level: "Line",
-  track: "Excel",
-  text: '=SUMIF(A:A, ">100")'
-}, {
-  level: "Line",
-  track: "Tableau",
-  text: 'IF [Sales] > 1000 THEN "High" END'
-}, {
-  level: "Line",
-  track: "Tableau",
-  text: "SUM([Profit]) / SUM([Sales])"
-}, {
-  level: "Line",
-  track: "Stats",
-  text: "z = (x - mu) / sigma"
-}, {
-  level: "Line",
-  track: "Stats",
-  text: "mean = sum(x) / len(x)"
-}, {
-  level: "Line",
-  track: "Power BI",
-  text: "Total = SUM(Sales[Amount])"
-}, {
-  level: "Line",
-  track: "Power BI",
-  text: "Margin = DIVIDE([Profit], [Revenue])"
-}];
-const TRACKS = ["Mixed", "SQL", "Python", "Excel", "Tableau", "Stats", "Power BI"];
-const LEVELS = ["Words", "Phrases", "Lines"]; // Words=easiest, Lines=hardest
-const LEVEL_TO_SINGULAR = {
-  "Words": "Word",
-  "Phrases": "Phrase",
-  "Lines": "Line"
-};
+
+// module-level "active template" view — set by applyTemplate; components read these unchanged
+let SYMBOLS = [],
+  SYMBOL_SET = new Set(),
+  SNIPPETS = [],
+  TRACKS = [],
+  ACTIVE_TPL = TEMPLATES[0];
+function applyTemplate(id) {
+  const t = TPL_BY_ID[id] || TEMPLATES[0];
+  ACTIVE_TPL = t;
+  SYMBOLS = t.symbols;
+  SYMBOL_SET = new Set(SYMBOLS.map(s => s.ch));
+  SNIPPETS = t.snippets;
+  const uniq = [...new Set(t.snippets.map(s => s.track))];
+  TRACKS = uniq.length > 1 ? ["Mixed", ...uniq] : uniq;
+}
+function initialTemplateId() {
+  try {
+    const url = new URLSearchParams(location.search).get("field");
+    if (url && TPL_BY_ID[url]) return url;
+  } catch (e) {}
+  const saved = store.load().template;
+  return TPL_BY_ID[saved] ? saved : null; // null = show first-run picker
+}
 
 /* ── Audio: researched feedback design ──
    correct = soft warm pitched confirmation (low-salience, ignorable in bulk)
@@ -1474,21 +976,35 @@ const store = {
     } catch (e) {}
   }
 };
+const saveStatsFor = (id, stats) => {
+  const cur = store.load();
+  const templates = {
+    ...(cur.templates || {})
+  };
+  templates[id] = {
+    ...(templates[id] || {}),
+    stats
+  };
+  store.save({
+    templates
+  });
+};
 
-/* ── stats ── */
-const blankStats = () => {
+/* ── stats (per template) ── */
+const blankStatsFor = tpl => {
   const s = {};
-  SYMBOLS.forEach(x => s[x.ch] = {
+  tpl.symbols.forEach(x => s[x.ch] = {
     attempts: 0,
     errors: 0,
     lat: []
   });
   return s;
 };
-const loadStats = () => {
-  const b = blankStats();
-  const saved = store.load().stats;
-  if (saved) SYMBOLS.forEach(x => {
+const loadStats = id => {
+  const t = TPL_BY_ID[id] || TEMPLATES[0];
+  const b = blankStatsFor(t);
+  const saved = (store.load().templates || {})[id] && (store.load().templates || {})[id].stats;
+  if (saved) t.symbols.forEach(x => {
     if (saved[x.ch]) b[x.ch] = {
       attempts: saved[x.ch].attempts | 0,
       errors: saved[x.ch].errors | 0,
@@ -1520,56 +1036,7 @@ const pick = stats => {
   return SYMBOLS[SYMBOLS.length - 1];
 };
 
-/* ── Sketch: every keystroke unfolds a single continuous line a little — MORE when correct,
-   a little when you miss — so it draws live as you type. Faster typing → faster drawing.
-   One drawing fills over ~STROKES_GOAL key-units (≈ a 5-minute session). pathLength="100"
-   normalizes each path so stroke-dashoffset reveals the right fraction. */
-const STROKES_GOAL = 200; // key-units to finish a drawing (~5 min of typing)
-const STEP_OK = 1; // a correct key unfolds this much
-const STEP_MISS = 0.34; // a miss still nudges it forward a little
-// Simple, iconic line drawings — clean thick blue stroke in the lesson style, no fills or filters.
-// Each is one connected path; pathLength="100" lets us reveal a fraction with stroke-dashoffset.
-const SKETCHES = [{
-  name: "a heart",
-  d: "M60,40 C50,22 25,25 25,52 C25,75 60,98 60,98 C60,98 95,75 95,52 C95,25 70,22 60,40 Z"
-}, {
-  name: "a star",
-  d: "M60,18 L72,50 L106,50 L78,71 L90,103 L60,82 L30,103 L42,71 L14,50 L48,50 Z"
-}, {
-  name: "a check",
-  d: "M22,62 L48,90 L100,28"
-}, {
-  name: "a house",
-  d: "M28,98 L28,55 L60,28 L92,55 L92,98 M52,98 L52,72 L68,72 L68,98"
-}, {
-  name: "a mountain",
-  d: "M10,95 L40,42 L62,65 L82,40 L110,95"
-}, {
-  name: "a balloon",
-  d: "M60,18 C30,18 30,62 60,74 C90,62 90,18 60,18 M60,74 L60,98"
-}, {
-  name: "an arrow",
-  d: "M18,60 L92,60 M76,42 L94,60 L76,78"
-}, {
-  name: "a leaf",
-  d: "M60,98 C60,80 60,62 60,52 C40,52 28,38 30,22 C46,22 60,32 60,52 C60,32 74,22 90,22 C92,38 80,52 60,52"
-}, {
-  name: "a key",
-  d: "M40,60 a14,14 0 1,1 28,0 a14,14 0 1,1 -28,0 M68,60 L104,60 M90,60 L90,74 M98,60 L98,72"
-}, {
-  name: "a smiley face",
-  d: "M60,15 C90,15 100,55 70,80 C40,90 22,72 22,45 C22,22 40,15 60,15 M42,42 L42,42 M78,42 L78,42 M40,60 C50,76 70,76 80,60"
-}];
-const randomSketch = cur => {
-  if (SKETCHES.length < 2) return 0;
-  let i;
-  do {
-    i = Math.floor(Math.random() * SKETCHES.length);
-  } while (i === cur);
-  return i;
-};
-
-/* ── Biodiversity ladder — unlock order mirrors real ecological succession ── */
+/* ── Biodiversity garden — 8-step ecological ladder ── */
 const GARDEN_LADDER = [{
   id: "wf",
   name: "native wildflowers",
@@ -1634,72 +1101,58 @@ const loadGarden = () => {
     lastVisit: g.lastVisit || null
   };
 };
-const blankSketch = () => ({
-  current: Math.floor(Math.random() * SKETCHES.length),
-  strokes: 0,
-  finished: [],
-  pending: null
-});
-const loadSketch = () => {
-  const s = store.load().sketch;
-  if (!s || typeof s !== "object") return blankSketch();
-  const okIdx = i => Number.isInteger(i) && i >= 0 && i < SKETCHES.length;
-  return {
-    current: okIdx(s.current) ? s.current : Math.floor(Math.random() * SKETCHES.length),
-    strokes: Math.max(0, Math.min(STROKES_GOAL, Number(s.strokes) || 0)),
-    finished: Array.isArray(s.finished) ? s.finished.filter(okIdx).slice(-24) : [],
-    pending: okIdx(s.pending) ? s.pending : null
-  };
-};
-// returning reward: a gentle day-streak that grows when you come back — never punished, never a timer
-const blankStreak = () => ({
-  lastVisit: null,
-  streak: 0,
-  days: 0,
-  sessions: 0
-});
-const loadStreak = () => {
-  const s = store.load().streak;
-  if (!s || typeof s !== "object") return blankStreak();
-  return {
-    lastVisit: typeof s.lastVisit === "string" ? s.lastVisit : null,
-    streak: s.streak | 0,
-    days: s.days | 0,
-    sessions: s.sessions | 0
-  };
-};
 
 /* ── App ── */
 function App() {
-  const [mode, setMode] = useState("drill");
-  const [stats, setStats] = useState(loadStats);
-  const [sketch, setSketch] = useState(loadSketch);
-  const [muted, setMuted] = useState(() => {
-    const m = store.load().muted;
-    return typeof m === "boolean" ? m : true;
-  }); // sound OFF by default
-  const [relaxOn, setRelaxOn] = useState(() => {
-    const v = store.load().relaxOn;
-    return typeof v === "boolean" ? v : true;
-  }); // breathing prompt ON by default
+  const [tplId, setTplId] = useState(initialTemplateId); // null => show picker
+  if (tplId) applyTemplate(tplId);else applyTemplate("general");
+  const [mode, setMode] = useState("home");
+  const [stats, setStats] = useState(() => loadStats(tplId || "general"));
+  const [muted, setMuted] = useState(() => !!store.load().muted);
   const [sens, setSens] = useState(() => {
     const s = store.load().sens;
     return typeof s === "number" ? s : 0.4;
   });
   const [showSet, setShowSet] = useState(false);
-  const [welcome, setWelcome] = useState(() => !store.load().welcomeSeen); // shown first visit, reopen via ?
-  const [streak, setStreak] = useState(loadStreak);
-  const [focusKeys, setFocusKeys] = useState(null); // when set, Drill practices only these (the most-missed) keys
-  const [breathe, setBreathe] = useState(0); // >0 = breathing overlay open with this many cycles
-  const [voiceOn, setVoiceOn] = useState(() => !!store.load().voiceOn); // spoken coaching toggle
   const [garden, setGarden] = useState(loadGarden);
-  const [newUnlock, setNewUnlock] = useState(null); // set to a GARDEN_LADDER step when it just unlocked
+  const [newUnlock, setNewUnlock] = useState(null);
+  const [showOnboard, setShowOnboard] = useState(false);
+  // PWA install prompt
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [installDismissed, setInstallDismissed] = useState(() => !!store.load().installDismissed);
+  const isStandalone = useMemo(() => {
+    try {
+      return window.matchMedia && window.matchMedia("(display-mode:standalone)").matches || !!window.navigator.standalone;
+    } catch (e) {
+      return false;
+    }
+  }, []);
+  // Touch/no-keyboard detection (Part D)
+  const isTouch = useMemo(() => {
+    try {
+      return navigator.maxTouchPoints > 0 && !window.matchMedia("(pointer:fine)").matches;
+    } catch (e) {
+      return false;
+    }
+  }, []);
+  useEffect(() => {
+    RELAX_SENS = sens;
+    store.save({
+      sens
+    });
+  }, [sens]);
+  useEffect(() => {
+    audio.setMuted(muted);
+    store.save({
+      muted
+    });
+  }, [muted]);
   useEffect(() => {
     store.save({
       garden
     });
   }, [garden]);
-  // detect newly-unlocked steps after addGrowth fires → show toast
+  // Unlock detection
   const prevUnlockedRef = useRef(null);
   useEffect(() => {
     if (prevUnlockedRef.current === null) {
@@ -1710,34 +1163,13 @@ function App() {
     if (fresh.length) setNewUnlock(GARDEN_BY_ID[fresh[0]] || null);
     prevUnlockedRef.current = garden.unlocked;
   }, [garden.unlocked]);
-  const addGrowth = useCallback((n = 1) => setGarden(g => {
-    const growth = g.growth + n;
-    const unlocked = [...g.unlocked];
-    for (const step of GARDEN_LADDER) if (!unlocked.includes(step.id) && growth >= step.threshold) unlocked.push(step.id);
-    return {
-      ...g,
-      growth,
-      unlocked
-    };
-  }), []);
-  // PWA install prompt — captured from `beforeinstallprompt`; pill button in topbar lets the user trigger it
-  const [installPrompt, setInstallPrompt] = useState(null);
-  const [installDismissed, setInstallDismissed] = useState(() => !!store.load().installDismissed);
-  const isStandalone = useMemo(() => {
-    try {
-      return window.matchMedia && window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
-    } catch (e) {
-      return false;
-    }
-  }, []);
+  // PWA install prompt listener
   useEffect(() => {
     const onPrompt = e => {
       e.preventDefault();
       setInstallPrompt(e);
     };
-    const onInstalled = () => {
-      setInstallPrompt(null);
-    };
+    const onInstalled = () => setInstallPrompt(null);
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
     return () => {
@@ -1749,9 +1181,7 @@ function App() {
     if (!installPrompt) return;
     installPrompt.prompt();
     const c = await installPrompt.userChoice;
-    if (c && c.outcome === "accepted") {
-      setInstallPrompt(null);
-    }
+    if (c && c.outcome === "accepted") setInstallPrompt(null);
   }, [installPrompt]);
   const dismissInstall = useCallback(() => {
     setInstallDismissed(true);
@@ -1759,58 +1189,16 @@ function App() {
       installDismissed: true
     });
   }, []);
-  useEffect(() => {
-    RELAX_SENS = sens;
-    store.save({
-      sens
-    });
-  }, [sens]);
-  useEffect(() => {
-    RELAX_ON = relaxOn;
-    store.save({
-      relaxOn
-    });
-  }, [relaxOn]);
-  useEffect(() => {
-    audio.setMuted(muted);
-    store.save({
-      muted
-    });
-  }, [muted]);
-  useEffect(() => {
-    store.save({
-      sketch
-    });
-  }, [sketch]); // sketch progress persists on every change
-  useEffect(() => {
-    store.save({
-      streak
-    });
-  }, [streak]); // returning streak persists
-  useEffect(() => {
-    VOICE_ON = voiceOn;
-    store.save({
-      voiceOn
-    });
-  }, [voiceOn]); // speech toggle syncs the module flag
-  // count this visit; the day-streak grows when you come back (consecutive days), never punished on a gap
-  useEffect(() => {
-    const today = new Date().toISOString().slice(0, 10);
-    const yest = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
-    setStreak(s => {
-      if (s.lastVisit === today) return {
-        ...s,
-        sessions: s.sessions + 1
-      }; // another session, same day
-      const streak = s.lastVisit === yest ? s.streak + 1 : 1; // consecutive day grows it; a gap simply restarts at 1
-      return {
-        lastVisit: today,
-        streak,
-        days: s.days + 1,
-        sessions: s.sessions + 1
-      };
-    });
-  }, []);
+  const addGrowth = useCallback((n = 1) => setGarden(g => {
+    const growth = g.growth + n;
+    const unlocked = [...g.unlocked];
+    for (const step of GARDEN_LADDER) if (!unlocked.includes(step.id) && growth >= step.threshold) unlocked.push(step.id);
+    return {
+      ...g,
+      growth,
+      unlocked
+    };
+  }), []);
   const saveTimer = useRef(0);
   const record = useCallback((ch, ok, lat) => {
     if (!SYMBOL_SET.has(ch)) return;
@@ -1825,112 +1213,83 @@ function App() {
         }
       };
       clearTimeout(saveTimer.current);
-      saveTimer.current = setTimeout(() => store.save({
-        stats: next
-      }), 400); // debounce writes
+      const id = ACTIVE_TPL.id;
+      saveTimer.current = setTimeout(() => saveStatsFor(id, next), 400);
       return next;
     });
   }, []);
-  // EVERY keystroke unfolds the drawing a little (more when correct), so it draws live as you type
-  const addProgress = useCallback(ok => setSketch(s => {
-    if (s.pending != null) return s; // finished drawing waiting on a save/delete choice — pause
-    const t = s.strokes + (ok ? STEP_OK : STEP_MISS);
-    if (t < STROKES_GOAL) return {
-      ...s,
-      strokes: t
-    };
-    return {
-      ...s,
-      strokes: STROKES_GOAL,
-      pending: s.current
-    }; // finished: pause on it (save/delete)
-  }), []);
-  const triggerBreathe = useCallback(n => setBreathe(prev => prev > 0 ? prev : n), []);
-  const closeBreathe = useCallback(() => setBreathe(0), []);
-  useEffect(() => {
-    audio.duck(breathe > 0);
-  }, [breathe]);
-  // when a drawing finishes (~5 min in), a breathing break pops up for 5 cycles
-  const justFinished = useRef(false);
-  useEffect(() => {
-    if (sketch.pending != null) {
-      if (!justFinished.current) {
-        justFinished.current = true;
-        setBreathe(5);
-      }
-    } else justFinished.current = false;
-  }, [sketch.pending]);
-  const saveSketch = useCallback(() => setSketch(s => s.pending == null ? s : {
-    current: randomSketch(s.current),
-    strokes: 0,
-    finished: [...s.finished, s.pending].slice(-24),
-    pending: null
-  }), []);
-  const discardSketch = useCallback(() => setSketch(s => s.pending == null ? s : {
-    current: randomSketch(s.current),
-    strokes: 0,
-    finished: s.finished,
-    pending: null
-  }), []);
-  const startFocus = useCallback(keys => {
-    setFocusKeys(keys && keys.length ? keys : null);
-    setMode("drill");
-  }, []);
-  const clearFocus = useCallback(() => setFocusKeys(null), []);
-  const toggleWelcome = useCallback(() => setWelcome(w => {
-    const nx = !w;
-    if (!nx) store.save({
-      welcomeSeen: true
-    });
-    return nx;
-  }), []);
-  const startApp = useCallback(() => {
+  const chooseTemplate = id => {
+    applyTemplate(id);
+    setStats(loadStats(id));
+    setMode("home");
+    setShowSet(false);
+    setTplId(id);
     store.save({
-      welcomeSeen: true
+      template: id
     });
-    setWelcome(false);
+    if (!store.load().onboardSeen) setShowOnboard(true);
+  };
+  const dismissOnboard = () => {
+    setShowOnboard(false);
     setMode("drill");
-  }, []);
+    store.save({
+      onboardSeen: true
+    });
+  };
   const toggleMute = () => setMuted(m => !m);
   const resetAll = () => {
     store.clear();
-    setStats(blankStats());
-    setSketch(blankSketch());
-    setStreak(blankStreak());
+    setStats(blankStatsFor(ACTIVE_TPL));
     setGarden(blankGarden());
     setSens(0.4);
-    setRelaxOn(true);
-    setMuted(true);
-    setWelcome(true);
-    setBreathe(0);
+    setMuted(false);
     setShowSet(false);
   };
   const sensLabel = sens < 0.25 ? "Rarely" : sens < 0.55 ? "Calm" : sens < 0.8 ? "Attentive" : "Eager";
   const total = useMemo(() => Object.values(stats).reduce((s, x) => s + x.attempts, 0), [stats]);
-  return /*#__PURE__*/React.createElement("div", {
+
+  // Touch/no-keyboard: show a friendly notice instead of a broken experience
+  if (isTouch && tplId) return /*#__PURE__*/React.createElement("div", {
     className: "kf-root"
-  }, /*#__PURE__*/React.createElement(SketchDefs, null), /*#__PURE__*/React.createElement("header", {
-    className: "kf-topbar"
+  }, /*#__PURE__*/React.createElement("header", {
+    className: "kf-head"
   }, /*#__PURE__*/React.createElement("div", {
     className: "kf-brand"
-  }, /*#__PURE__*/React.createElement("a", {
-    href: "https://michaelnocito.github.io/",
-    title: "Back to Michael Nocito's portfolio",
-    style: {
-      display: "inline-flex",
-      alignItems: "center",
-      textDecoration: "none",
-      fontSize: "13px",
-      fontWeight: 700,
-      color: "#5b6470",
-      marginRight: "10px",
-      whiteSpace: "nowrap"
-    }
-  }, "\u2190 Home"), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     className: "kf-glyph"
-  }, "{ }"), /*#__PURE__*/React.createElement("span", {
-    className: "kf-brandname"
-  }, "Keygarden")), /*#__PURE__*/React.createElement("nav", {
+  }, "{ }"), /*#__PURE__*/React.createElement("h1", null, "Keygarden"))), /*#__PURE__*/React.createElement("div", {
+    className: "kf-touch-notice"
+  }, /*#__PURE__*/React.createElement("h2", null, "\u2328\uFE0F Keygarden needs a physical keyboard"), /*#__PURE__*/React.createElement("p", null, "This typing trainer is designed for desktop use with a real keyboard. Open it on a laptop or desktop for the full experience.")));
+  if (!tplId) return /*#__PURE__*/React.createElement("div", {
+    className: "kf-root"
+  }, /*#__PURE__*/React.createElement("header", {
+    className: "kf-head"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "kf-brand"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "kf-glyph"
+  }, "{ }"), /*#__PURE__*/React.createElement("h1", null, "Keygarden")), /*#__PURE__*/React.createElement("p", {
+    className: "kf-tag"
+  }, "typing practice for the symbols your field runs on")), /*#__PURE__*/React.createElement(Picker, {
+    onPick: chooseTemplate
+  }));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "kf-root"
+  }, showOnboard && /*#__PURE__*/React.createElement(Onboard, {
+    field: ACTIVE_TPL,
+    onDismiss: dismissOnboard
+  }), newUnlock && /*#__PURE__*/React.createElement(GardenUnlockToast, {
+    step: newUnlock,
+    onClose: () => setNewUnlock(null)
+  }), /*#__PURE__*/React.createElement("header", {
+    className: "kf-head"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "kf-brand"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "kf-glyph"
+  }, "{ }"), /*#__PURE__*/React.createElement("h1", null, "Keygarden")), /*#__PURE__*/React.createElement("span", {
+    className: "kf-field-chip"
+  }, ACTIVE_TPL.label)), /*#__PURE__*/React.createElement("nav", {
     className: "kf-nav"
   }, /*#__PURE__*/React.createElement("button", {
     className: mode === "drill" ? "on" : "",
@@ -1938,38 +1297,24 @@ function App() {
   }, "Drill keys"), /*#__PURE__*/React.createElement("button", {
     className: mode === "snippet" ? "on" : "",
     onClick: () => setMode("snippet")
-  }, "Type code"), /*#__PURE__*/React.createElement("button", {
+  }, "Type snippets"), /*#__PURE__*/React.createElement("button", {
     className: mode === "garden" ? "on" : "",
     onClick: () => setMode("garden")
-  }, "Garden")), /*#__PURE__*/React.createElement("div", {
-    className: "kf-controls"
-  }, installPrompt && !installDismissed && !isStandalone && /*#__PURE__*/React.createElement("span", {
+  }, "Garden"), /*#__PURE__*/React.createElement("button", {
+    className: mode === "home" ? "on" : "",
+    onClick: () => setMode("home")
+  }, "Progress"), installPrompt && !installDismissed && !isStandalone && /*#__PURE__*/React.createElement("span", {
     className: "kf-install kf-fade",
     onClick: triggerInstall,
-    title: "Install Keygarden as a desktop app \u2014 works offline and gets a Start Menu shortcut"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "kf-install-arrow",
-    "aria-hidden": "true"
-  }, "\u2B07"), /*#__PURE__*/React.createElement("span", {
-    className: "kf-install-label"
-  }, "Install app"), /*#__PURE__*/React.createElement("span", {
+    title: "Install as a desktop app"
+  }, /*#__PURE__*/React.createElement("span", null, "\u2B07 Install app"), /*#__PURE__*/React.createElement("span", {
     className: "kf-install-x",
     onClick: e => {
       e.stopPropagation();
       dismissInstall();
     },
-    title: "Not now",
-    role: "button",
-    "aria-label": "Dismiss"
+    title: "Not now"
   }, "\xD7")), /*#__PURE__*/React.createElement("button", {
-    className: "kf-mute" + (welcome ? " on" : ""),
-    onClick: toggleWelcome,
-    title: "welcome & how it works"
-  }, "?"), /*#__PURE__*/React.createElement("button", {
-    className: "kf-mute speech" + (voiceOn ? " on" : ""),
-    onClick: () => setVoiceOn(v => !v),
-    title: voiceOn ? "voice coaching on — click to mute" : "voice coaching off — click to enable"
-  }, "\uD83D\uDD0A"), /*#__PURE__*/React.createElement("button", {
     className: "kf-mute" + (muted ? " off" : ""),
     onClick: toggleMute,
     title: muted ? "sound off" : "sound on"
@@ -1977,40 +1322,23 @@ function App() {
     className: "kf-mute",
     onClick: () => setShowSet(s => !s),
     title: "settings"
-  }, "\u2699"))), welcome && /*#__PURE__*/React.createElement(Welcome, {
-    onStart: startApp,
-    onClose: toggleWelcome,
-    muted: muted
-  }), breathe > 0 && /*#__PURE__*/React.createElement(BreatheOverlay, {
-    cycles: breathe,
-    onClose: closeBreathe
-  }), newUnlock && /*#__PURE__*/React.createElement(GardenUnlockToast, {
-    step: newUnlock,
-    onClose: () => setNewUnlock(null)
-  }), showSet && /*#__PURE__*/React.createElement("div", {
-    className: "kf-settings-wrap",
-    onClick: e => {
-      if (e.target === e.currentTarget) setShowSet(false);
-    }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, "\u2699")), showSet && /*#__PURE__*/React.createElement("div", {
     className: "kf-settings kf-fade"
-  }, /*#__PURE__*/React.createElement("label", {
-    className: "kf-toggle"
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "checkbox",
-    checked: relaxOn,
-    onChange: e => setRelaxOn(e.target.checked)
-  }), " Breathing breaks ", /*#__PURE__*/React.createElement("strong", null, relaxOn ? "on" : "off")), /*#__PURE__*/React.createElement("p", {
-    className: "kf-dim"
-  }, "A gentle 3-breath reset when it senses tension or hesitation \u2014 never from typing fast. Visual only; turn it off to never be interrupted."), relaxOn && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("label", {
+  }, /*#__PURE__*/React.createElement("label", null, "Field"), /*#__PURE__*/React.createElement("div", {
+    className: "kf-tracks",
     style: {
-      fontSize: ".85rem"
+      marginTop: ".5rem"
     }
-  }, "How often: ", /*#__PURE__*/React.createElement("strong", {
+  }, TEMPLATES.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.id,
+    className: t.id === tplId ? "on" : "",
+    onClick: () => chooseTemplate(t.id)
+  }, t.label))), /*#__PURE__*/React.createElement("label", {
     style: {
-      color: "var(--accent-d)"
+      display: "block",
+      marginTop: "1rem"
     }
-  }, sensLabel)), /*#__PURE__*/React.createElement("input", {
+  }, "Relax prompts: ", /*#__PURE__*/React.createElement("strong", null, sensLabel)), /*#__PURE__*/React.createElement("input", {
     type: "range",
     min: "0",
     max: "1",
@@ -2019,160 +1347,72 @@ function App() {
     onChange: e => setSens(parseFloat(e.target.value))
   }), /*#__PURE__*/React.createElement("div", {
     className: "kf-slabels"
-  }, /*#__PURE__*/React.createElement("span", null, "rarely"), /*#__PURE__*/React.createElement("span", null, "eager"))), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("span", null, "rarely"), /*#__PURE__*/React.createElement("span", null, "eager")), /*#__PURE__*/React.createElement("p", {
+    className: "kf-dim"
+  }, "Triggered by mistakes or long pauses \u2014 never by speed. Lower = leaves you alone more."), /*#__PURE__*/React.createElement("button", {
     className: "kf-reset",
     onClick: resetAll
-  }, "Reset progress & settings"))), /*#__PURE__*/React.createElement("div", {
-    className: "kf-stage"
-  }, /*#__PURE__*/React.createElement("aside", {
-    className: "kf-rail"
-  }, /*#__PURE__*/React.createElement(ProgressRail, {
-    stats: stats,
-    attempts: total,
-    sketch: sketch,
-    streak: streak,
-    onFocus: startFocus,
-    onSave: saveSketch,
-    onDiscard: discardSketch
-  })), /*#__PURE__*/React.createElement("main", {
-    className: "kf-work"
-  }, mode === "garden" ? /*#__PURE__*/React.createElement(Garden, {
+  }, "Reset all progress & settings")), /*#__PURE__*/React.createElement("main", {
+    className: "kf-main",
+    key: tplId
+  }, mode === "garden" && /*#__PURE__*/React.createElement(Garden, {
     garden: garden
-  }) : mode === "snippet" ? /*#__PURE__*/React.createElement(Snippet, {
-    record: record,
-    addProgress: addProgress,
-    addGrowth: addGrowth,
-    onBreathe: triggerBreathe,
-    voiceOn: voiceOn,
-    sketch: sketch,
-    onSave: saveSketch,
-    onDiscard: discardSketch
-  }) : /*#__PURE__*/React.createElement(Drill, {
+  }), mode === "home" && /*#__PURE__*/React.createElement(Home, {
+    stats: stats,
+    attempts: total
+  }), mode === "drill" && /*#__PURE__*/React.createElement(Drill, {
     stats: stats,
     record: record,
-    addProgress: addProgress,
-    addGrowth: addGrowth,
-    onBreathe: triggerBreathe,
-    focusKeys: focusKeys,
-    clearFocus: clearFocus,
-    voiceOn: voiceOn,
-    sketch: sketch,
-    onSave: saveSketch,
-    onDiscard: discardSketch
-  }))));
+    addGrowth: addGrowth
+  }), mode === "snippet" && /*#__PURE__*/React.createElement(Snippet, {
+    record: record,
+    addGrowth: addGrowth
+  })));
 }
-
-// The always-visible progress rail: streak, most-missed report, the live sketch, accuracy, collection.
-/* Collapsible rail card — click the header to open/close. Chevron rotates. */
-function Collapsible({
-  title,
-  defaultOpen = false,
-  subtitle,
-  children
+function Picker({
+  onPick
 }) {
-  const [open, setOpen] = useState(defaultOpen);
-  return /*#__PURE__*/React.createElement("div", {
-    className: "kf-railcard kf-coll" + (open ? " open" : "")
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "kf-coll-head",
-    onClick: () => setOpen(o => !o),
-    "aria-expanded": open
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "kf-coll-title"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "kf-eyebrow",
+  return /*#__PURE__*/React.createElement("section", {
+    className: "kf-card kf-fade"
+  }, /*#__PURE__*/React.createElement("h2", null, "Pick your field"), /*#__PURE__*/React.createElement("p", {
+    className: "kf-dim",
     style: {
-      margin: 0
+      marginBottom: "1.2rem"
     }
-  }, title), subtitle && /*#__PURE__*/React.createElement("span", {
-    className: "kf-coll-sub"
-  }, subtitle)), /*#__PURE__*/React.createElement("span", {
-    className: "kf-coll-chev",
-    "aria-hidden": "true"
-  }, "\u25BE")), open && /*#__PURE__*/React.createElement("div", {
-    className: "kf-coll-body"
-  }, children));
+  }, "This sets which keys and snippets you'll practice. You can change it anytime in \u2699."), /*#__PURE__*/React.createElement("div", {
+    className: "kf-picker"
+  }, TEMPLATES.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.id,
+    className: "kf-pick",
+    onClick: () => onPick(t.id)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "kf-pick-label"
+  }, t.label), /*#__PURE__*/React.createElement("span", {
+    className: "kf-pick-blurb"
+  }, t.blurb)))));
 }
-function ProgressRail({
+function Home({
   stats,
-  attempts,
-  sketch,
-  streak,
-  onFocus,
-  onSave,
-  onDiscard
+  attempts
 }) {
-  const finished = sketch ? sketch.finished : [];
-  const recent = [...finished].reverse().slice(0, 9);
-  const streakWord = streak && streak.streak > 1 ? `${streak.streak} days in a row` : "a fresh start";
-  // status report: the keys you miss most (need a few tries before it counts)
-  const missed = SYMBOLS.map(s => ({
+  const ranked = SYMBOLS.map(s => ({
     ...s,
     st: stats[s.ch]
-  })).filter(s => s.st.attempts >= 3 && s.st.errors > 0).map(s => ({
-    ...s,
-    miss: s.st.errors / s.st.attempts
-  })).sort((a, b) => b.miss - a.miss).slice(0, 5);
-  const focusSet = missed.map(s => s.ch);
-  return /*#__PURE__*/React.createElement(React.Fragment, null, streak && streak.sessions > 0 && /*#__PURE__*/React.createElement("div", {
-    className: "kf-streak"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "kf-streak-num"
-  }, streak.streak || 1), /*#__PURE__*/React.createElement("span", {
-    className: "kf-streak-txt"
-  }, streak.streak > 1 ? /*#__PURE__*/React.createElement(React.Fragment, null, "Welcome back \u2014 ", /*#__PURE__*/React.createElement("b", null, streakWord), ".") : /*#__PURE__*/React.createElement(React.Fragment, null, "Good to see you. Showing up is the whole game."), streak.days > 1 && /*#__PURE__*/React.createElement(React.Fragment, null, " ", streak.days, " days \xB7 ", streak.sessions, " sessions", finished.length > 0 ? ` · ${finished.length} ${finished.length === 1 ? "sketch" : "sketches"}` : "", "."))), /*#__PURE__*/React.createElement(Collapsible, {
-    title: "Your most-missed keys",
-    defaultOpen: true,
-    subtitle: attempts === 0 ? null : missed.length > 0 ? `${missed.length} ${missed.length === 1 ? "key" : "keys"} fumbled` : "clean so far"
-  }, attempts === 0 ? /*#__PURE__*/React.createElement("p", {
-    className: "kf-dim",
-    style: {
-      margin: 0
-    }
-  }, "No keystrokes yet. Start the warm-up \u2014 the keys you fumble surface here, with a button to drill just those.") : missed.length > 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    className: "kf-missed"
-  }, missed.map(m => /*#__PURE__*/React.createElement("div", {
-    key: m.ch,
-    className: "kf-missed-row",
-    title: `${m.st.errors} misses in ${m.st.attempts} tries — ${m.where}`
-  }, /*#__PURE__*/React.createElement("code", {
-    className: "kf-missed-ch"
-  }, m.ch), /*#__PURE__*/React.createElement("span", {
-    className: "kf-missed-bar"
-  }, /*#__PURE__*/React.createElement("i", {
-    style: {
-      width: Math.max(6, Math.round(m.miss * 100)) + "%"
-    }
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "kf-missed-pct"
-  }, Math.round(m.miss * 100), "%")))), /*#__PURE__*/React.createElement("button", {
-    className: "kf-drillthese",
-    onClick: () => onFocus(focusSet)
-  }, "Drill just these ", focusSet.map(c => /*#__PURE__*/React.createElement("code", {
-    key: c
-  }, c)), " \u2192")) : /*#__PURE__*/React.createElement("p", {
-    className: "kf-dim",
-    style: {
-      margin: 0
-    }
-  }, "Clean so far \u2014 nothing's tripping you up. Keep going.")), attempts > 0 && /*#__PURE__*/React.createElement(Collapsible, {
-    title: "Accuracy per key",
-    subtitle: "heatmap"
-  }, /*#__PURE__*/React.createElement(Heatmap, {
+  })).filter(s => s.st.attempts > 0).sort((a, b) => weakness(b.st) - weakness(a.st));
+  const targets = ranked.slice(0, 2);
+  return /*#__PURE__*/React.createElement("section", {
+    className: "kf-card kf-fade"
+  }, attempts === 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "kf-empty"
+  }, /*#__PURE__*/React.createElement("p", null, "No keystrokes yet."), /*#__PURE__*/React.createElement("p", {
+    className: "kf-dim"
+  }, "Don't worry about the meaning \u2014 just get the typing down. The patterns start to feel familiar on their own. Sound's on; tap \u266A to mute.")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", null, "Where you are"), targets.length > 0 && /*#__PURE__*/React.createElement("p", {
+    className: "kf-focus"
+  }, "Focus next: ", targets.map(t => /*#__PURE__*/React.createElement("code", {
+    key: t.ch
+  }, t.ch))), /*#__PURE__*/React.createElement(Heatmap, {
     stats: stats
-  })), recent.length > 0 && /*#__PURE__*/React.createElement(Collapsible, {
-    title: "Finished sketches",
-    defaultOpen: true,
-    subtitle: `${recent.length} saved`
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "kf-collection"
-  }, recent.map((idx, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    className: "kf-frame"
-  }, /*#__PURE__*/React.createElement(SketchArt, {
-    sketch: SKETCHES[idx],
-    frac: 1
-  }))))));
+  })));
 }
 function Heatmap({
   stats
@@ -2199,219 +1439,30 @@ function Heatmap({
     }, acc === null ? "—" : `${Math.round(acc * 100)}%`));
   }));
 }
-
-/* ── On-screen keyboard diagram ──
-   Shows the full QWERTY layout; target key = blue, shift key = purple (when needed),
-   wrong key = red for ~700ms. Finger-zone tints follow standard 8-finger color guide. */
-function KeyboardDiagram({
-  target,
-  wrongKey
-}) {
-  // The POS map (already computed above) gives us row + column for every key
-  const tKey = target ? target.physKey : null;
-  const needsShift = target ? target.shift : false;
-  const OFFSETS = [0, 14, 23, 34]; // horizontal offset per row (px) to stagger like a real keyboard
-  return /*#__PURE__*/React.createElement("div", {
-    className: "kf-kbd-wrap",
-    style: {
-      overflowX: "auto"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "inline-block",
-      minWidth: 440
-    }
-  }, KROWS.map(row => /*#__PURE__*/React.createElement("div", {
-    key: row.row,
-    className: "kf-krow",
-    style: {
-      justifyContent: "flex-start",
-      paddingLeft: OFFSETS[row.row]
-    }
-  }, row.row === 2 && /*#__PURE__*/React.createElement("div", {
-    className: "kf-key wide",
-    style: {
-      fontSize: 9,
-      color: "var(--dim)"
-    }
-  }, "Caps"), row.row === 3 && /*#__PURE__*/React.createElement("div", {
-    className: "kf-key wide" + (needsShift ? " target-shift" : ""),
-    style: {
-      fontSize: 9
-    }
-  }, "Shift"), row.keys.map(k => {
-    const isTarget = tKey && k.k === tKey && !(!needsShift && k.s && k.s === target.ch); // main highlight
-    // For `physKey` highlight, we match the raw base key regardless of shift
-    const isPhysTarget = tKey && k.k === tKey;
-    const isWrong = wrongKey && k.k === wrongKey;
-    const cls = ["kf-key std", "finger-" + k.f, isPhysTarget ? "target" : "", isWrong ? "wrong" : ""].filter(Boolean).join(" ");
-    return /*#__PURE__*/React.createElement("div", {
-      key: k.k,
-      className: cls
-    }, k.s && /*#__PURE__*/React.createElement("span", {
-      className: "kf-shifted"
-    }, k.s), /*#__PURE__*/React.createElement("span", {
-      className: "kf-base"
-    }, k.k.toUpperCase()));
-  }), row.row === 2 && /*#__PURE__*/React.createElement("div", {
-    className: "kf-key wide",
-    style: {
-      fontSize: 9,
-      color: "var(--dim)"
-    }
-  }, "Enter"), row.row === 0 && /*#__PURE__*/React.createElement("div", {
-    className: "kf-key xwide",
-    style: {
-      fontSize: 9,
-      color: "var(--dim)"
-    }
-  }, "Back"))), /*#__PURE__*/React.createElement("div", {
-    className: "kf-krow",
-    style: {
-      paddingLeft: 120
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "kf-key spc"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "kf-base",
-    style: {
-      fontSize: 8,
-      letterSpacing: 2
-    }
-  }, "SPACE")))));
-}
-
-/* TypedSlots: each keystroke "draws into" the next slot — same visual language as the kf-bigkey guide,
-   but smaller and in a row. Correct = blue (accent), wrong = red. A blinking dashed slot waits next. */
-function TypedSlots({
-  typed
-}) {
-  const recent = typed.slice(-14);
-  return /*#__PURE__*/React.createElement("div", {
-    className: "kf-term"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "kf-term-label"
-  }, "Typed"), recent.length === 0 ? /*#__PURE__*/React.createElement("span", {
-    className: "kf-dim",
-    style: {
-      fontSize: ".82rem"
-    }
-  }, "The keys you press will appear here.") : recent.map((t, i) => /*#__PURE__*/React.createElement("span", {
-    key: typed.length - recent.length + i,
-    className: "kf-slot" + (t.ok ? "" : " bad")
-  }, t.ch === " " ? "␣" : t.ch)), /*#__PURE__*/React.createElement("span", {
-    className: "kf-slot-empty",
-    "aria-hidden": "true"
-  }));
-}
 function Drill({
   stats,
   record,
-  addProgress,
-  addGrowth,
-  onBreathe,
-  focusKeys,
-  clearFocus,
-  voiceOn,
-  sketch,
-  onSave,
-  onDiscard
+  addGrowth
 }) {
   const statsRef = useRef(stats);
   statsRef.current = stats;
-  // focus mode: practice ONLY the chosen (most-missed) keys — weighted toward the weaker ones
-  const focus = useMemo(() => {
-    const set = Array.isArray(focusKeys) ? focusKeys : [];
-    const pool = SYMBOLS.filter(s => set.includes(s.ch));
-    return pool.length ? pool : null;
-  }, [focusKeys]);
-  // ── learning-science scheduler (SYMBOLS is the easy→hard, chunked-by-finger pedagogical order):
-  //    layered release — introduce keys gradually, give each a little massed acquisition, then SPACED +
-  //    INTERLEAVED review weighted by weakness (and no back-to-back repeats). Not random. ──
-  const intro = useRef(0);
-  const seen = useRef({});
-  const sinceIntro = useRef(0);
-  const last = useRef(null);
-  const schedule = useCallback(() => {
-    const weightedPick = poolN => {
-      const w = poolN.map(s => weakness(statsRef.current[s.ch]));
-      const tot = w.reduce((p, q) => p + q, 0) || 1;
-      let r = Math.random() * tot;
-      for (let i = 0; i < poolN.length; i++) {
-        r -= w[i];
-        if (r <= 0) return poolN[i];
-      }
-      return poolN[poolN.length - 1];
-    };
-    if (focus) return {
-      sym: weightedPick(focus),
-      isNew: false
-    };
-    if (intro.current === 0) {
-      intro.current = 1;
-      sinceIntro.current = 0;
-      return {
-        sym: SYMBOLS[0],
-        isNew: true
-      };
-    }
-    const newest = SYMBOLS[intro.current - 1];
-    const review = () => {
-      let p = SYMBOLS.slice(0, intro.current).filter(s => s.ch !== last.current);
-      return weightedPick(p.length ? p : SYMBOLS.slice(0, intro.current));
-    };
-    // 1) acquire the newest key (massed, but lightly interleaved so it isn't rote)
-    if ((seen.current[newest.ch] || 0) < 4 && (intro.current === 1 || Math.random() < 0.6)) return {
-      sym: newest,
-      isNew: false
-    };
-    // 2) introduce the next key once the newest is warm and a few reps have passed
-    if (intro.current < SYMBOLS.length && (seen.current[newest.ch] || 0) >= 3 && sinceIntro.current >= 3) {
-      intro.current++;
-      sinceIntro.current = 0;
-      return {
-        sym: SYMBOLS[intro.current - 1],
-        isNew: true
-      };
-    }
-    // 3) spaced + interleaved review across everything introduced
-    return {
-      sym: review(),
-      isNew: false
-    };
-  }, [focus]);
-  const advance = useCallback(() => {
-    const l = schedule();
-    seen.current[l.sym.ch] = (seen.current[l.sym.ch] || 0) + 1;
-    if (!l.isNew) sinceIntro.current++;
-    last.current = l.sym.ch;
-    return l;
-  }, [schedule]);
-  const [lesson, setLesson] = useState(advance); // { sym, isNew }
-  const target = lesson.sym,
-    isNew = lesson.isNew;
-  const prevTarget = useRef(target.ch);
+  const warm = useRef(0); // index into SYMBOLS during the one-pass warmup
+  const [target, setTarget] = useState(() => SYMBOLS[0]); // begin on the easiest key
   const [flash, setFlash] = useState(null);
   const [hint, setHint] = useState(null);
-  const [wrongKey, setWrongKey] = useState(null); // physical key lit red on the keyboard diagram
-  const [typed, setTyped] = useState([]); // terminal echo of what you actually pressed
-  const [ks, setKs] = useState(0); // keystroke counter this session
   const [cel, setCel] = useState(0);
   const [celLvl, setCelLvl] = useState(1);
   const shownAt = useRef(performance.now());
   const streak = useRef(0);
-  const report = useRelaxCue(useCallback(() => onBreathe(3), [onBreathe]));
-  // speak the key name when target changes
+  const relax = useRelaxCue();
   useEffect(() => {
-    if (target.ch !== prevTarget.current) {
-      prevTarget.current = target.ch;
-      speak(target.name, 0.88);
-    }
-  }, [target]);
+    audio.duck(relax.show);
+  }, [relax.show]);
   const next = useCallback(() => {
-    setLesson(advance());
+    warm.current++;
+    setTarget(warm.current < SYMBOLS.length ? SYMBOLS[warm.current] : pick(statsRef.current));
     shownAt.current = performance.now();
-  }, [advance]);
+  }, []);
   useEffect(() => {
     shownAt.current = performance.now();
     const onKey = e => {
@@ -2421,31 +1472,20 @@ function Drill({
       const lat = performance.now() - shownAt.current;
       const ok = e.key === target.ch;
       record(target.ch, ok, lat);
-      report(ok, lat);
+      relax.report(ok, lat);
       audio.playKey(ok);
-      addProgress(ok);
-      setKs(k => k + 1);
-      setTyped(p => [...p, {
-        ch: e.key,
-        ok
-      }].slice(-36)); // echo it into the terminal line
       if (ok) {
         setHint(null);
-        setWrongKey(null);
+        const finishedWarmup = warm.current === SYMBOLS.length - 1; // last warmup key just cleared
         streak.current += 1;
-        if (streak.current % 12 === 0) {
+        if (finishedWarmup || streak.current % 12 === 0) {
           audio.milestone();
-          setCelLvl(Math.min(Math.floor(streak.current / 12), 4));
+          setCelLvl(finishedWarmup ? 2 : Math.min(Math.floor(streak.current / 12), 4));
           setCel(c => c + 1);
           addGrowth(1);
         }
       } else {
-        const h = diagnose(target.ch, e.key);
-        setHint(h);
-        if (h) speak(h, 0.9); // voice coaching: "you hit A — colon is up and to the right"
-        const wrongPhys = SYM_BY_CH[e.key] ? SYM_BY_CH[e.key].physKey : e.key.toLowerCase();
-        setWrongKey(wrongPhys);
-        setTimeout(() => setWrongKey(null), 700);
+        setHint(diagnose(target.ch, e.key));
         streak.current = 0;
       }
       setFlash(ok ? "ok" : "miss");
@@ -2454,118 +1494,61 @@ function Drill({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [target, record, next, report, addProgress]);
+  }, [target, record, next, relax]);
   return /*#__PURE__*/React.createElement("section", {
     className: "kf-card kf-fade kf-center"
-  }, /*#__PURE__*/React.createElement(Celebrate, {
+  }, relax.show && /*#__PURE__*/React.createElement(RelaxOverlay, {
+    onClose: relax.dismiss
+  }), /*#__PURE__*/React.createElement(Celebrate, {
     trigger: cel,
     level: celLvl
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "flex-start",
-      width: "100%",
-      marginBottom: ".3rem",
-      flexWrap: "wrap",
-      gap: ".4rem"
-    }
-  }, focus ? /*#__PURE__*/React.createElement("p", {
-    className: "kf-focusbar",
-    style: {
-      margin: 0
-    }
-  }, "Focusing on ", focus.map(s => /*#__PURE__*/React.createElement("code", {
-    key: s.ch
-  }, s.ch)), " ", /*#__PURE__*/React.createElement("button", {
-    className: "kf-linkbtn",
-    onClick: clearFocus
-  }, "drill all")) : /*#__PURE__*/React.createElement("p", {
-    className: "kf-dim",
-    style: {
-      margin: 0
-    }
-  }, intro.current >= SYMBOLS.length ? "All keys in play" : `Building up · ${intro.current}/${SYMBOLS.length} keys`), /*#__PURE__*/React.createElement("p", {
-    className: "kf-counter",
-    style: {
-      margin: 0
-    }
-  }, /*#__PURE__*/React.createElement("b", null, ks), " keys this session")), isNew && !focus && /*#__PURE__*/React.createElement("span", {
-    className: "kf-newkey"
-  }, "New key \u2014 take it slow"), /*#__PURE__*/React.createElement("div", {
-    className: "kf-place"
-  }, /*#__PURE__*/React.createElement("p", {
-    className: "kf-place-where"
-  }, target.where), /*#__PURE__*/React.createElement("p", {
-    className: "kf-place-finger"
-  }, target.finger)), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "kf-dim"
+  }, warm.current < SYMBOLS.length ? `Warm-up · ${warm.current + 1}/${SYMBOLS.length}` : "Adaptive practice", " \u2014 no timer, no penalty."), /*#__PURE__*/React.createElement("div", {
     className: "kf-bigkey " + (flash || "")
   }, target.ch), /*#__PURE__*/React.createElement("p", {
     className: "kf-name"
-  }, target.name), hint && /*#__PURE__*/React.createElement("p", {
+  }, target.name), /*#__PURE__*/React.createElement("p", {
+    className: "kf-finger"
+  }, target.finger), hint && /*#__PURE__*/React.createElement("p", {
     className: "kf-hint",
     key: hint
-  }, hint), /*#__PURE__*/React.createElement("div", {
-    className: "kf-kbdrow"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "kf-kbd"
-  }, /*#__PURE__*/React.createElement(KeyboardDiagram, {
-    target: target,
-    wrongKey: wrongKey
-  })), /*#__PURE__*/React.createElement(LiveSketch, {
-    sketch: sketch,
-    onSave: onSave,
-    onDiscard: onDiscard,
-    inline: true
-  })), /*#__PURE__*/React.createElement(TypedSlots, {
-    typed: typed
-  }));
+  }, hint));
 }
 function Snippet({
   record,
-  addProgress,
-  addGrowth,
-  onBreathe,
-  voiceOn,
-  sketch,
-  onSave,
-  onDiscard
+  addGrowth
 }) {
   const [track, setTrack] = useState("Mixed");
-  const [level, setLevel] = useState(() => store.load().level || "Words"); // start beginners on Words
-  const lvl = LEVEL_TO_SINGULAR[level];
-  const pool = useMemo(() => {
-    let p = SNIPPETS.filter(s => s.level === lvl);
-    if (track !== "Mixed") p = p.filter(s => s.track === track);
-    return p.length ? p : SNIPPETS.filter(s => s.level === lvl); // fallback if track has no entries at this level
-  }, [track, lvl]);
-  useEffect(() => {
-    store.save({
-      level
-    });
-  }, [level]);
+  const pool = useMemo(() => track === "Mixed" ? SNIPPETS : SNIPPETS.filter(s => s.track === track), [track]);
   const [snip, setSnip] = useState(() => pool[0]);
   const [pos, setPos] = useState(0);
   const [wrong, setWrong] = useState(false);
   const [hint, setHint] = useState(null);
+  const [auto, setAuto] = useState(() => new Set()); // indices the "editor" auto-filled
   const [cel, setCel] = useState(0);
   const [celLvl, setCelLvl] = useState(1);
-  const [ks, setKs] = useState(0);
+  const stack = useRef([]);
   const lastAt = useRef(performance.now());
   const errs = useRef(0);
-  const report = useRelaxCue(useCallback(() => onBreathe(3), [onBreathe]));
+  const relax = useRelaxCue();
+  useEffect(() => {
+    audio.duck(relax.show);
+  }, [relax.show]);
   const loadNext = useCallback(p => {
     const list = p || pool;
     setSnip(list[Math.floor(Math.random() * list.length)]);
     setPos(0);
     setWrong(false);
     setHint(null);
+    setAuto(new Set());
+    stack.current = [];
     errs.current = 0;
     lastAt.current = performance.now();
   }, [pool]);
   useEffect(() => {
     loadNext(pool);
-  }, [track, level]); // eslint-disable-line
+  }, [track]); // eslint-disable-line
   useEffect(() => {
     const onKey = e => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -2575,16 +1558,29 @@ function Snippet({
       const lat = performance.now() - lastAt.current;
       const ok = e.key === want;
       if (SYMBOL_SET.has(want)) record(want, ok, lat);
-      report(ok, lat);
+      relax.report(ok, lat);
       audio.playKey(ok);
-      addProgress(ok);
-      setKs(k => k + 1);
       if (ok) {
         setWrong(false);
         setHint(null);
         lastAt.current = performance.now();
-        const np = pos + 1;
-        setPos(np); // you type every character — closers included
+        const top = stack.current[stack.current.length - 1];
+        const closingQuote = (want === '"' || want === "'") && top === want;
+        if (PAIRS[want] && !closingQuote) stack.current.push(PAIRS[want]); // opener owes a closer
+        else if (closingQuote) stack.current.pop(); // manual closing quote
+        let np = pos + 1;
+        const skipped = [];
+        while (np < snip.text.length && stack.current.length && snip.text[np] === stack.current[stack.current.length - 1]) {
+          stack.current.pop();
+          skipped.push(np);
+          np++; // closer auto-fills; you don't type it
+        }
+        if (skipped.length) setAuto(prev => {
+          const s = new Set(prev);
+          skipped.forEach(i => s.add(i));
+          return s;
+        });
+        setPos(np); // always advance, even off the end, so the line closes cleanly
         if (np >= snip.text.length) {
           if (errs.current === 0) {
             audio.milestone();
@@ -2592,96 +1588,52 @@ function Snippet({
             setCel(c => c + 1);
             addGrowth(1);
           }
-          setTimeout(() => loadNext(), 420);
+          setTimeout(() => loadNext(), 380);
         }
       } else {
         errs.current += 1;
         setWrong(true);
-        const h = diagnose(want, e.key);
-        setHint(h);
-        if (h) speak(h, 0.9);
+        setHint(diagnose(want, e.key));
         setTimeout(() => setWrong(false), 200);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [snip, pos, record, loadNext, report, addProgress]);
+  }, [snip, pos, record, loadNext, relax]);
   return /*#__PURE__*/React.createElement("section", {
     className: "kf-card kf-fade"
-  }, /*#__PURE__*/React.createElement(Celebrate, {
+  }, relax.show && /*#__PURE__*/React.createElement(RelaxOverlay, {
+    onClose: relax.dismiss
+  }), /*#__PURE__*/React.createElement(Celebrate, {
     trigger: cel,
     level: celLvl
   }), /*#__PURE__*/React.createElement("div", {
-    className: "kf-tracks",
-    style: {
-      marginBottom: ".4rem"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "kf-tracks-label"
-  }, "Level"), LEVELS.map(l => /*#__PURE__*/React.createElement("button", {
-    key: l,
-    className: l === level ? "on" : "",
-    onClick: () => setLevel(l),
-    title: l === "Words" ? "Single tokens (easiest)" : l === "Phrases" ? "Mid-length expressions" : "Full statements"
-  }, l))), /*#__PURE__*/React.createElement("div", {
     className: "kf-tracks"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "kf-tracks-label"
-  }, "Track"), TRACKS.map(t => /*#__PURE__*/React.createElement("button", {
+  }, TRACKS.map(t => /*#__PURE__*/React.createElement("button", {
     key: t,
     className: t === track ? "on" : "",
     onClick: () => setTrack(t)
-  }, t))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: ".25rem",
-      flexWrap: "wrap",
-      gap: ".4rem"
-    }
-  }, /*#__PURE__*/React.createElement("p", {
-    className: "kf-dim",
-    style: {
-      margin: 0
-    }
-  }, "Type every character including closers \u2014 like a real terminal. ", /*#__PURE__*/React.createElement("code", null, snip.track)), /*#__PURE__*/React.createElement("p", {
-    className: "kf-counter",
-    style: {
-      margin: 0
-    }
-  }, /*#__PURE__*/React.createElement("b", null, ks), " keys this session")), /*#__PURE__*/React.createElement("div", {
-    className: "kf-kbdrow"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "kf-snip " + (wrong ? "wrong" : ""),
-    style: {
-      flex: "1 1 auto",
-      margin: 0
-    }
+  }, t))), /*#__PURE__*/React.createElement("p", {
+    className: "kf-dim"
+  }, "Closers auto-fill, like your editor \u2014 just type the openers. ", /*#__PURE__*/React.createElement("code", null, snip.track)), /*#__PURE__*/React.createElement("div", {
+    className: "kf-snip " + (wrong ? "wrong" : "")
   }, snip.text.split("").map((c, i) => /*#__PURE__*/React.createElement("span", {
     key: i,
-    className: i < pos ? "done" : i === pos ? "cur" : "pending"
-  }, c === " " ? "\u00A0" : c))), /*#__PURE__*/React.createElement(LiveSketch, {
-    sketch: sketch,
-    onSave: onSave,
-    onDiscard: onDiscard,
-    inline: true
-  })), hint && /*#__PURE__*/React.createElement("p", {
+    className: (i < pos ? "done" : i === pos ? "cur" : "pending") + (auto.has(i) ? " auto" : "")
+  }, c === " " ? "\u00A0" : c))), hint && /*#__PURE__*/React.createElement("p", {
     className: "kf-hint",
     key: hint
   }, hint));
 }
 
-// shared sensitivity, 0 (rarely) .. 1 (eager); default calm. RELAX_ON gates the breathing prompt entirely.
+// shared sensitivity, 0 (rarely) .. 1 (eager); default calm
 let RELAX_SENS = 0.4;
-let RELAX_ON = true;
-// returns a report(ok,lat) fn; on detected tension it calls onTrigger() (App opens a 3-breath break)
-function useRelaxCue(onTrigger) {
+function useRelaxCue() {
+  const [show, setShow] = useState(false);
   const recent = useRef([]);
   const cooldown = useRef(0);
   const spikes = useRef(0);
-  return useCallback((ok, lat) => {
-    if (!RELAX_ON) return; // breathing breaks switched off
+  const report = useCallback((ok, lat) => {
     const r = recent.current;
     r.push({
       ok,
@@ -2697,12 +1649,18 @@ function useRelaxCue(onTrigger) {
     if (med > 0 && lat > med * spikeMult && lat > 450) spikes.current++;else spikes.current = Math.max(0, spikes.current - 1);
     const errCount = r.filter(x => !x.ok).length;
     if (r.length >= 12 && (errCount >= errNeeded || spikes.current >= spikesNeeded)) {
+      setShow(true);
       recent.current = [];
       spikes.current = 0;
       cooldown.current = performance.now() + 60000;
-      onTrigger();
     }
-  }, [onTrigger]);
+  }, []);
+  const dismiss = useCallback(() => setShow(false), []);
+  return {
+    show,
+    report,
+    dismiss
+  };
 }
 const PRAISE = ["Clean", "Nice flow", "Smooth", "Locked in", "Effortless", "No misses", "Flowing", "Crisp"];
 const PRAISE_HI = ["On fire", "Unstoppable", "Flawless run", "In the zone", "Masterful"];
@@ -2763,277 +1721,42 @@ function Celebrate({
     className: "kf-praise" + (hi ? " hi" : "")
   }, word, hi ? ` ×${level}` : ""));
 }
-
-/* Guided breathing reset: N slow breaths, exhale longer than inhale (the lever that flips on the
-   calming "rest" response fastest). Starts with a small "prepare" circle, then grows on each in-breath. */
-const BREATHE_IN = 4000,
-  BREATHE_OUT = 6000,
-  BREATHE_PREP = 2200;
-function BreatheOverlay({
-  onClose,
-  cycles = 3
+function RelaxOverlay({
+  onClose
 }) {
-  const [phase, setPhase] = useState("prep"); // prep | in | out | done
-  const [count, setCount] = useState(0);
   useEffect(() => {
-    let alive = true;
-    const timers = [];
-    let n = 1;
-    const after = (ms, fn) => timers.push(setTimeout(() => {
-      if (alive) fn();
-    }, ms));
-    const cycle = () => {
-      setPhase("in");
-      setCount(n);
-      after(BREATHE_IN, () => {
-        setPhase("out");
-        after(BREATHE_OUT, () => {
-          if (n >= cycles) {
-            setPhase("done");
-            after(2800, onClose);
-          } else {
-            n += 1;
-            cycle();
-          }
-        });
-      });
-    };
-    setPhase("prep");
-    after(BREATHE_PREP, cycle); // small circle first: "prepare to breathe in"
-    return () => {
-      alive = false;
-      timers.forEach(clearTimeout);
-    };
-  }, [onClose, cycles]);
-  const done = phase === "done";
-  const scale = phase === "in" ? 1.15 : phase === "prep" ? 0.42 : done ? 0.95 : 0.55;
-  const dur = phase === "in" ? BREATHE_IN : phase === "prep" ? BREATHE_PREP : BREATHE_OUT;
+    const t = setTimeout(onClose, 6000);
+    return () => clearTimeout(t);
+  }, [onClose]);
   return /*#__PURE__*/React.createElement("div", {
     className: "kf-relax",
     onClick: onClose
-  }, phase === "prep" && /*#__PURE__*/React.createElement("p", {
-    className: "kf-bcount"
-  }, "Get ready \xB7 ", cycles, " slow breaths"), (phase === "in" || phase === "out") && /*#__PURE__*/React.createElement("p", {
-    className: "kf-bcount"
-  }, "Breath ", count, " of ", cycles), /*#__PURE__*/React.createElement("div", {
-    className: "kf-borb",
-    style: {
-      transform: `scale(${scale})`,
-      transitionDuration: dur + "ms"
-    }
-  }), /*#__PURE__*/React.createElement("p", null, done ? "Nice." : phase === "prep" ? "Prepare to breathe in…" : phase === "in" ? "Deep breath in…" : "…and slowly out"), /*#__PURE__*/React.createElement("p", {
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "kf-breath"
+  }), /*#__PURE__*/React.createElement("p", null, "Reset."), /*#__PURE__*/React.createElement("p", {
     className: "kf-dim"
-  }, done ? "Shoulders down, wrists floating. Carry on whenever you're ready." : "Let your shoulders drop and your wrists float. Follow the circle — slow and easy."), /*#__PURE__*/React.createElement("span", {
-    className: "kf-skip"
-  }, "tap anywhere to skip"));
+  }, "Drop your shoulders. Let your wrists float. One slow breath."));
 }
 
-/* ── Welcome / orientation (first visit; reopen via ?) ──
-   North-Star principles from the Archaeology kits: orient first — what you do, what's next,
-   what the result is, what you get — top-down and scannable, with one clear way to start. */
-const FEATURES = [{
-  ic: "=",
-  name: "Drill the symbols",
-  body: /*#__PURE__*/React.createElement(React.Fragment, null, "Warm up on one symbol at a time, easiest first, with a finger hint. The order quietly adapts to the keys you fumble. ", /*#__PURE__*/React.createElement("span", {
-    className: "kf-feat-step"
-  }, "You get:"), " the awkward reaches stop feeling awkward.")
-}, {
-  ic: "{}",
-  name: "Type code",
-  body: /*#__PURE__*/React.createElement(React.Fragment, null, "Real SQL, Python, Excel \u2014 start with single ", /*#__PURE__*/React.createElement("b", null, "words"), " (like ", /*#__PURE__*/React.createElement("code", null, "SELECT"), "), graduate to ", /*#__PURE__*/React.createElement("b", null, "phrases"), ", then full ", /*#__PURE__*/React.createElement("b", null, "lines"), ". You type every symbol, closers included. ", /*#__PURE__*/React.createElement("span", {
-    className: "kf-feat-step"
-  }, "You get:"), " the patterns feel familiar under your fingers.")
-}, {
-  ic: "✎",
-  name: "Watch a sketch appear",
-  body: /*#__PURE__*/React.createElement(React.Fragment, null, "Each clean line quietly draws a little picture below the keys. Finish one in ~5 minutes, then save it or delete it; pick a style (charcoal, watercolor, abstract, celestial) in ", /*#__PURE__*/React.createElement("code", null, "\u2699"), ". ", /*#__PURE__*/React.createElement("span", {
-    className: "kf-feat-step"
-  }, "You get:"), " a calm, growing reward for showing up.")
-}, {
-  ic: "♪",
-  name: "Optional gentle sound",
-  body: /*#__PURE__*/React.createElement(React.Fragment, null, "Soft, musical key feedback and a low flow pad that swells as you find a rhythm. ", /*#__PURE__*/React.createElement("span", {
-    className: "kf-feat-step"
-  }, "Off by default"), " \u2014 tap ", /*#__PURE__*/React.createElement("code", null, "\u266A"), " anytime to turn it on.")
-}, {
-  ic: "~",
-  name: "Breathing breaks",
-  body: /*#__PURE__*/React.createElement(React.Fragment, null, "If it senses tension or hesitation (never speed), it offers ", /*#__PURE__*/React.createElement("b", null, "three slow breaths"), " to loosen your shoulders. On by default; tune it or switch it off in ", /*#__PURE__*/React.createElement("code", null, "\u2699"), ".")
-}, {
-  ic: "⬇",
-  name: "Install it on your desktop",
-  body: /*#__PURE__*/React.createElement(React.Fragment, null, "Want it on your taskbar? In Chrome or Edge, click the ", /*#__PURE__*/React.createElement("b", null, "Install app"), " pill in the top bar (or the install icon at the right side of your address bar). Keygarden becomes a real Start Menu shortcut, runs in its own window, and works offline. ", /*#__PURE__*/React.createElement("span", {
-    className: "kf-feat-step"
-  }, "No download, no warnings \u2014 pure browser install."))
-}];
-function Welcome({
-  onStart,
-  onClose,
-  muted
+/* ── 60-second onboarding (Part D) — shown once after picking a field ── */
+function Onboard({
+  field,
+  onDismiss
 }) {
   return /*#__PURE__*/React.createElement("div", {
-    className: "kf-welcome-backdrop",
+    className: "kf-onboard-wrap",
     onClick: e => {
-      if (e.target === e.currentTarget) onClose();
+      if (e.target === e.currentTarget) onDismiss();
     }
   }, /*#__PURE__*/React.createElement("div", {
-    className: "kf-welcome"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "kf-welcome-head"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h2", null, "Welcome to Keygarden"), /*#__PURE__*/React.createElement("p", {
-    className: "kf-welcome-sub"
-  }, "the symbols data work runs on \u2014 slow, relaxed, repeated")), /*#__PURE__*/React.createElement("button", {
-    className: "kf-welcome-x",
-    onClick: onClose
-  }, "Skip \u2715")), /*#__PURE__*/React.createElement("p", {
-    className: "kf-premise"
-  }, "A calm place to drill the brackets, braces, and operators that slow you down in SQL, Python, and spreadsheets. ", /*#__PURE__*/React.createElement("b", null, "No timer, no score, nothing to fail"), " \u2014 a few quiet minutes, most days, is the whole method. Here's what's inside:"), /*#__PURE__*/React.createElement("div", {
-    className: "kf-feats"
-  }, FEATURES.map((f, i) => /*#__PURE__*/React.createElement("div", {
-    className: "kf-feat",
-    key: i
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "kf-feat-ic"
-  }, f.ic), /*#__PURE__*/React.createElement("div", {
-    className: "kf-feat-b"
-  }, /*#__PURE__*/React.createElement("h4", null, f.name), /*#__PURE__*/React.createElement("p", null, f.body))))), /*#__PURE__*/React.createElement("div", {
-    className: "kf-welcome-cta"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "kf-start",
-    onClick: onStart
-  }, "Start the warm-up \u2192"), /*#__PURE__*/React.createElement("span", null, "New here? The warm-up is the gentlest way in.", muted ? " Sound is off — tap ♪ to add it." : ""))));
+    className: "kf-onboard"
+  }, /*#__PURE__*/React.createElement("h3", null, "Welcome to ", field.label, " practice"), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("b", null, "Drill keys"), " introduces one symbol at a time \u2014 easiest first, with a placement hint. ", /*#__PURE__*/React.createElement("b", null, "Type snippets"), " uses real ", field.label.toLowerCase(), " text so the patterns become familiar under your fingers. ", /*#__PURE__*/React.createElement("b", null, "No timer, no score, nothing to fail"), " \u2014 just a few quiet minutes most days. Your garden grows as you go."), /*#__PURE__*/React.createElement("button", {
+    className: "kf-onboard-cta",
+    onClick: onDismiss
+  }, "Start the warm-up \u2192")));
 }
 
-/* ── Simple line sketch ──
-   One connected path with pathLength="100", revealed a fraction at a time via stroke-dashoffset.
-   Clean, thick, blue accent stroke — in the lesson visual style. No filters, no fills, no packs. */
-function SketchDefs() {
-  return null;
-} // legacy hook — no filters needed anymore
-function SketchArt({
-  sketch,
-  frac
-}) {
-  const f = Math.max(0, Math.min(1, frac));
-  return /*#__PURE__*/React.createElement("svg", {
-    className: "kf-art",
-    viewBox: "0 0 120 120",
-    preserveAspectRatio: "xMidYMid meet",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("path", {
-    className: "ghost",
-    d: sketch.d,
-    pathLength: "100"
-  }), /*#__PURE__*/React.createElement("path", {
-    className: "ink",
-    d: sketch.d,
-    pathLength: "100",
-    style: {
-      strokeDasharray: 100,
-      strokeDashoffset: 100 * (1 - f)
-    }
-  }));
-}
-/* LiveSketch: the prominent drawing panel in the work area.
-   A pen-tip dot follows the end of the drawn line so it looks like it's being sketched. */
-function LiveSketch({
-  sketch,
-  onSave,
-  onDiscard,
-  inline
-}) {
-  const pending = sketch.pending != null;
-  const cur = SKETCHES[pending ? sketch.pending : sketch.current] || SKETCHES[0];
-  const frac = pending ? 1 : Math.max(0, Math.min(1, sketch.strokes / STROKES_GOAL));
-  const near = frac >= 0.75 && !pending;
-  const n = sketch.finished ? sketch.finished.length : 0;
-  const title = cur.name.charAt(0).toUpperCase() + cur.name.slice(1);
-  const pathRef = useRef(null);
-  const [tip, setTip] = useState({
-    x: 60,
-    y: 60,
-    visible: false
-  });
-  useEffect(() => {
-    if (!pathRef.current || frac === 0 || frac >= 1) {
-      setTip(t => ({
-        ...t,
-        visible: false
-      }));
-      return;
-    }
-    try {
-      const total = pathRef.current.getTotalLength();
-      const pt = pathRef.current.getPointAtLength(frac * total);
-      setTip({
-        x: pt.x,
-        y: pt.y,
-        visible: true
-      });
-    } catch (e) {}
-  }, [frac, cur.d]);
-  return /*#__PURE__*/React.createElement("div", {
-    className: "kf-sketch-row" + (pending ? " done" : "") + (inline ? " inline" : "")
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "kf-sketch-canvas"
-  }, /*#__PURE__*/React.createElement("svg", {
-    className: "kf-art",
-    viewBox: "0 0 120 120",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("path", {
-    className: "ghost",
-    d: cur.d,
-    pathLength: "100"
-  }), /*#__PURE__*/React.createElement("path", {
-    ref: pathRef,
-    className: "ink",
-    d: cur.d,
-    pathLength: "100",
-    style: {
-      strokeDasharray: 100,
-      strokeDashoffset: 100 * (1 - frac)
-    }
-  }), tip.visible && /*#__PURE__*/React.createElement("circle", {
-    cx: tip.x,
-    cy: tip.y,
-    r: "3.6",
-    className: "kf-pen-tip",
-    fill: "var(--accent)"
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "kf-sketch-info"
-  }, /*#__PURE__*/React.createElement("p", {
-    className: "kf-sketch-name"
-  }, title), pending ? /*#__PURE__*/React.createElement(React.Fragment, null, !inline && /*#__PURE__*/React.createElement("p", {
-    className: "kf-dim"
-  }, "Keep this one in your collection?"), /*#__PURE__*/React.createElement("div", {
-    className: "kf-save-row",
-    style: {
-      marginTop: ".35rem"
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "kf-save",
-    onClick: onSave
-  }, "Save"), /*#__PURE__*/React.createElement("button", {
-    className: "kf-del",
-    onClick: onDiscard
-  }, "Delete"))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    className: "kf-sketch-prog"
-  }, /*#__PURE__*/React.createElement("i", {
-    style: {
-      width: Math.round(frac * 100) + "%"
-    }
-  })), !inline && /*#__PURE__*/React.createElement("p", {
-    className: "kf-dim"
-  }, near ? "Almost there — a few more keystrokes finish it." : n > 0 ? `${n} ${n === 1 ? "sketch" : "sketches"} saved · type to draw` : "Type to draw — each keystroke unfolds the line."), inline && /*#__PURE__*/React.createElement("p", {
-    className: "kf-dim",
-    style: {
-      fontSize: ".62rem",
-      margin: 0
-    }
-  }, Math.round(frac * 100), "%", n > 0 ? ` · ${n} saved` : ""))));
-}
-
-/* ── Garden: biodiversity reward that grows as you practice ── */
+/* ── Garden toast, scene, and components ── */
 
 function GardenUnlockToast({
   step,
@@ -3054,8 +1777,6 @@ function GardenUnlockToast({
     className: "kf-unlock-fact"
   }, "\"", step.fact, "\""));
 }
-
-// Single flower: stem + 5 petals + yellow center
 function GFlower({
   x,
   y,
@@ -3090,8 +1811,6 @@ function GFlower({
     fill: "#ffeb3b"
   }));
 }
-
-// Grey silhouette of the next unlockable element so the user can see what's coming
 function GardenGhost({
   unlocked
 }) {
@@ -3534,12 +2253,6 @@ function GardenScene({
     cy: "175",
     r: "2.1",
     fill: "#5c3d1e"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "325",
-    cy: "171",
-    r: "2",
-    fill: "#5c3d1e",
-    opacity: "0.7"
   }), /*#__PURE__*/React.createElement("ellipse", {
     cx: "329",
     cy: "202",
@@ -3547,13 +2260,6 @@ function GardenScene({
     ry: "3.5",
     fill: "#a07030",
     opacity: "0.72"
-  }), /*#__PURE__*/React.createElement("ellipse", {
-    cx: "337",
-    cy: "202",
-    rx: "10",
-    ry: "2.5",
-    fill: "#c8a558",
-    opacity: "0.6"
   }), /*#__PURE__*/React.createElement("g", {
     transform: "translate(332,183)"
   }, /*#__PURE__*/React.createElement("circle", {
@@ -3876,7 +2582,7 @@ function Garden({
   const prevThresh = done.length ? done[done.length - 1].threshold : 0;
   const prog = next ? Math.min(1, (growth - prevThresh) / Math.max(1, next.threshold - prevThresh)) : 1;
   return /*#__PURE__*/React.createElement("section", {
-    className: "kf-card kf-fade kf-garden-wrap"
+    className: "kf-card kf-fade"
   }, /*#__PURE__*/React.createElement("div", {
     className: "kf-eyebrow"
   }, "Your garden"), /*#__PURE__*/React.createElement(GardenScene, {
@@ -3893,16 +2599,16 @@ function Garden({
     className: "kf-garden-next-label"
   }, "\u2192 ", next.name)) : /*#__PURE__*/React.createElement("p", {
     style: {
-      marginTop: ".4rem",
+      marginTop: ".35rem",
       fontSize: ".8rem",
       color: "var(--good)",
       fontWeight: 700
     }
-  }, "\uD83C\uDFC6 Fully certified wildlife habitat \u2014 congratulations."), unlocked.length === 0 && /*#__PURE__*/React.createElement("p", {
+  }, "\uD83C\uDFC6 Fully certified wildlife habitat!"), unlocked.length === 0 && /*#__PURE__*/React.createElement("p", {
     className: "kf-garden-empty"
   }, "Your garden is bare soil and possibility.", /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: ".76rem"
+      fontSize: ".74rem"
     }
   }, "Each clean drill streak or snippet adds growth. Nothing wilts \u2014 it'll wait for you.")), /*#__PURE__*/React.createElement("div", {
     className: "kf-garden-ladder"
