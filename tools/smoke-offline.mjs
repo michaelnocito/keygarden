@@ -38,6 +38,14 @@ await new Promise((r) => setTimeout(r, 80));
 
 ok("React present (offline, no CDN)", typeof window.React === "object" && typeof window.ReactDOM === "object");
 ok("app mounted into #root", root.textContent.length > 0);
+ok("first run shows field picker", /Pick your field/.test(root.textContent));
+
+// pick the Data & Analytics field so the rest of the rich UI mounts
+const pickBtn = [...root.querySelectorAll(".kf-pickbtn")].find(x => /Data & Analytics/.test(x.textContent));
+if (pickBtn) pickBtn.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+await new Promise((r) => setTimeout(r, 40));
+ok("picked a field", !!pickBtn);
+
 ok("opens on Progress empty-state", /No keystrokes yet/.test(root.textContent));
 
 const clickBtn = (label) => {
