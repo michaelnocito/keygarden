@@ -179,10 +179,10 @@ ok("saved state available for rehydration", rehydrated);
 // 8. Sketch layer: the live drawing panel renders in the work area (below the typing card)
 clickBtn("Type code");
 await new Promise((r) => setTimeout(r, 30));
-ok("live sketch panel renders in the work area", !!$(".kf-sketch-panel .kf-art .ink")[0] || !!$(".kf-sketch-panel")[0]);
+ok("live sketch renders in the progress rail", !!$(".kf-rail .kf-sketch-row")[0] || !!$(".kf-rail .kf-art .ink")[0]);
 clickBtn("Drill keys");
 await new Promise((r) => setTimeout(r, 30));
-ok("live sketch persists on the Drill screen", !!$(".kf-sketch-panel")[0]);
+ok("live sketch persists in the rail on the Drill screen", !!$(".kf-rail .kf-sketch-row")[0]);
 
 // 9. a clean line added a stroke, persisted into keygarden.v1.sketch; a returning streak is tracked
 let sketchPersist = false, sketchGrew = false, streakTracked = false;

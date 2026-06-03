@@ -134,11 +134,11 @@
   .kf-key.target-shift .kf-base{color:#fff!important;}
   .kf-key.wrong{background:var(--bad)!important;border-color:#b01a24!important;animation:nudge .18s;}
   .kf-key.wrong .kf-base,.kf-key.wrong .kf-shifted{color:#fff!important;}
-  /* sketch panel in work area — secondary, sits below typing card */
-  .kf-sketch-panel{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:.75rem 1rem;margin-top:.7rem;}
-  .kf-sketch-row{display:flex;align-items:center;gap:.9rem;}
-  .kf-sketch-canvas{flex:0 0 auto;width:120px;height:120px;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;}
+  /* sketch — sits at top of the progress rail; vertical stack in narrow column */
+  .kf-sketch-row{display:flex;flex-direction:column;align-items:center;gap:.55rem;}
+  .kf-sketch-canvas{width:160px;height:160px;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;}
   .kf-sketch-canvas svg{width:88%;height:88%;}
+  .kf-sketch-info{width:100%;text-align:center;}
   .kf-art{display:block;width:100%;height:100%;}
   .kf-art .ghost{fill:none;stroke:var(--accent-bd);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;}
   .kf-art .ink{fill:none;stroke:var(--accent);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;transition:stroke-dashoffset .28s ease-out;}
@@ -663,7 +663,6 @@ function App(){
           {mode==="snippet"
             ? <Snippet record={record} addProgress={addProgress} onBreathe={triggerBreathe} voiceOn={voiceOn}/>
             : <Drill stats={stats} record={record} addProgress={addProgress} onBreathe={triggerBreathe} focusKeys={focusKeys} clearFocus={clearFocus} voiceOn={voiceOn}/>}
-          <LiveSketch sketch={sketch} onSave={saveSketch} onDiscard={discardSketch}/>
         </main>
       </div>
     </div>
@@ -709,6 +708,9 @@ function ProgressRail({stats,attempts,sketch,streak,onFocus,onSave,onDiscard}){
           </span>
         </div>
       )}
+      <Collapsible title={sketch&&sketch.pending!=null?"Sketch — finished":"Drawing"} defaultOpen={true} subtitle={sketch&&sketch.pending!=null?"keep or delete?":`${Math.round((sketch?sketch.strokes:0)/STROKES_GOAL*100)}%`}>
+        <LiveSketch sketch={sketch} onSave={onSave} onDiscard={onDiscard}/>
+      </Collapsible>
       <Collapsible title="Your most-missed keys" defaultOpen={true} subtitle={attempts===0?null:missed.length>0?`${missed.length} ${missed.length===1?"key":"keys"} fumbled`:"clean so far"}>
         {attempts===0
           ? <p className="kf-dim" style={{margin:0}}>No keystrokes yet. Start the warm-up — the keys you fumble surface here, with a button to drill just those.</p>
@@ -1134,8 +1136,7 @@ function LiveSketch({sketch,onSave,onDiscard}){
     try{ const total=pathRef.current.getTotalLength(); const pt=pathRef.current.getPointAtLength(frac*total); setTip({x:pt.x,y:pt.y,visible:true}); }catch(e){}
   },[frac,cur.d]);
   return (
-    <div className={"kf-sketch-panel"+(pending?" done":"")}>
-      <div className="kf-sketch-row">
+    <div className={"kf-sketch-row"+(pending?" done":"")}>
         <div className="kf-sketch-canvas">
           <svg className="kf-art" viewBox="0 0 120 120" aria-hidden="true">
             <path className="ghost" d={cur.d} pathLength="100"/>
@@ -1144,7 +1145,6 @@ function LiveSketch({sketch,onSave,onDiscard}){
           </svg>
         </div>
         <div className="kf-sketch-info">
-          <p className="kf-sketch-status">{pending?"Finished ✓":"Sketching"}</p>
           <p className="kf-sketch-name">{title}</p>
           {pending?(
             <>
@@ -1161,7 +1161,6 @@ function LiveSketch({sketch,onSave,onDiscard}){
             </>
           )}
         </div>
-      </div>
     </div>
   );
 }

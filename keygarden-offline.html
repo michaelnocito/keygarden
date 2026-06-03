@@ -134,11 +134,11 @@
   .kf-key.target-shift .kf-base{color:#fff!important;}
   .kf-key.wrong{background:var(--bad)!important;border-color:#b01a24!important;animation:nudge .18s;}
   .kf-key.wrong .kf-base,.kf-key.wrong .kf-shifted{color:#fff!important;}
-  /* sketch panel in work area — secondary, sits below typing card */
-  .kf-sketch-panel{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:.75rem 1rem;margin-top:.7rem;}
-  .kf-sketch-row{display:flex;align-items:center;gap:.9rem;}
-  .kf-sketch-canvas{flex:0 0 auto;width:120px;height:120px;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;}
+  /* sketch — sits at top of the progress rail; vertical stack in narrow column */
+  .kf-sketch-row{display:flex;flex-direction:column;align-items:center;gap:.55rem;}
+  .kf-sketch-canvas{width:160px;height:160px;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;}
   .kf-sketch-canvas svg{width:88%;height:88%;}
+  .kf-sketch-info{width:100%;text-align:center;}
   .kf-art{display:block;width:100%;height:100%;}
   .kf-art .ghost{fill:none;stroke:var(--accent-bd);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;}
   .kf-art .ink{fill:none;stroke:var(--accent);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;transition:stroke-dashoffset .28s ease-out;}
@@ -1804,10 +1804,6 @@ function App() {
     focusKeys: focusKeys,
     clearFocus: clearFocus,
     voiceOn: voiceOn
-  }), /*#__PURE__*/React.createElement(LiveSketch, {
-    sketch: sketch,
-    onSave: saveSketch,
-    onDiscard: discardSketch
   }))));
 }
 
@@ -1870,6 +1866,14 @@ function ProgressRail({
   }, streak.streak || 1), /*#__PURE__*/React.createElement("span", {
     className: "kf-streak-txt"
   }, streak.streak > 1 ? /*#__PURE__*/React.createElement(React.Fragment, null, "Welcome back \u2014 ", /*#__PURE__*/React.createElement("b", null, streakWord), ".") : /*#__PURE__*/React.createElement(React.Fragment, null, "Good to see you. Showing up is the whole game."), streak.days > 1 && /*#__PURE__*/React.createElement(React.Fragment, null, " ", streak.days, " days \xB7 ", streak.sessions, " sessions", finished.length > 0 ? ` · ${finished.length} ${finished.length === 1 ? "sketch" : "sketches"}` : "", "."))), /*#__PURE__*/React.createElement(Collapsible, {
+    title: sketch && sketch.pending != null ? "Sketch — finished" : "Drawing",
+    defaultOpen: true,
+    subtitle: sketch && sketch.pending != null ? "keep or delete?" : `${Math.round((sketch ? sketch.strokes : 0) / STROKES_GOAL * 100)}%`
+  }, /*#__PURE__*/React.createElement(LiveSketch, {
+    sketch: sketch,
+    onSave: onSave,
+    onDiscard: onDiscard
+  })), /*#__PURE__*/React.createElement(Collapsible, {
     title: "Your most-missed keys",
     defaultOpen: true,
     subtitle: attempts === 0 ? null : missed.length > 0 ? `${missed.length} ${missed.length === 1 ? "key" : "keys"} fumbled` : "clean so far"
@@ -2687,9 +2691,7 @@ function LiveSketch({
     } catch (e) {}
   }, [frac, cur.d]);
   return /*#__PURE__*/React.createElement("div", {
-    className: "kf-sketch-panel" + (pending ? " done" : "")
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "kf-sketch-row"
+    className: "kf-sketch-row" + (pending ? " done" : "")
   }, /*#__PURE__*/React.createElement("div", {
     className: "kf-sketch-canvas"
   }, /*#__PURE__*/React.createElement("svg", {
@@ -2718,8 +2720,6 @@ function LiveSketch({
   }))), /*#__PURE__*/React.createElement("div", {
     className: "kf-sketch-info"
   }, /*#__PURE__*/React.createElement("p", {
-    className: "kf-sketch-status"
-  }, pending ? "Finished ✓" : "Sketching"), /*#__PURE__*/React.createElement("p", {
     className: "kf-sketch-name"
   }, title), pending ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
     className: "kf-dim"
@@ -2742,7 +2742,7 @@ function LiveSketch({
     }
   })), /*#__PURE__*/React.createElement("p", {
     className: "kf-dim"
-  }, near ? "Almost there — a few more keystrokes finish it." : n > 0 ? `${n} ${n === 1 ? "sketch" : "sketches"} saved · type to draw` : "Type to draw — each keystroke unfolds the line.")))));
+  }, near ? "Almost there — a few more keystrokes finish it." : n > 0 ? `${n} ${n === 1 ? "sketch" : "sketches"} saved · type to draw` : "Type to draw — each keystroke unfolds the line."))));
 }
 ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(App, null));</script>
 </body>
