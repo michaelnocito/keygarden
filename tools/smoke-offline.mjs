@@ -57,7 +57,7 @@ await new Promise((r) => setTimeout(r, 30));
 ok("miss produces coaching hint", !!$(".kf-hint")[0]);
 if ($(".kf-hint")[0]) console.log("HINT SAMPLE:", JSON.stringify($(".kf-hint")[0].textContent));
 
-ok("enter Snippet", clickBtn("Type snippets"));
+ok("enter Snippet", clickBtn("Type code"));
 await new Promise((r) => setTimeout(r, 30));
 ok("snippet line renders", ($(".kf-snip")[0]?.textContent || "").trim().length > 0);
 

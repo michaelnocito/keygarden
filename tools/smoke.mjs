@@ -94,7 +94,7 @@ ok("wrong key shows a hint", !!$(".kf-hint")[0]);
 ok("typed-slots show what you pressed", $(".kf-slot").length >= 1 && (($(".kf-slot")[0] || {}).textContent || "") === "a");
 
 // 4. Snippet — type through a pair-heavy line; closers must auto-fill
-ok("Snippet button exists", clickBtn("Type snippets"));
+ok("Snippet button exists", clickBtn("Type code"));
 await new Promise((r) => setTimeout(r, 30));
 clickBtn("Python"); // every Python line has brackets/quotes
 await new Promise((r) => setTimeout(r, 40));
@@ -126,7 +126,7 @@ ok("sensitivity slider renders", !!slider);
 ok("slider defaults to calm range", slider && Math.abs(parseFloat(slider.value) - 0.4) < 0.001);
 
 // 6. less twitchy: at min sensitivity, clean typing must NOT trip the relax overlay
-clickBtn("Type snippets");
+clickBtn("Type code");
 await new Promise((r) => setTimeout(r, 20));
 if (slider) {
   slider.value = "0";
@@ -137,7 +137,7 @@ await new Promise((r) => setTimeout(r, 20));
 let relaxFired = false;
 for (let i = 0; i < 16; i++) {
   let cur = $(".kf-snip .cur")[0];
-  if (!cur) { clickBtn("Type snippets"); await new Promise((r)=>setTimeout(r,15)); cur = $(".kf-snip .cur")[0]; }
+  if (!cur) { clickBtn("Type code"); await new Promise((r)=>setTimeout(r,15)); cur = $(".kf-snip .cur")[0]; }
   if (!cur) continue;
   const ch = cur.textContent === "\u00A0" ? " " : cur.textContent;
   key(ch);
@@ -177,7 +177,7 @@ try {
 ok("saved state available for rehydration", rehydrated);
 
 // 8. Sketch layer: the live drawing panel renders in the work area (below the typing card)
-clickBtn("Type snippets");
+clickBtn("Type code");
 await new Promise((r) => setTimeout(r, 30));
 ok("live sketch panel renders in the work area", !!$(".kf-sketch-panel .kf-art .ink")[0] || !!$(".kf-sketch-panel")[0]);
 clickBtn("Drill keys");
@@ -212,7 +212,7 @@ firstHead && firstHead.dispatchEvent(new window.MouseEvent("click", { bubbles: t
 await new Promise((r) => setTimeout(r, 30));
 
 // 9d. finishing a drawing offers Save / Delete; Save adds it to the collection
-clickBtn("Type snippets");
+clickBtn("Type code");
 await new Promise((r) => setTimeout(r, 40));
 for (let ln = 0; ln < 45 && !$(".kf-save")[0] && !$(".kf-relax")[0]; ln++) {
   for (let g = 0; g < 60; g++) {
@@ -278,7 +278,7 @@ try {
   await new Promise((r) => setTimeout(r, 20));
   key("="); key("a");
   await new Promise((r) => setTimeout(r, 15));
-  clickBtn("Type snippets");
+  clickBtn("Type code");
   await new Promise((r) => setTimeout(r, 20));
   const cur = $(".kf-snip .cur")[0];
   if (cur) key(cur.textContent === " " ? " " : cur.textContent);
