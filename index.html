@@ -390,6 +390,10 @@
   .kf-fieldbtn.on .kf-fieldbtn-label,.kf-fieldbtn.on .kf-fieldbtn-blurb{color:#fff;}
   .kf-fieldbtn-label{font-weight:700;font-size:.82rem;color:var(--ink);}
   .kf-fieldbtn-blurb{font-size:.66rem;color:var(--dim);margin-top:.1rem;}
+  /* ── Quiet portfolio footer ── */
+  .kf-footer{max-width:var(--stage-max);margin:0 auto;padding:.6rem .9rem 1.2rem;text-align:center;}
+  .kf-footer-link{font-size:.72rem;font-weight:600;color:var(--dim);text-decoration:none;border-bottom:1px solid transparent;transition:.15s;}
+  .kf-footer-link:hover{color:var(--accent-d);border-bottom-color:var(--accent-bd);}
 </style>
 </head>
 <body>
@@ -1203,6 +1207,9 @@ function App(){
               : <Drill stats={stats} record={record} addProgress={addProgress} addGrowth={addGrowth} onBreathe={triggerBreathe} focusKeys={focusKeys} clearFocus={clearFocus} voiceOn={voiceOn} sketch={sketch} onSave={saveSketch} onDiscard={discardSketch}/>}
         </main>
       </div>
+      <footer className="kf-footer">
+        <a className="kf-footer-link" href="https://michaelnocito.github.io/" target="_blank" rel="noopener">More tools by Michael Nocito →</a>
+      </footer>
     </div>
   );
 }
