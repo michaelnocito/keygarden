@@ -928,13 +928,20 @@ function App(){
 
   // Field picker view — shown on true first run OR when the user clicks the topbar field-pill.
   // If they already have a saved field, the picker lets them cancel back to it.
+  // The Welcome splash renders ABOVE the picker on first run so newcomers see the
+  // orientation + features list before they're asked to pick anything.
   if(!tplId){
     const saved = store.load().template;
     const cancelTo = TPL_BY_ID[saved] ? saved : null;
+    const dismissWelcomeAndStay = ()=>{store.save({welcomeSeen:true});setWelcome(false);};
     return (
       <div className="kf-root">
+        {welcome&&<Welcome onStart={dismissWelcomeAndStay} onClose={toggleWelcome} muted={muted} hasField={false} fieldLabel="" tpl={null}/>}
         <header className="kf-topbar">
           <div className="kf-brand"><a href="https://michaelnocito.github.io/" title="Back to Michael Nocito's portfolio" style={{display:"inline-flex",alignItems:"center",textDecoration:"none",fontSize:"13px",fontWeight:700,color:"#5b6470",marginRight:"10px",whiteSpace:"nowrap"}}>← Home</a><span className="kf-glyph">{"{ }"}</span><span className="kf-brandname">Keygarden</span></div>
+          <div className="kf-controls">
+            <button className={"kf-mute"+(welcome?" on":"")} onClick={toggleWelcome} title="welcome &amp; how it works">?</button>
+          </div>
         </header>
         <div className="kf-stage" style={{gridTemplateColumns:"1fr",maxWidth:"720px"}}>
           <main className="kf-work"><Picker onPick={chooseTemplate} current={cancelTo} onCancel={cancelTo?()=>setTplId(cancelTo):null}/></main>
@@ -967,7 +974,7 @@ function App(){
           <button className="kf-mute" onClick={()=>setShowSet(s=>!s)} title="settings">⚙</button>
         </div>
       </header>
-      {welcome&&<Welcome onStart={startApp} onClose={toggleWelcome} muted={muted}/>}
+      {welcome&&<Welcome onStart={startApp} onClose={toggleWelcome} muted={muted} hasField={true} fieldLabel={ACTIVE_TPL.label} tpl={ACTIVE_TPL}/>}
       {breathe>0&&<BreatheOverlay cycles={breathe} onClose={closeBreathe}/>}
       {newUnlock&&<GardenUnlockToast step={newUnlock} onClose={()=>setNewUnlock(null)}/>}
       {showSet&&(
@@ -1415,28 +1422,36 @@ function BreatheOverlay({onClose,cycles=3}){
 /* ── Welcome / orientation (first visit; reopen via ?) ──
    North-Star principles from the Archaeology kits: orient first — what you do, what's next,
    what the result is, what you get — top-down and scannable, with one clear way to start. */
-const FEATURES=[
-  { ic:"=",  name:"Drill the symbols", body:<>Warm up on one symbol at a time, easiest first, with a finger hint. The order quietly adapts to the keys you fumble. <span className="kf-feat-step">You get:</span> the awkward reaches stop feeling awkward.</> },
-  { ic:"{}", name:"Type code", body:<>Real SQL, Python, Excel — start with single <b>words</b> (like <code>SELECT</code>), graduate to <b>phrases</b>, then full <b>lines</b>. You type every symbol, closers included. <span className="kf-feat-step">You get:</span> the patterns feel familiar under your fingers.</> },
-  { ic:"✎",  name:"Watch a sketch appear", body:<>Each clean line quietly draws a little picture below the keys. Finish one in ~5 minutes, then save it or delete it; pick a style (charcoal, watercolor, abstract, celestial) in <code>⚙</code>. <span className="kf-feat-step">You get:</span> a calm, growing reward for showing up.</> },
-  { ic:"♪",  name:"Optional gentle sound", body:<>Soft, musical key feedback and a low flow pad that swells as you find a rhythm. <span className="kf-feat-step">Off by default</span> — tap <code>♪</code> anytime to turn it on.</> },
-  { ic:"~",  name:"Breathing breaks", body:<>If it senses tension or hesitation (never speed), it offers <b>three slow breaths</b> to loosen your shoulders. On by default; tune it or switch it off in <code>⚙</code>.</> },
-  { ic:"⬇",  name:"Install it on your desktop", body:<>Want it on your taskbar? In Chrome or Edge, click the <b>Install app</b> pill in the top bar (or the install icon at the right side of your address bar). Keygarden becomes a real Start Menu shortcut, runs in its own window, and works offline. <span className="kf-feat-step">No download, no warnings — pure browser install.</span></> },
-];
-function Welcome({onStart,onClose,muted}){
+// Features are rendered with the active template's label so the welcome is field-aware.
+const buildFeatures=(tpl)=>{
+  const fieldLabel = tpl ? tpl.label : "your field";
+  const exampleTrack = tpl && tpl.tracks && tpl.tracks[1] ? tpl.tracks[1] : "your tools";
+  return [
+    { ic:"⌘", name:"Pick your field", body:<>Pick from <b>Data & Analytics, General, Healthcare, Software / Web, Cybersecurity, or Finance</b> — each field practices the symbols you actually type. Switch anytime by clicking the field name in the top bar. <span className="kf-feat-step">You get:</span> a trainer tuned to the work in front of you, not a generic one.</> },
+    { ic:"=",  name:"Drill the symbols", body:<>Warm up on one symbol at a time, easiest first, with a finger hint + on-screen keyboard showing where your finger goes. The order quietly adapts to the keys you fumble. <span className="kf-feat-step">You get:</span> the awkward reaches stop feeling awkward.</> },
+    { ic:"{}", name:"Type real "+fieldLabel+" snippets", body:<>Real text from {fieldLabel} — start with single <b>words</b>, graduate to <b>phrases</b>, then full <b>lines</b>. Switch tracks ({exampleTrack}, etc.) anytime. <span className="kf-feat-step">You get:</span> the patterns feel familiar under your fingers.</> },
+    { ic:"✎",  name:"Watch a sketch appear", body:<>Each clean line quietly draws a little picture next to the keys. Finish one in ~5 minutes, then save it or delete it. <span className="kf-feat-step">You get:</span> a calm, growing reward for showing up.</> },
+    { ic:"❀",  name:"Grow a biodiversity garden", body:<>Clean drill streaks and snippet completions grow a garden. Unlock wildflowers → birdbath → bee house → bug hotel → berry shrubs → native oak → bat house → certified habitat. Each step brings real wildlife and a real ecology fact. <span className="kf-feat-step">Nothing wilts</span> — it'll wait for you between sessions.</> },
+    { ic:"♪",  name:"Optional gentle sound", body:<>Soft musical key feedback and a low flow pad that swells as you find a rhythm. <span className="kf-feat-step">Off by default</span> — tap <code>♪</code> anytime to turn it on.</> },
+    { ic:"~",  name:"Breathing breaks", body:<>If it senses tension or hesitation (never speed), it offers <b>three slow breaths</b> to loosen your shoulders. On by default; tune it or switch it off in <code>⚙</code>.</> },
+    { ic:"⬇",  name:"Install it on your desktop", body:<>Want it on your taskbar? In Chrome or Edge, click the <b>Install app</b> pill in the top bar (or the install icon in your address bar). Keygarden becomes a real Start Menu shortcut, runs in its own window, and works offline.</> },
+  ];
+};
+function Welcome({onStart,onClose,muted,hasField,fieldLabel,tpl}){
+  const features = buildFeatures(tpl);
   return (
     <div className="kf-welcome-backdrop" onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
     <div className="kf-welcome">
       <div className="kf-welcome-head">
         <div>
           <h2>Welcome to Keygarden</h2>
-          <p className="kf-welcome-sub">the symbols data work runs on — slow, relaxed, repeated</p>
+          <p className="kf-welcome-sub">typing practice for the symbols your field actually runs on — slow, relaxed, repeated</p>
         </div>
         <button className="kf-welcome-x" onClick={onClose}>Skip ✕</button>
       </div>
-      <p className="kf-premise">A calm place to drill the brackets, braces, and operators that slow you down in SQL, Python, and spreadsheets. <b>No timer, no score, nothing to fail</b> — a few quiet minutes, most days, is the whole method. Here's what's inside:</p>
+      <p className="kf-premise">A calm place to drill the brackets, braces, operators, and punctuation that slow you down — tuned to {hasField?<>your <b>{fieldLabel}</b> work</>:<b>the field you pick</b>}. <b>No timer, no score, nothing to fail</b> — a few quiet minutes, most days, is the whole method. Here's what's inside:</p>
       <div className="kf-feats">
-        {FEATURES.map((f,i)=>(
+        {features.map((f,i)=>(
           <div className="kf-feat" key={i}>
             <span className="kf-feat-ic">{f.ic}</span>
             <div className="kf-feat-b"><h4>{f.name}</h4><p>{f.body}</p></div>
@@ -1444,8 +1459,8 @@ function Welcome({onStart,onClose,muted}){
         ))}
       </div>
       <div className="kf-welcome-cta">
-        <button className="kf-start" onClick={onStart}>Start the warm-up →</button>
-        <span>New here? The warm-up is the gentlest way in.{muted?" Sound is off — tap ♪ to add it.":""}</span>
+        <button className="kf-start" onClick={onStart}>{hasField?"Start the warm-up →":"Pick your field →"}</button>
+        <span>{hasField?<>New here? The warm-up is the gentlest way in.{muted?" Sound is off — tap ♪ to add it.":""}</>:<>You can switch fields anytime from the top bar.</>}</span>
       </div>
     </div>
     </div>

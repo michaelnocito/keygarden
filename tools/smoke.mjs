@@ -61,7 +61,17 @@ const $ = (sel) => [...root.querySelectorAll(sel)];
 
 await new Promise((r) => setTimeout(r, 50));
 
-// 0. First-run field picker — pick Data & Analytics so the rest of the rich UI mounts
+// 0a. First-run Welcome splash appears OVER the picker (the orientation screen)
+ok("Welcome splash shows on first run", !!root.querySelector(".kf-welcome"));
+ok("Welcome lists multiple features", root.querySelectorAll(".kf-feat").length >= 6);
+ok("Welcome mentions field templates", /Pick your field/.test(root.textContent));
+ok("Welcome mentions the garden", /biodiversity garden|biodiversity/i.test(root.textContent));
+// Dismiss the welcome to access the picker beneath it
+const skipBtn = [...root.querySelectorAll(".kf-welcome-x")].pop();
+if (skipBtn) skipBtn.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+await new Promise((r) => setTimeout(r, 30));
+
+// 0b. Now the field picker is visible
 ok("first run shows field picker", /Pick your field/.test(root.textContent));
 ok("picker offers Healthcare template", !![...root.querySelectorAll("button")].find(b => /Healthcare/.test(b.textContent)));
 const pickField = (label) => {
@@ -252,14 +262,17 @@ let collected = false;
 try { const sk = JSON.parse(window.localStorage.getItem("keygarden.v1") || "{}").sketch; collected = sk && Array.isArray(sk.finished) && sk.finished.length >= 1 && sk.pending == null; } catch (e) {}
 ok("Save adds the finished sketch to the collection", collected);
 
-// 9e. the welcome screen lists features and toggles from the nav (open on first visit)
+// 9e. the welcome screen lists features and toggles from the nav (re-opens via ?)
 const helpBtn = $("button").find((b) => b.textContent.trim() === "?");
-const welcomeBefore = !!$(".kf-welcome")[0];
-ok("welcome screen lists the features", welcomeBefore && $(".kf-feat").length >= 4);
+const welcomeWasClosed = !$(".kf-welcome")[0];
+// Open it via the ? button
 helpBtn && helpBtn.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
 await new Promise((r) => setTimeout(r, 20));
-const welcomeAfter = !!$(".kf-welcome")[0];
-ok("welcome toggles from the nav", !!helpBtn && welcomeBefore !== welcomeAfter);
+ok("welcome screen lists the features", !!$(".kf-welcome")[0] && $(".kf-feat").length >= 6);
+// Toggle it closed
+helpBtn && helpBtn.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+await new Promise((r) => setTimeout(r, 20));
+ok("welcome toggles from the nav", !!helpBtn && welcomeWasClosed && !$(".kf-welcome")[0]);
 
 // 9f. defaults: sound starts OFF; the breathing-break toggle is in settings
 let soundOff = false;

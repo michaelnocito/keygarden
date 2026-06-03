@@ -2501,12 +2501,27 @@ function App() {
 
   // Field picker view — shown on true first run OR when the user clicks the topbar field-pill.
   // If they already have a saved field, the picker lets them cancel back to it.
+  // The Welcome splash renders ABOVE the picker on first run so newcomers see the
+  // orientation + features list before they're asked to pick anything.
   if (!tplId) {
     const saved = store.load().template;
     const cancelTo = TPL_BY_ID[saved] ? saved : null;
+    const dismissWelcomeAndStay = () => {
+      store.save({
+        welcomeSeen: true
+      });
+      setWelcome(false);
+    };
     return /*#__PURE__*/React.createElement("div", {
       className: "kf-root"
-    }, /*#__PURE__*/React.createElement("header", {
+    }, welcome && /*#__PURE__*/React.createElement(Welcome, {
+      onStart: dismissWelcomeAndStay,
+      onClose: toggleWelcome,
+      muted: muted,
+      hasField: false,
+      fieldLabel: "",
+      tpl: null
+    }), /*#__PURE__*/React.createElement("header", {
       className: "kf-topbar"
     }, /*#__PURE__*/React.createElement("div", {
       className: "kf-brand"
@@ -2527,7 +2542,13 @@ function App() {
       className: "kf-glyph"
     }, "{ }"), /*#__PURE__*/React.createElement("span", {
       className: "kf-brandname"
-    }, "Keygarden"))), /*#__PURE__*/React.createElement("div", {
+    }, "Keygarden")), /*#__PURE__*/React.createElement("div", {
+      className: "kf-controls"
+    }, /*#__PURE__*/React.createElement("button", {
+      className: "kf-mute" + (welcome ? " on" : ""),
+      onClick: toggleWelcome,
+      title: "welcome & how it works"
+    }, "?"))), /*#__PURE__*/React.createElement("div", {
       className: "kf-stage",
       style: {
         gridTemplateColumns: "1fr",
@@ -2622,7 +2643,10 @@ function App() {
   }, "\u2699"))), welcome && /*#__PURE__*/React.createElement(Welcome, {
     onStart: startApp,
     onClose: toggleWelcome,
-    muted: muted
+    muted: muted,
+    hasField: true,
+    fieldLabel: ACTIVE_TPL.label,
+    tpl: ACTIVE_TPL
   }), breathe > 0 && /*#__PURE__*/React.createElement(BreatheOverlay, {
     cycles: breathe,
     onClose: closeBreathe
@@ -3493,46 +3517,65 @@ function BreatheOverlay({
 /* ── Welcome / orientation (first visit; reopen via ?) ──
    North-Star principles from the Archaeology kits: orient first — what you do, what's next,
    what the result is, what you get — top-down and scannable, with one clear way to start. */
-const FEATURES = [{
-  ic: "=",
-  name: "Drill the symbols",
-  body: /*#__PURE__*/React.createElement(React.Fragment, null, "Warm up on one symbol at a time, easiest first, with a finger hint. The order quietly adapts to the keys you fumble. ", /*#__PURE__*/React.createElement("span", {
-    className: "kf-feat-step"
-  }, "You get:"), " the awkward reaches stop feeling awkward.")
-}, {
-  ic: "{}",
-  name: "Type code",
-  body: /*#__PURE__*/React.createElement(React.Fragment, null, "Real SQL, Python, Excel \u2014 start with single ", /*#__PURE__*/React.createElement("b", null, "words"), " (like ", /*#__PURE__*/React.createElement("code", null, "SELECT"), "), graduate to ", /*#__PURE__*/React.createElement("b", null, "phrases"), ", then full ", /*#__PURE__*/React.createElement("b", null, "lines"), ". You type every symbol, closers included. ", /*#__PURE__*/React.createElement("span", {
-    className: "kf-feat-step"
-  }, "You get:"), " the patterns feel familiar under your fingers.")
-}, {
-  ic: "✎",
-  name: "Watch a sketch appear",
-  body: /*#__PURE__*/React.createElement(React.Fragment, null, "Each clean line quietly draws a little picture below the keys. Finish one in ~5 minutes, then save it or delete it; pick a style (charcoal, watercolor, abstract, celestial) in ", /*#__PURE__*/React.createElement("code", null, "\u2699"), ". ", /*#__PURE__*/React.createElement("span", {
-    className: "kf-feat-step"
-  }, "You get:"), " a calm, growing reward for showing up.")
-}, {
-  ic: "♪",
-  name: "Optional gentle sound",
-  body: /*#__PURE__*/React.createElement(React.Fragment, null, "Soft, musical key feedback and a low flow pad that swells as you find a rhythm. ", /*#__PURE__*/React.createElement("span", {
-    className: "kf-feat-step"
-  }, "Off by default"), " \u2014 tap ", /*#__PURE__*/React.createElement("code", null, "\u266A"), " anytime to turn it on.")
-}, {
-  ic: "~",
-  name: "Breathing breaks",
-  body: /*#__PURE__*/React.createElement(React.Fragment, null, "If it senses tension or hesitation (never speed), it offers ", /*#__PURE__*/React.createElement("b", null, "three slow breaths"), " to loosen your shoulders. On by default; tune it or switch it off in ", /*#__PURE__*/React.createElement("code", null, "\u2699"), ".")
-}, {
-  ic: "⬇",
-  name: "Install it on your desktop",
-  body: /*#__PURE__*/React.createElement(React.Fragment, null, "Want it on your taskbar? In Chrome or Edge, click the ", /*#__PURE__*/React.createElement("b", null, "Install app"), " pill in the top bar (or the install icon at the right side of your address bar). Keygarden becomes a real Start Menu shortcut, runs in its own window, and works offline. ", /*#__PURE__*/React.createElement("span", {
-    className: "kf-feat-step"
-  }, "No download, no warnings \u2014 pure browser install."))
-}];
+// Features are rendered with the active template's label so the welcome is field-aware.
+const buildFeatures = tpl => {
+  const fieldLabel = tpl ? tpl.label : "your field";
+  const exampleTrack = tpl && tpl.tracks && tpl.tracks[1] ? tpl.tracks[1] : "your tools";
+  return [{
+    ic: "⌘",
+    name: "Pick your field",
+    body: /*#__PURE__*/React.createElement(React.Fragment, null, "Pick from ", /*#__PURE__*/React.createElement("b", null, "Data & Analytics, General, Healthcare, Software / Web, Cybersecurity, or Finance"), " \u2014 each field practices the symbols you actually type. Switch anytime by clicking the field name in the top bar. ", /*#__PURE__*/React.createElement("span", {
+      className: "kf-feat-step"
+    }, "You get:"), " a trainer tuned to the work in front of you, not a generic one.")
+  }, {
+    ic: "=",
+    name: "Drill the symbols",
+    body: /*#__PURE__*/React.createElement(React.Fragment, null, "Warm up on one symbol at a time, easiest first, with a finger hint + on-screen keyboard showing where your finger goes. The order quietly adapts to the keys you fumble. ", /*#__PURE__*/React.createElement("span", {
+      className: "kf-feat-step"
+    }, "You get:"), " the awkward reaches stop feeling awkward.")
+  }, {
+    ic: "{}",
+    name: "Type real " + fieldLabel + " snippets",
+    body: /*#__PURE__*/React.createElement(React.Fragment, null, "Real text from ", fieldLabel, " \u2014 start with single ", /*#__PURE__*/React.createElement("b", null, "words"), ", graduate to ", /*#__PURE__*/React.createElement("b", null, "phrases"), ", then full ", /*#__PURE__*/React.createElement("b", null, "lines"), ". Switch tracks (", exampleTrack, ", etc.) anytime. ", /*#__PURE__*/React.createElement("span", {
+      className: "kf-feat-step"
+    }, "You get:"), " the patterns feel familiar under your fingers.")
+  }, {
+    ic: "✎",
+    name: "Watch a sketch appear",
+    body: /*#__PURE__*/React.createElement(React.Fragment, null, "Each clean line quietly draws a little picture next to the keys. Finish one in ~5 minutes, then save it or delete it. ", /*#__PURE__*/React.createElement("span", {
+      className: "kf-feat-step"
+    }, "You get:"), " a calm, growing reward for showing up.")
+  }, {
+    ic: "❀",
+    name: "Grow a biodiversity garden",
+    body: /*#__PURE__*/React.createElement(React.Fragment, null, "Clean drill streaks and snippet completions grow a garden. Unlock wildflowers \u2192 birdbath \u2192 bee house \u2192 bug hotel \u2192 berry shrubs \u2192 native oak \u2192 bat house \u2192 certified habitat. Each step brings real wildlife and a real ecology fact. ", /*#__PURE__*/React.createElement("span", {
+      className: "kf-feat-step"
+    }, "Nothing wilts"), " \u2014 it'll wait for you between sessions.")
+  }, {
+    ic: "♪",
+    name: "Optional gentle sound",
+    body: /*#__PURE__*/React.createElement(React.Fragment, null, "Soft musical key feedback and a low flow pad that swells as you find a rhythm. ", /*#__PURE__*/React.createElement("span", {
+      className: "kf-feat-step"
+    }, "Off by default"), " \u2014 tap ", /*#__PURE__*/React.createElement("code", null, "\u266A"), " anytime to turn it on.")
+  }, {
+    ic: "~",
+    name: "Breathing breaks",
+    body: /*#__PURE__*/React.createElement(React.Fragment, null, "If it senses tension or hesitation (never speed), it offers ", /*#__PURE__*/React.createElement("b", null, "three slow breaths"), " to loosen your shoulders. On by default; tune it or switch it off in ", /*#__PURE__*/React.createElement("code", null, "\u2699"), ".")
+  }, {
+    ic: "⬇",
+    name: "Install it on your desktop",
+    body: /*#__PURE__*/React.createElement(React.Fragment, null, "Want it on your taskbar? In Chrome or Edge, click the ", /*#__PURE__*/React.createElement("b", null, "Install app"), " pill in the top bar (or the install icon in your address bar). Keygarden becomes a real Start Menu shortcut, runs in its own window, and works offline.")
+  }];
+};
 function Welcome({
   onStart,
   onClose,
-  muted
+  muted,
+  hasField,
+  fieldLabel,
+  tpl
 }) {
+  const features = buildFeatures(tpl);
   return /*#__PURE__*/React.createElement("div", {
     className: "kf-welcome-backdrop",
     onClick: e => {
@@ -3544,14 +3587,14 @@ function Welcome({
     className: "kf-welcome-head"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h2", null, "Welcome to Keygarden"), /*#__PURE__*/React.createElement("p", {
     className: "kf-welcome-sub"
-  }, "the symbols data work runs on \u2014 slow, relaxed, repeated")), /*#__PURE__*/React.createElement("button", {
+  }, "typing practice for the symbols your field actually runs on \u2014 slow, relaxed, repeated")), /*#__PURE__*/React.createElement("button", {
     className: "kf-welcome-x",
     onClick: onClose
   }, "Skip \u2715")), /*#__PURE__*/React.createElement("p", {
     className: "kf-premise"
-  }, "A calm place to drill the brackets, braces, and operators that slow you down in SQL, Python, and spreadsheets. ", /*#__PURE__*/React.createElement("b", null, "No timer, no score, nothing to fail"), " \u2014 a few quiet minutes, most days, is the whole method. Here's what's inside:"), /*#__PURE__*/React.createElement("div", {
+  }, "A calm place to drill the brackets, braces, operators, and punctuation that slow you down \u2014 tuned to ", hasField ? /*#__PURE__*/React.createElement(React.Fragment, null, "your ", /*#__PURE__*/React.createElement("b", null, fieldLabel), " work") : /*#__PURE__*/React.createElement("b", null, "the field you pick"), ". ", /*#__PURE__*/React.createElement("b", null, "No timer, no score, nothing to fail"), " \u2014 a few quiet minutes, most days, is the whole method. Here's what's inside:"), /*#__PURE__*/React.createElement("div", {
     className: "kf-feats"
-  }, FEATURES.map((f, i) => /*#__PURE__*/React.createElement("div", {
+  }, features.map((f, i) => /*#__PURE__*/React.createElement("div", {
     className: "kf-feat",
     key: i
   }, /*#__PURE__*/React.createElement("span", {
@@ -3563,7 +3606,7 @@ function Welcome({
   }, /*#__PURE__*/React.createElement("button", {
     className: "kf-start",
     onClick: onStart
-  }, "Start the warm-up \u2192"), /*#__PURE__*/React.createElement("span", null, "New here? The warm-up is the gentlest way in.", muted ? " Sound is off — tap ♪ to add it." : ""))));
+  }, hasField ? "Start the warm-up →" : "Pick your field →"), /*#__PURE__*/React.createElement("span", null, hasField ? /*#__PURE__*/React.createElement(React.Fragment, null, "New here? The warm-up is the gentlest way in.", muted ? " Sound is off — tap ♪ to add it." : "") : /*#__PURE__*/React.createElement(React.Fragment, null, "You can switch fields anytime from the top bar.")))));
 }
 
 /* ── Simple line sketch ──
