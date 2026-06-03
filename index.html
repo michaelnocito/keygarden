@@ -110,7 +110,16 @@
   /* speech toggle in controls */
   .kf-mute.speech{font-size:.9rem;}
   /* on-screen keyboard diagram */
-  .kf-kbd{width:100%;max-width:560px;margin:.45rem auto 0;user-select:none;}
+  .kf-kbd{flex:1 1 auto;min-width:0;max-width:460px;user-select:none;}
+  /* keyboard + drawing side-by-side inside the typing card */
+  .kf-kbdrow{display:flex;align-items:flex-start;justify-content:center;gap:.6rem;margin:.45rem auto 0;flex-wrap:wrap;}
+  /* inline LiveSketch — compact, sits next to the keyboard */
+  .kf-sketch-row.inline{flex:0 0 auto;flex-direction:column;align-items:center;gap:.2rem;width:100px;}
+  .kf-sketch-row.inline .kf-sketch-canvas{width:92px;height:92px;border-radius:7px;}
+  .kf-sketch-row.inline .kf-sketch-name{font-size:.65rem;margin:.05rem 0 .12rem;text-align:center;line-height:1.1;}
+  .kf-sketch-row.inline .kf-sketch-prog{height:4px;margin-bottom:.1rem;}
+  .kf-sketch-row.inline.done{background:var(--good-bg);border:1px solid var(--good-bd);border-radius:8px;padding:.3rem;}
+  .kf-sketch-row.inline .kf-save,.kf-sketch-row.inline .kf-del{font-size:.62rem;padding:.18rem .45rem;}
   .kf-kbd svg{width:100%;height:auto;display:block;}
   .kf-krow{display:flex;gap:2px;margin-bottom:2px;justify-content:center;}
   .kf-key{font-family:var(--mono);font-size:8px;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:default;transition:background .12s,transform .12s;line-height:1.05;}
@@ -152,7 +161,10 @@
   .kf-coll-sub{font-size:.65rem;color:var(--dim);font-weight:500;}
   .kf-coll-chev{font-size:.82rem;color:var(--dim);transition:transform .18s ease;display:inline-block;}
   .kf-coll.open .kf-coll-chev{transform:rotate(180deg);color:var(--accent-d);}
-  .kf-coll-body{padding:.45rem .7rem .6rem;animation:fade .25s ease;}
+  .kf-coll-body{padding:.45rem .7rem .6rem;animation:fade .25s ease;max-height:240px;overflow-y:auto;}
+  .kf-coll-body::-webkit-scrollbar{width:6px;}
+  .kf-coll-body::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+  .kf-coll-body::-webkit-scrollbar-thumb:hover{background:var(--dim);}
   .kf-sketch-info{flex:1 1 auto;min-width:0;}
   .kf-sketch-status{font-size:.62rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-d);margin:0 0 .1rem;}
   .kf-sketch-name{font-size:.82rem;font-weight:700;color:var(--ink);margin:0 0 .25rem;}
@@ -661,8 +673,8 @@ function App(){
         </aside>
         <main className="kf-work">
           {mode==="snippet"
-            ? <Snippet record={record} addProgress={addProgress} onBreathe={triggerBreathe} voiceOn={voiceOn}/>
-            : <Drill stats={stats} record={record} addProgress={addProgress} onBreathe={triggerBreathe} focusKeys={focusKeys} clearFocus={clearFocus} voiceOn={voiceOn}/>}
+            ? <Snippet record={record} addProgress={addProgress} onBreathe={triggerBreathe} voiceOn={voiceOn} sketch={sketch} onSave={saveSketch} onDiscard={discardSketch}/>
+            : <Drill stats={stats} record={record} addProgress={addProgress} onBreathe={triggerBreathe} focusKeys={focusKeys} clearFocus={clearFocus} voiceOn={voiceOn} sketch={sketch} onSave={saveSketch} onDiscard={discardSketch}/>}
         </main>
       </div>
     </div>
@@ -708,9 +720,6 @@ function ProgressRail({stats,attempts,sketch,streak,onFocus,onSave,onDiscard}){
           </span>
         </div>
       )}
-      <Collapsible title={sketch&&sketch.pending!=null?"Sketch — finished":"Drawing"} defaultOpen={true} subtitle={sketch&&sketch.pending!=null?"keep or delete?":`${Math.round((sketch?sketch.strokes:0)/STROKES_GOAL*100)}%`}>
-        <LiveSketch sketch={sketch} onSave={onSave} onDiscard={onDiscard}/>
-      </Collapsible>
       <Collapsible title="Your most-missed keys" defaultOpen={true} subtitle={attempts===0?null:missed.length>0?`${missed.length} ${missed.length===1?"key":"keys"} fumbled`:"clean so far"}>
         {attempts===0
           ? <p className="kf-dim" style={{margin:0}}>No keystrokes yet. Start the warm-up — the keys you fumble surface here, with a button to drill just those.</p>
@@ -770,7 +779,7 @@ function KeyboardDiagram({target,wrongKey}){
   const OFFSETS=[0,14,23,34]; // horizontal offset per row (px) to stagger like a real keyboard
   return (
     <div className="kf-kbd-wrap" style={{overflowX:"auto"}}>
-      <div style={{display:"inline-block",minWidth:560}}>
+      <div style={{display:"inline-block",minWidth:440}}>
         {KROWS.map((row)=>(
           <div key={row.row} className="kf-krow" style={{justifyContent:"flex-start",paddingLeft:OFFSETS[row.row]}}>
             {row.row===2&&<div className="kf-key wide" style={{fontSize:9,color:"var(--dim)"}}>Caps</div>}
@@ -817,7 +826,7 @@ function TypedSlots({typed}){
   );
 }
 
-function Drill({stats,record,addProgress,onBreathe,focusKeys,clearFocus,voiceOn}){
+function Drill({stats,record,addProgress,onBreathe,focusKeys,clearFocus,voiceOn,sketch,onSave,onDiscard}){
   const statsRef=useRef(stats);statsRef.current=stats;
   // focus mode: practice ONLY the chosen (most-missed) keys — weighted toward the weaker ones
   const focus=useMemo(()=>{const set=Array.isArray(focusKeys)?focusKeys:[];const pool=SYMBOLS.filter(s=>set.includes(s.ch));return pool.length?pool:null;},[focusKeys]);
@@ -902,13 +911,16 @@ function Drill({stats,record,addProgress,onBreathe,focusKeys,clearFocus,voiceOn}
       <div className={"kf-bigkey "+(flash||"")}>{target.ch}</div>
       <p className="kf-name">{target.name}</p>
       {hint&&<p className="kf-hint" key={hint}>{hint}</p>}
-      <div className="kf-kbd"><KeyboardDiagram target={target} wrongKey={wrongKey}/></div>
+      <div className="kf-kbdrow">
+        <div className="kf-kbd"><KeyboardDiagram target={target} wrongKey={wrongKey}/></div>
+        <LiveSketch sketch={sketch} onSave={onSave} onDiscard={onDiscard} inline/>
+      </div>
       <TypedSlots typed={typed}/>
     </section>
   );
 }
 
-function Snippet({record,addProgress,onBreathe,voiceOn}){
+function Snippet({record,addProgress,onBreathe,voiceOn,sketch,onSave,onDiscard}){
   const [track,setTrack]=useState("Mixed");
   const [level,setLevel]=useState(()=>store.load().level||"Words"); // start beginners on Words
   const lvl=LEVEL_TO_SINGULAR[level];
@@ -969,8 +981,11 @@ function Snippet({record,addProgress,onBreathe,voiceOn}){
         <p className="kf-dim" style={{margin:0}}>Type every character including closers — like a real terminal. <code>{snip.track}</code></p>
         <p className="kf-counter" style={{margin:0}}><b>{ks}</b> keys this session</p>
       </div>
-      <div className={"kf-snip "+(wrong?"wrong":"")}>
-        {snip.text.split("").map((c,i)=><span key={i} className={i<pos?"done":i===pos?"cur":"pending"}>{c===" "?"\u00A0":c}</span>)}
+      <div className="kf-kbdrow">
+        <div className={"kf-snip "+(wrong?"wrong":"")} style={{flex:"1 1 auto",margin:0}}>
+          {snip.text.split("").map((c,i)=><span key={i} className={i<pos?"done":i===pos?"cur":"pending"}>{c===" "?"\u00A0":c}</span>)}
+        </div>
+        <LiveSketch sketch={sketch} onSave={onSave} onDiscard={onDiscard} inline/>
       </div>
       {hint&&<p className="kf-hint" key={hint}>{hint}</p>}
     </section>
@@ -1122,7 +1137,7 @@ function SketchArt({sketch,frac}){
 }
 /* LiveSketch: the prominent drawing panel in the work area.
    A pen-tip dot follows the end of the drawn line so it looks like it's being sketched. */
-function LiveSketch({sketch,onSave,onDiscard}){
+function LiveSketch({sketch,onSave,onDiscard,inline}){
   const pending=sketch.pending!=null;
   const cur=SKETCHES[pending?sketch.pending:sketch.current]||SKETCHES[0];
   const frac=pending?1:Math.max(0,Math.min(1,sketch.strokes/STROKES_GOAL));
@@ -1136,7 +1151,7 @@ function LiveSketch({sketch,onSave,onDiscard}){
     try{ const total=pathRef.current.getTotalLength(); const pt=pathRef.current.getPointAtLength(frac*total); setTip({x:pt.x,y:pt.y,visible:true}); }catch(e){}
   },[frac,cur.d]);
   return (
-    <div className={"kf-sketch-row"+(pending?" done":"")}>
+    <div className={"kf-sketch-row"+(pending?" done":"")+(inline?" inline":"")}>
         <div className="kf-sketch-canvas">
           <svg className="kf-art" viewBox="0 0 120 120" aria-hidden="true">
             <path className="ghost" d={cur.d} pathLength="100"/>
@@ -1148,8 +1163,8 @@ function LiveSketch({sketch,onSave,onDiscard}){
           <p className="kf-sketch-name">{title}</p>
           {pending?(
             <>
-              <p className="kf-dim">Keep this one in your collection?</p>
-              <div className="kf-save-row" style={{marginTop:".6rem"}}>
+              {!inline&&<p className="kf-dim">Keep this one in your collection?</p>}
+              <div className="kf-save-row" style={{marginTop:".35rem"}}>
                 <button className="kf-save" onClick={onSave}>Save</button>
                 <button className="kf-del" onClick={onDiscard}>Delete</button>
               </div>
@@ -1157,7 +1172,8 @@ function LiveSketch({sketch,onSave,onDiscard}){
           ):(
             <>
               <div className="kf-sketch-prog"><i style={{width:Math.round(frac*100)+"%"}}/></div>
-              <p className="kf-dim">{near?"Almost there — a few more keystrokes finish it.":n>0?`${n} ${n===1?"sketch":"sketches"} saved · type to draw`:"Type to draw — each keystroke unfolds the line."}</p>
+              {!inline&&<p className="kf-dim">{near?"Almost there — a few more keystrokes finish it.":n>0?`${n} ${n===1?"sketch":"sketches"} saved · type to draw`:"Type to draw — each keystroke unfolds the line."}</p>}
+              {inline&&<p className="kf-dim" style={{fontSize:".62rem",margin:0}}>{Math.round(frac*100)}%{n>0?` · ${n} saved`:""}</p>}
             </>
           )}
         </div>
