@@ -98,6 +98,9 @@ ok("Snippet button exists", clickBtn("Type code"));
 await new Promise((r) => setTimeout(r, 30));
 clickBtn("Python"); // every Python line has brackets/quotes
 await new Promise((r) => setTimeout(r, 40));
+// Switch to Lines level so the snippet always contains closers (, [ etc.)
+const linesBtn = $("button").find(b => b.textContent === "Lines");
+if (linesBtn) { linesBtn.dispatchEvent(new window.MouseEvent("click", { bubbles: true })); await new Promise((r) => setTimeout(r, 40)); }
 const snipText = $(".kf-snip")[0]?.textContent || "";
 ok("Snippet renders a non-empty line", snipText.trim().length > 0);
 
@@ -268,7 +271,22 @@ allBtn && allBtn.dispatchEvent(new window.MouseEvent("click", { bubbles: true })
 await new Promise((r) => setTimeout(r, 30));
 ok("'drill all keys' clears the focus", !$(".kf-focusbar")[0]);
 
-// 10. typing with audio muted must never throw
+// 10. Garden: nav button, view renders, state persists, growth tied to milestones
+ok("Garden nav button exists", !!$("button").find(b=>/Garden/.test(b.textContent)));
+clickBtn("Garden");
+await new Promise(r=>setTimeout(r,40));
+ok("Garden view renders", /Your garden|bare soil/.test(txt()));
+await new Promise(r=>setTimeout(r,250));
+let gardenPersists=false, gardenGrew=false;
+try{
+  const s=JSON.parse(window.localStorage.getItem("keygarden.v1")||"{}");
+  gardenPersists=!!s.garden&&typeof s.garden.growth==="number";
+  gardenGrew=gardenPersists&&(s.garden.growth||0)>=1; // at least one clean line was typed above
+}catch(e){}
+ok("garden state persists in keygarden.v1", gardenPersists);
+ok("garden.growth increments on clean-line milestone", gardenGrew);
+
+// 11. typing with audio muted must never throw
 let mutedNoThrow = true;
 try {
   const muteBtn = $("button").find((b) => b.textContent.trim() === "♪");

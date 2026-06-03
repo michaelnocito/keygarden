@@ -315,6 +315,37 @@
   @media (prefers-reduced-motion:reduce){
     .kf-art .ink{transition:none!important;}
   }
+
+  /* ── Biodiversity garden ── */
+  .kf-garden-wrap{width:100%;}
+  .kf-garden-svg{width:100%;display:block;border-radius:12px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow);}
+  .kf-garden-prog-wrap{display:flex;align-items:center;gap:.5rem;margin:.5rem 0 .15rem;}
+  .kf-garden-progbar{flex:1 1 auto;height:6px;border-radius:999px;background:var(--sheet-head);border:1px solid var(--line);overflow:hidden;}
+  .kf-garden-progbar i{display:block;height:100%;background:linear-gradient(90deg,var(--good),#5aaf44);border-radius:999px;transition:width 1.2s ease;}
+  .kf-garden-next-label{font-size:.72rem;font-weight:600;color:var(--good);white-space:nowrap;}
+  .kf-garden-empty{text-align:center;padding:1.2rem .5rem 0;color:var(--dim);font-size:.85rem;}
+  .kf-garden-ladder{display:flex;flex-direction:column;gap:.22rem;margin:.5rem 0 0;}
+  .kf-ladder-step{display:flex;align-items:flex-start;gap:.45rem;padding:.28rem .5rem;border-radius:8px;}
+  .kf-ladder-step.done{background:var(--good-bg);border:1px solid var(--good-bd);}
+  .kf-ladder-step.next{background:var(--accent-bg);border:1px dashed var(--accent-bd);}
+  .kf-ladder-step.locked{opacity:.35;background:var(--sheet-head);border:1px solid transparent;}
+  .kf-ladder-ic{flex:0 0 1.1rem;font-size:.88rem;text-align:center;line-height:1.4;}
+  .kf-ladder-name{font-weight:700;font-size:.78rem;color:var(--ink);}
+  .kf-ladder-fact{font-size:.67rem;color:var(--dim);margin:.05rem 0 0;line-height:1.4;font-style:italic;}
+  /* Unlock toast (bottom-right, auto-dismisses) */
+  .kf-unlock-toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:60;background:var(--panel);border:1px solid var(--good-bd);border-left:4px solid var(--good);border-radius:12px;box-shadow:0 8px 28px -8px rgba(26,127,55,.3);padding:.6rem .85rem .55rem;max-width:270px;cursor:pointer;animation:fade .4s ease;}
+  .kf-unlock-head{font-weight:700;font-size:.82rem;color:var(--good);margin:0 0 .12rem;}
+  .kf-unlock-body{font-size:.76rem;color:var(--ink);margin:0 0 .12rem;}
+  .kf-unlock-fact{font-size:.66rem;color:var(--dim);margin:0;line-height:1.4;font-style:italic;}
+  /* Wildlife CSS animations — subtle motion only */
+  @keyframes beefloat{0%,100%{transform:translate(0,0);}33%{transform:translate(5px,-4px);}66%{transform:translate(-3px,2px);}}
+  @keyframes flutter{0%,100%{transform:scaleX(1);}50%{transform:scaleX(.2)scaleY(1.1);}}
+  @keyframes glow{0%,100%{opacity:.18;}50%{opacity:.9;}}
+  @keyframes batflight{0%{transform:translate(0,0)scaleX(1);}40%{transform:translate(36px,-12px)scaleX(-1);}100%{transform:translate(0,0)scaleX(1);}}
+  @media(prefers-reduced-motion:reduce){
+    .kf-bee,.kf-butterfly,.kf-dragonfly,.kf-bird,.kf-bat,.kf-firefly{animation:none!important;opacity:.7!important;}
+    .kf-garden-progbar i{transition:none!important;}
+  }
 </style>
 </head>
 <body>
@@ -595,6 +626,35 @@ const SKETCHES=[
 ];
 const randomSketch=cur=>{ if(SKETCHES.length<2)return 0; let i; do{ i=Math.floor(Math.random()*SKETCHES.length); }while(i===cur); return i; };
 
+/* ── Biodiversity ladder — unlock order mirrors real ecological succession ── */
+const GARDEN_LADDER=[
+  {id:"wf",   name:"native wildflowers",      emoji:"🌸",threshold:3,
+   fact:"Plant in clusters of a few square feet — pollinators find and forage them far more easily."},
+  {id:"water",name:"a birdbath",              emoji:"💧",threshold:8,
+   fact:"Wildlife needs three things: food, water, and cover. This is the water."},
+  {id:"bh",   name:"a bee house",             emoji:"🐝",threshold:15,
+   fact:"Solitary bees can pollinate up to ~20× more than honeybees — and most can't sting."},
+  {id:"bug",  name:"a bug hotel",             emoji:"🌿",threshold:24,
+   fact:"Fallen leaves shelter insects through winter — food for ground-feeding birds."},
+  {id:"berry",name:"berry shrubs",            emoji:"🫐",threshold:35,
+   fact:"Native berries pack more fat and energy than invasive fruit, and birds prefer them."},
+  {id:"oak",  name:"a native oak & nest box", emoji:"🌳",threshold:48,
+   fact:"One oak can host hundreds of caterpillar species — the food nesting birds feed their young."},
+  {id:"bat",  name:"a bat house",             emoji:"🦇",threshold:63,
+   fact:"A single insect-eating bat can eat about 1,000 mosquito-sized insects in one night."},
+  {id:"cert", name:"certified habitat",       emoji:"🏆",threshold:80,
+   fact:"Skip pesticides — they kill the very insects and birds you're trying to attract."},
+];
+const GARDEN_BY_ID=Object.fromEntries(GARDEN_LADDER.map(l=>[l.id,l]));
+const blankGarden=()=>({growth:0,unlocked:[],lastVisit:null});
+const loadGarden=()=>{
+  const g=store.load().garden;
+  if(!g||typeof g!=="object")return blankGarden();
+  return{growth:Math.max(0,Number(g.growth)||0),
+    unlocked:Array.isArray(g.unlocked)?g.unlocked.filter(id=>GARDEN_BY_ID[id]):[],
+    lastVisit:g.lastVisit||null};
+};
+
 const blankSketch=()=>({current:Math.floor(Math.random()*SKETCHES.length),strokes:0,finished:[],pending:null});
 const loadSketch=()=>{
   const s=store.load().sketch;if(!s||typeof s!=="object")return blankSketch();
@@ -625,6 +685,23 @@ function App(){
   const [focusKeys,setFocusKeys]=useState(null); // when set, Drill practices only these (the most-missed) keys
   const [breathe,setBreathe]=useState(0);        // >0 = breathing overlay open with this many cycles
   const [voiceOn,setVoiceOn]=useState(()=>!!store.load().voiceOn); // spoken coaching toggle
+  const [garden,setGarden]=useState(loadGarden);
+  const [newUnlock,setNewUnlock]=useState(null); // set to a GARDEN_LADDER step when it just unlocked
+  useEffect(()=>{store.save({garden});},[garden]);
+  // detect newly-unlocked steps after addGrowth fires → show toast
+  const prevUnlockedRef=useRef(null);
+  useEffect(()=>{
+    if(prevUnlockedRef.current===null){prevUnlockedRef.current=garden.unlocked;return;}
+    const fresh=garden.unlocked.filter(id=>!prevUnlockedRef.current.includes(id));
+    if(fresh.length)setNewUnlock(GARDEN_BY_ID[fresh[0]]||null);
+    prevUnlockedRef.current=garden.unlocked;
+  },[garden.unlocked]);
+  const addGrowth=useCallback((n=1)=>setGarden(g=>{
+    const growth=g.growth+n;
+    const unlocked=[...g.unlocked];
+    for(const step of GARDEN_LADDER)if(!unlocked.includes(step.id)&&growth>=step.threshold)unlocked.push(step.id);
+    return{...g,growth,unlocked};
+  }),[]);
   // PWA install prompt — captured from `beforeinstallprompt`; pill button in topbar lets the user trigger it
   const [installPrompt,setInstallPrompt]=useState(null);
   const [installDismissed,setInstallDismissed]=useState(()=>!!store.load().installDismissed);
@@ -690,7 +767,7 @@ function App(){
   const toggleWelcome=useCallback(()=>setWelcome(w=>{const nx=!w;if(!nx)store.save({welcomeSeen:true});return nx;}),[]);
   const startApp=useCallback(()=>{store.save({welcomeSeen:true});setWelcome(false);setMode("drill");},[]);
   const toggleMute=()=>setMuted(m=>!m);
-  const resetAll=()=>{store.clear();setStats(blankStats());setSketch(blankSketch());setStreak(blankStreak());setSens(0.4);setRelaxOn(true);setMuted(true);setWelcome(true);setBreathe(0);setShowSet(false);};
+  const resetAll=()=>{store.clear();setStats(blankStats());setSketch(blankSketch());setStreak(blankStreak());setGarden(blankGarden());setSens(0.4);setRelaxOn(true);setMuted(true);setWelcome(true);setBreathe(0);setShowSet(false);};
   const sensLabel=sens<0.25?"Rarely":sens<0.55?"Calm":sens<0.8?"Attentive":"Eager";
   const total=useMemo(()=>Object.values(stats).reduce((s,x)=>s+x.attempts,0),[stats]);
   return (
@@ -701,6 +778,7 @@ function App(){
         <nav className="kf-nav">
           <button className={mode==="drill"?"on":""} onClick={()=>setMode("drill")}>Drill keys</button>
           <button className={mode==="snippet"?"on":""} onClick={()=>setMode("snippet")}>Type code</button>
+          <button className={mode==="garden"?"on":""} onClick={()=>setMode("garden")}>Garden</button>
         </nav>
         <div className="kf-controls">
           {installPrompt&&!installDismissed&&!isStandalone&&(
@@ -718,6 +796,7 @@ function App(){
       </header>
       {welcome&&<Welcome onStart={startApp} onClose={toggleWelcome} muted={muted}/>}
       {breathe>0&&<BreatheOverlay cycles={breathe} onClose={closeBreathe}/>}
+      {newUnlock&&<GardenUnlockToast step={newUnlock} onClose={()=>setNewUnlock(null)}/>}
       {showSet&&(
         <div className="kf-settings-wrap" onClick={e=>{if(e.target===e.currentTarget)setShowSet(false);}}>
           <div className="kf-settings kf-fade">
@@ -737,9 +816,11 @@ function App(){
           <ProgressRail stats={stats} attempts={total} sketch={sketch} streak={streak} onFocus={startFocus} onSave={saveSketch} onDiscard={discardSketch}/>
         </aside>
         <main className="kf-work">
-          {mode==="snippet"
-            ? <Snippet record={record} addProgress={addProgress} onBreathe={triggerBreathe} voiceOn={voiceOn} sketch={sketch} onSave={saveSketch} onDiscard={discardSketch}/>
-            : <Drill stats={stats} record={record} addProgress={addProgress} onBreathe={triggerBreathe} focusKeys={focusKeys} clearFocus={clearFocus} voiceOn={voiceOn} sketch={sketch} onSave={saveSketch} onDiscard={discardSketch}/>}
+          {mode==="garden"
+            ? <Garden garden={garden}/>
+            : mode==="snippet"
+              ? <Snippet record={record} addProgress={addProgress} addGrowth={addGrowth} onBreathe={triggerBreathe} voiceOn={voiceOn} sketch={sketch} onSave={saveSketch} onDiscard={discardSketch}/>
+              : <Drill stats={stats} record={record} addProgress={addProgress} addGrowth={addGrowth} onBreathe={triggerBreathe} focusKeys={focusKeys} clearFocus={clearFocus} voiceOn={voiceOn} sketch={sketch} onSave={saveSketch} onDiscard={discardSketch}/>}
         </main>
       </div>
     </div>
@@ -891,7 +972,7 @@ function TypedSlots({typed}){
   );
 }
 
-function Drill({stats,record,addProgress,onBreathe,focusKeys,clearFocus,voiceOn,sketch,onSave,onDiscard}){
+function Drill({stats,record,addProgress,addGrowth,onBreathe,focusKeys,clearFocus,voiceOn,sketch,onSave,onDiscard}){
   const statsRef=useRef(stats);statsRef.current=stats;
   // focus mode: practice ONLY the chosen (most-missed) keys — weighted toward the weaker ones
   const focus=useMemo(()=>{const set=Array.isArray(focusKeys)?focusKeys:[];const pool=SYMBOLS.filter(s=>set.includes(s.ch));return pool.length?pool:null;},[focusKeys]);
@@ -944,7 +1025,7 @@ function Drill({stats,record,addProgress,onBreathe,focusKeys,clearFocus,voiceOn,
       if(ok){
         setHint(null);setWrongKey(null);
         streak.current+=1;
-        if(streak.current%12===0){audio.milestone();setCelLvl(Math.min(Math.floor(streak.current/12),4));setCel(c=>c+1);}
+        if(streak.current%12===0){audio.milestone();setCelLvl(Math.min(Math.floor(streak.current/12),4));setCel(c=>c+1);addGrowth(1);}
       }
       else{
         const h=diagnose(target.ch,e.key);setHint(h);
@@ -985,7 +1066,7 @@ function Drill({stats,record,addProgress,onBreathe,focusKeys,clearFocus,voiceOn,
   );
 }
 
-function Snippet({record,addProgress,onBreathe,voiceOn,sketch,onSave,onDiscard}){
+function Snippet({record,addProgress,addGrowth,onBreathe,voiceOn,sketch,onSave,onDiscard}){
   const [track,setTrack]=useState("Mixed");
   const [level,setLevel]=useState(()=>store.load().level||"Words"); // start beginners on Words
   const lvl=LEVEL_TO_SINGULAR[level];
@@ -1020,7 +1101,7 @@ function Snippet({record,addProgress,onBreathe,voiceOn,sketch,onSave,onDiscard})
       if(ok){
         setWrong(false);setHint(null);lastAt.current=performance.now();
         const np=pos+1; setPos(np); // you type every character — closers included
-        if(np>=snip.text.length){if(errs.current===0){audio.milestone();setCelLvl(snip.text.length>=24?3:snip.text.length>=16?2:1);setCel(c=>c+1);}setTimeout(()=>loadNext(),420);}
+        if(np>=snip.text.length){if(errs.current===0){audio.milestone();setCelLvl(snip.text.length>=24?3:snip.text.length>=16?2:1);setCel(c=>c+1);addGrowth(1);}setTimeout(()=>loadNext(),420);}
       }else{
         errs.current+=1;setWrong(true);
         const h=diagnose(want,e.key);setHint(h);
@@ -1244,6 +1325,273 @@ function LiveSketch({sketch,onSave,onDiscard,inline}){
           )}
         </div>
     </div>
+  );
+}
+
+/* ── Garden: biodiversity reward that grows as you practice ── */
+
+function GardenUnlockToast({step,onClose}){
+  useEffect(()=>{const t=setTimeout(onClose,6500);return()=>clearTimeout(t);},[onClose]);
+  return(
+    <div className="kf-unlock-toast" onClick={onClose}>
+      <p className="kf-unlock-head">{step.emoji} Your garden is ready for {step.name}!</p>
+      <p className="kf-unlock-body">Keep typing — it'll keep growing.</p>
+      <p className="kf-unlock-fact">"{step.fact}"</p>
+    </div>
+  );
+}
+
+// Single flower: stem + 5 petals + yellow center
+function GFlower({x,y,color,h=24,size=1}){
+  const r=4*size,cr=2.5*size;
+  const pts=Array.from({length:5},(_,i)=>{const a=(i/5)*Math.PI*2-Math.PI/2;return[Math.cos(a)*r*1.25,Math.sin(a)*r*1.25];});
+  return(
+    <g transform={`translate(${x},${y})`}>
+      <line y1="0" y2={h} stroke="#4a7a3c" strokeWidth={1.5*size}/>
+      {pts.map(([px,py],i)=><circle key={i} cx={px} cy={-h+py} r={r} fill={color}/>)}
+      <circle cy={-h} r={cr} fill="#ffeb3b"/>
+    </g>
+  );
+}
+
+// Grey silhouette of the next unlockable element so the user can see what's coming
+function GardenGhost({unlocked}){
+  const next=GARDEN_LADDER.find(l=>!unlocked.includes(l.id));
+  if(!next)return null;
+  const op=0.16;
+  const shapes={
+    wf:<g opacity={op}><GFlower x={78} y={195} color="#888" h={24}/><GFlower x={95} y={200} color="#888" h={21}/></g>,
+    water:<g opacity={op}><rect x="253" y="180" width="3" height="25" fill="#888" rx="1"/><ellipse cx="254" cy="180" rx="17" ry="5" fill="#888"/></g>,
+    bh:<g opacity={op}><rect x="162" y="173" width="3.5" height="28" fill="#888" rx="1"/><rect x="154" y="154" width="20" height="21" fill="#888" rx="2"/><path d="M152 154 L164 143 L176 154 Z" fill="#888"/></g>,
+    bug:<g opacity={op}><rect x="318" y="163" width="32" height="36" fill="#888" rx="2"/><path d="M315 163 L334 151 L353 163 Z" fill="#888"/></g>,
+    berry:<g opacity={op}><ellipse cx="414" cy="192" rx="24" ry="19" fill="#888"/><ellipse cx="447" cy="195" rx="18" ry="14" fill="#888"/></g>,
+    oak:<g opacity={op}><path d="M524 205 L520 130 L532 130 L538 205 Z" fill="#888"/><ellipse cx="528" cy="113" rx="42" ry="40" fill="#888"/></g>,
+    bat:<g opacity={op}><rect x="519" y="134" width="11" height="22" fill="#555" rx="1"/></g>,
+    cert:<g opacity={op}><rect x="619" y="174" width="26" height="18" fill="#888" rx="3"/></g>,
+  };
+  return shapes[next.id]||null;
+}
+
+function GardenScene({unlocked}){
+  const has=id=>unlocked.includes(id);
+  const night=has("bat");
+  return(
+    <svg className="kf-garden-svg" viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="gsky" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor={night?"#1a2744":"#b8d4f0"}/>
+          <stop offset="100%" stopColor={night?"#2d4a6e":"#d0e8f5"}/>
+        </linearGradient>
+      </defs>
+      <rect width="700" height="195" fill="url(#gsky)"/>
+      {night
+        ?<><circle cx="625" cy="38" r="20" fill="#e8eaf6" opacity="0.9"/><circle cx="635" cy="30" r="18" fill="#1a2744" opacity="0.95"/>
+           {[[180,28],[295,18],[425,35],[545,22],[650,50]].map(([sx,sy],i)=><circle key={i} cx={sx} cy={sy} r="1.5" fill="#fff" opacity="0.65"/>)}
+          </>
+        :<circle cx="90" cy="44" r="24" fill="#f9d71c" opacity="0.88"/>
+      }
+      {/* Ground layers */}
+      <path d="M0 190 Q175 178 350 188 Q525 200 700 183 L700 240 L0 240 Z" fill={night?"#244a1e":"#4a9a3c"}/>
+      <path d="M0 206 Q175 198 350 204 Q525 213 700 200 L700 240 L0 240 Z" fill={night?"#1a3615":"#3d7a30"}/>
+
+      {/* 1 — Native wildflowers → bees + butterflies */}
+      {has("wf")&&<g>
+        <GFlower x={60} y={200} color="#e8709a" h={22}/>
+        <GFlower x={78} y={195} color="#a855f7" h={26}/>
+        <GFlower x={95} y={200} color="#f59e42" h={21}/>
+        <GFlower x={115} y={196} color="#e8709a" h={24}/>
+        <GFlower x={133} y={201} color="#a855f7" h={19} size={0.82}/>
+        <g className="kf-bee" style={{animation:"beefloat 3.2s ease-in-out infinite"}} transform="translate(73,174)">
+          <ellipse rx="5.5" ry="3.8" fill="#f9d71c"/>
+          <ellipse cx="2.5" ry="3.5" rx="2.5" fill="#1a1a1a" opacity="0.7"/>
+          <ellipse cx="-3" cy="-4" rx="5" ry="2.2" fill="rgba(255,255,255,.62)" transform="rotate(-32)"/>
+          <ellipse cx="3" cy="-4" rx="5" ry="2.2" fill="rgba(255,255,255,.62)" transform="rotate(32)"/>
+        </g>
+        <g className="kf-butterfly" style={{animation:"beefloat 5.1s ease-in-out infinite .9s"}} transform="translate(120,157)">
+          <g style={{animation:"flutter 1.4s ease-in-out infinite"}}>
+            <path d="M0,0 C-9,-11 -18,-7 -13,0 C-18,7 -9,11 0,0" fill="#6366f1" opacity=".82"/>
+            <path d="M0,0 C9,-11 18,-7 13,0 C18,7 9,11 0,0" fill="#8b5cf6" opacity=".82"/>
+          </g>
+          <ellipse ry="4" rx="1.5" fill="#2d1b4e"/>
+        </g>
+      </g>}
+
+      {/* 2 — Birdbath → dragonflies, frog, first songbirds */}
+      {has("water")&&<g>
+        <rect x="253" y="180" width="3" height="25" fill="#9ba6b0" rx="1"/>
+        <ellipse cx="254" cy="180" rx="17" ry="5" fill="#aab8c2"/>
+        <ellipse cx="254" cy="178" rx="15" ry="3.5" fill="#78bcd8" opacity="0.85"/>
+        <ellipse cx="251" cy="177" rx="5.5" ry="1.4" fill="none" stroke="#fff" strokeWidth="0.7" opacity="0.5"/>
+        <g transform="translate(270,207)">
+          <ellipse rx="6" ry="4.5" fill="#4a8a40"/>
+          <circle cx="-3.5" cy="-3" r="2.5" fill="#4a8a40"/>
+          <circle cx="3.5" cy="-3" r="2.5" fill="#4a8a40"/>
+          <circle cx="-3.5" cy="-3" r="1.2" fill="#d4f0d0"/>
+          <circle cx="3.5" cy="-3" r="1.2" fill="#d4f0d0"/>
+        </g>
+        <g className="kf-dragonfly" style={{animation:"beefloat 3.5s ease-in-out infinite .3s"}} transform="translate(242,163)">
+          <ellipse rx="6" ry="1.4" fill="#0ea5e9" transform="rotate(-15)"/>
+          <ellipse cx="-3" cy="-2.5" rx="6.5" ry="2" fill="rgba(186,230,253,.78)" transform="rotate(-38)"/>
+          <ellipse cx="2" cy="-2.5" rx="6.5" ry="2" fill="rgba(186,230,253,.78)" transform="rotate(38)"/>
+        </g>
+        <g className="kf-bird" style={{animation:"beefloat 7s ease-in-out infinite 2s"}} transform="translate(226,155)">
+          <path d="M0,0 L-8,4 M0,0 L8,4" fill="none" stroke="#5b6470" strokeWidth="2" strokeLinecap="round"/>
+        </g>
+      </g>}
+
+      {/* 3 — Bee house → solitary bees */}
+      {has("bh")&&<g>
+        <rect x="162" y="173" width="3.5" height="28" fill="#7a5030" rx="1"/>
+        <rect x="154" y="154" width="20" height="21" fill="#c8a558" rx="2"/>
+        <path d="M152 154 L164 143 L176 154 Z" fill="#7a5030"/>
+        <circle cx="161" cy="163" r="2.2" fill="#4a2f0e"/>
+        <circle cx="167" cy="163" r="2.2" fill="#4a2f0e"/>
+        <circle cx="164" cy="169" r="1.8" fill="#4a2f0e"/>
+        <g className="kf-bee" style={{animation:"beefloat 2.8s ease-in-out infinite .5s"}} transform="translate(148,150)">
+          <ellipse rx="4.5" ry="3.2" fill="#f9d71c"/>
+          <ellipse cx="2" ry="3" rx="2" fill="#1a1a1a" opacity="0.65"/>
+          <ellipse cx="-2.5" cy="-3.5" rx="4" ry="1.8" fill="rgba(255,255,255,.6)" transform="rotate(-28)"/>
+          <ellipse cx="2.5" cy="-3.5" rx="4" ry="1.8" fill="rgba(255,255,255,.6)" transform="rotate(28)"/>
+        </g>
+      </g>}
+
+      {/* 4 — Bug hotel + leaf pile → ladybugs, lacewings */}
+      {has("bug")&&<g>
+        <rect x="318" y="163" width="32" height="36" fill="#c8a558" rx="2"/>
+        <path d="M315 163 L334 151 L353 163 Z" fill="#7a5030"/>
+        <line x1="318" y1="181" x2="350" y2="181" stroke="#7a5030" strokeWidth="1.2"/>
+        <line x1="334" y1="163" x2="334" y2="199" stroke="#7a5030" strokeWidth="1.2"/>
+        <circle cx="342" cy="170" r="2.1" fill="#5c3d1e"/>
+        <circle cx="342" cy="175" r="2.1" fill="#5c3d1e"/>
+        <circle cx="325" cy="171" r="2" fill="#5c3d1e" opacity="0.7"/>
+        <ellipse cx="329" cy="202" rx="17" ry="3.5" fill="#a07030" opacity="0.72"/>
+        <ellipse cx="337" cy="202" rx="10" ry="2.5" fill="#c8a558" opacity="0.6"/>
+        <g transform="translate(332,183)">
+          <circle r="4.5" fill="#d41c1c"/>
+          <line y1="-4.5" y2="4.5" stroke="#111" strokeWidth="0.9"/>
+          <circle cx="-2" cy="-2" r="1.2" fill="#111"/>
+          <circle cx="2" cy="1.5" r="1.1" fill="#111"/>
+          <circle cx="-1" cy="2" r="1" fill="#111"/>
+          <circle cx="2" cy="-1" r="1" fill="#111"/>
+        </g>
+      </g>}
+
+      {/* 5 — Berry shrubs → more songbirds, migrators */}
+      {has("berry")&&<g>
+        <ellipse cx="414" cy="192" rx="24" ry="19" fill={night?"#1d4e1a":"#2d6a1f"}/>
+        <ellipse cx="447" cy="195" rx="18" ry="14" fill={night?"#234f20":"#346b24"}/>
+        {[[-8,-5],[5,-11],[13,-3],[-12,0],[1,3],[9,-8],[-4,5]].map(([bx,by],i)=>(
+          <circle key={i} cx={414+bx} cy={192+by} r="3.5" fill={i%2?"#7a1a1a":"#c03030"}/>
+        ))}
+        {[[-6,-3],[6,-8],[9,-1],[-9,-1],[1,4]].map(([bx,by],i)=>(
+          <circle key={i} cx={447+bx} cy={195+by} r="3" fill={i%2?"#5d2080":"#8b34b5"}/>
+        ))}
+        <g className="kf-bird" style={{animation:"beefloat 6s ease-in-out infinite 1.2s"}} transform="translate(415,172)">
+          <ellipse rx="7" ry="4.5" fill="#c4763a"/>
+          <circle cx="-4" cy="-1.5" r="4.5" fill="#c4763a"/>
+          <path d="M-8.5,-2 L-15,-3 L-8.5,-.5 Z" fill="#c4763a"/>
+          <circle cx="-5" cy="-2" r="1.2" fill="#fff"/>
+          <circle cx="-5" cy="-2" r="0.7" fill="#111"/>
+        </g>
+      </g>}
+
+      {/* 6 — Native oak + nest box → nesting birds (chickadees) */}
+      {has("oak")&&<g>
+        <path d="M524 205 L520 130 L532 130 L538 205 Z" fill="#7a4f20"/>
+        <ellipse cx="528" cy="113" rx="42" ry="40" fill={night?"#1a4010":"#2d6a1f"}/>
+        <ellipse cx="508" cy="126" rx="27" ry="22" fill={night?"#1e4a14":"#3d7a2f"}/>
+        <ellipse cx="550" cy="125" rx="24" ry="20" fill={night?"#1e4a14":"#3d7a2f"}/>
+        <circle cx="514" cy="150" r="4" fill="#8b6914"/>
+        <rect x="512" y="143" width="4" height="5" fill="#5c3d1e" rx="1"/>
+        <rect x="537" y="150" width="15" height="13" fill="#c8a558" rx="2"/>
+        <circle cx="544" cy="154" r="3.2" fill="#5c3d1e"/>
+        <g className="kf-bird" style={{animation:"beefloat 7.5s ease-in-out infinite .5s"}} transform="translate(543,143)">
+          <ellipse rx="5" ry="4" fill="#d4d0c8"/>
+          <circle cx="-3.5" cy="-1.5" r="4" fill="#111"/>
+          <path d="M-7.5,-2 L-13,-3 L-7.5,-.5 Z" fill="#666"/>
+          <circle cx="-4" cy="-2.5" r="1.2" fill="#fff"/>
+          <circle cx="-4" cy="-2.5" r="0.6" fill="#111"/>
+        </g>
+      </g>}
+
+      {/* 7 — Bat house → bats + fireflies (unlocks night sky) */}
+      {has("bat")&&<g>
+        {has("oak")
+          ?<><rect x="519" y="134" width="11" height="22" fill="#3a2010" rx="1"/><rect x="517" y="132" width="15" height="4" fill="#2a1808" rx="1"/></>
+          :<><rect x="474" y="155" width="3.5" height="46" fill="#7a5030" rx="1"/><rect x="466" y="138" width="19" height="20" fill="#3a2010" rx="1"/><rect x="464" y="135" width="23" height="5" fill="#2a1808" rx="1"/></>
+        }
+        <g className="kf-bat" style={{animation:"batflight 8s ease-in-out infinite"}} transform="translate(480,102)">
+          <path d="M0,0 C-12,-9 -22,-1 -14,6 C-9,3 -4,1 0,0" fill="#2d1b4e" opacity=".88"/>
+          <path d="M0,0 C12,-9 22,-1 14,6 C9,3 4,1 0,0" fill="#2d1b4e" opacity=".88"/>
+          <ellipse rx="4" ry="3.5" fill="#3d2460"/>
+          <circle cx="-1.5" cy="-2" r="1.5" fill="#5a3880"/>
+          <circle cx="1.5" cy="-2" r="1.5" fill="#5a3880"/>
+        </g>
+        {[[458,184],[488,173],[510,187],[470,193],[498,197]].map(([fx,fy],i)=>(
+          <circle key={i} className="kf-firefly" cx={fx} cy={fy} r="2.5" fill="#a8ff78"
+            style={{animation:`glow ${1.4+i*0.35}s ease-in-out infinite ${i*0.28}s`}} opacity="0.75"/>
+        ))}
+      </g>}
+
+      {/* 8 — Certified habitat → hummingbirds + diverse butterflies */}
+      {has("cert")&&<g>
+        <rect x="630" y="190" width="4" height="15" fill="#7a5c3a" rx="1"/>
+        <rect x="619" y="174" width="26" height="18" fill="#fff" rx="3" stroke="#1a7f37" strokeWidth="1.5"/>
+        <text x="632" y="184" textAnchor="middle" fontSize="6" fill="#1a7f37" fontWeight="700" fontFamily="system-ui,sans-serif">CERTIFIED</text>
+        <text x="632" y="190" textAnchor="middle" fontSize="5.5" fill="#5b6470" fontFamily="system-ui,sans-serif">HABITAT ✓</text>
+        <g className="kf-bird" style={{animation:"beefloat 3.8s ease-in-out infinite .6s"}} transform="translate(608,151)">
+          <ellipse rx="6.5" ry="3" fill="#059669"/>
+          <ellipse cx="-4.5" cy="0" rx="5" ry="3" fill="#047857"/>
+          <path d="M-9,0 L-17,-.5" stroke="#333" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+          <circle cx="-5" cy="-.5" r="1.2" fill="#ecfdf5"/>
+          <circle cx="-5" cy="-.5" r=".65" fill="#111"/>
+          <ellipse cx="1" cy="-3" rx="5" ry="1.8" fill="rgba(16,185,129,.45)" transform="rotate(-15)"/>
+          <ellipse cx="1" cy="3" rx="5" ry="1.8" fill="rgba(16,185,129,.45)" transform="rotate(15)"/>
+        </g>
+      </g>}
+
+      <GardenGhost unlocked={unlocked}/>
+    </svg>
+  );
+}
+
+function Garden({garden}){
+  const{growth,unlocked}=garden;
+  const done=GARDEN_LADDER.filter(l=>unlocked.includes(l.id));
+  const next=GARDEN_LADDER.find(l=>!unlocked.includes(l.id));
+  const prevThresh=done.length?done[done.length-1].threshold:0;
+  const prog=next?Math.min(1,(growth-prevThresh)/Math.max(1,next.threshold-prevThresh)):1;
+  return(
+    <section className="kf-card kf-fade kf-garden-wrap">
+      <div className="kf-eyebrow">Your garden</div>
+      <GardenScene unlocked={unlocked}/>
+      {next?(
+        <div className="kf-garden-prog-wrap">
+          <div className="kf-garden-progbar"><i style={{width:Math.round(prog*100)+"%"}}/></div>
+          <span className="kf-garden-next-label">→ {next.name}</span>
+        </div>
+      ):(
+        <p style={{marginTop:".4rem",fontSize:".8rem",color:"var(--good)",fontWeight:700}}>🏆 Fully certified wildlife habitat — congratulations.</p>
+      )}
+      {unlocked.length===0&&(
+        <p className="kf-garden-empty">Your garden is bare soil and possibility.<br/><span style={{fontSize:".76rem"}}>Each clean drill streak or snippet adds growth. Nothing wilts — it'll wait for you.</span></p>
+      )}
+      <div className="kf-garden-ladder">
+        {GARDEN_LADDER.map(l=>{
+          const st=unlocked.includes(l.id)?"done":next&&next.id===l.id?"next":"locked";
+          return(
+            <div key={l.id} className={"kf-ladder-step "+st}>
+              <span className="kf-ladder-ic">{l.emoji}</span>
+              <div>
+                <span className="kf-ladder-name">{st==="done"?"✓ ":""}{l.name}</span>
+                {st==="done"&&<p className="kf-ladder-fact">{l.fact}</p>}
+                {st==="next"&&<p className="kf-ladder-fact">Coming next — keep typing.</p>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
