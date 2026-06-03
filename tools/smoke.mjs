@@ -207,6 +207,9 @@ ok("saved state available for rehydration", rehydrated);
 clickBtn("Type code");
 await new Promise((r) => setTimeout(r, 30));
 ok("live sketch sits next to the typing surface", !!$(".kf-work .kf-sketch-row.inline")[0]);
+// On-screen keyboard also renders in Type code mode (matches Drill)
+ok("on-screen keyboard renders in Type code mode", !!$(".kf-work .kf-kbd")[0] && $(".kf-work .kf-key").length > 20);
+ok("Type code keyboard highlights a target key", !!$(".kf-work .kf-key.target")[0]);
 clickBtn("Drill keys");
 await new Promise((r) => setTimeout(r, 30));
 ok("live sketch sits next to the keyboard on Drill", !!$(".kf-work .kf-kbdrow .kf-sketch-row")[0]);

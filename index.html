@@ -574,12 +574,54 @@ const KROWS=[
   {row:3,keys:[{k:"z",s:"",f:"lp"},{k:"x",s:"",f:"lr"},{k:"c",s:"",f:"lm"},{k:"v",s:"",f:"li"},{k:"b",s:"",f:"li"},{k:"n",s:"",f:"ri"},{k:"m",s:"",f:"ri"},{k:",",s:"<",f:"rm"},{k:".",s:">",f:"rr"},{k:"/",s:"?",f:"rp"}]},
 ];
 
-/* ── Speech synthesis: read the coaching hint + key name aloud (toggle in settings) ── */
+/* ── Speech synthesis: human-sounding voice for the coaching hint + key names ──
+   Picks the OS's best neural/natural voice when available (Edge → Microsoft Natural,
+   Mac/iOS → Samantha/Allison/Karen, Chrome → Google US English). Falls back gracefully.
+   Voices load async on first call → we listen for `voiceschanged` and re-pick. */
 let VOICE_ON=false;
-const speak=(text,rate=0.92)=>{
+let CHOSEN_VOICE=null;
+// Preference order: neural > high-quality > standard. First match wins.
+const VOICE_PREFERENCES=[
+  /Microsoft (Aria|Jenny|Ava|Emma|Michelle|Sara|Nancy)( Online)?( \(Natural\))? - English/i,
+  /Microsoft (Guy|Andrew|Brian|Davis|Roger|Tony) Online \(Natural\) - English/i,
+  /Google US English/i,
+  /Samantha/i,                 // macOS / iOS — warmest default
+  /Allison/i, /Ava/i, /Karen/i, /Moira/i, /Susan/i, /Victoria/i,
+  /Google UK English Female/i,
+  /Microsoft Zira/i, /Microsoft David/i,  // older Win SAPI voices, OK fallback
+];
+function pickVoice(){
+  if(!window.speechSynthesis)return null;
+  const all=speechSynthesis.getVoices();
+  if(!all.length)return null;
+  const en=all.filter(v=>/^en/i.test(v.lang));
+  for(const re of VOICE_PREFERENCES){
+    const v=(en.find(v=>re.test(v.name))||all.find(v=>re.test(v.name)));
+    if(v)return v;
+  }
+  // Last resort: prefer remote/cloud voices (usually higher quality than localService)
+  return en.find(v=>!v.localService)||en[0]||all[0];
+}
+function ensureVoice(){
+  if(!window.speechSynthesis)return;
+  if(!CHOSEN_VOICE)CHOSEN_VOICE=pickVoice();
+}
+if(typeof window!=="undefined"&&window.speechSynthesis){
+  ensureVoice();
+  // voices fire `voiceschanged` once the OS list is ready (Chrome especially loads them async)
+  speechSynthesis.addEventListener&&speechSynthesis.addEventListener("voiceschanged",()=>{CHOSEN_VOICE=pickVoice();});
+}
+const speak=(text,opts={})=>{
   if(!VOICE_ON||!window.speechSynthesis)return;
+  ensureVoice();
   speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text);u.rate=rate;u.volume=0.95;
+  const u=new SpeechSynthesisUtterance(text);
+  if(CHOSEN_VOICE)u.voice=CHOSEN_VOICE;
+  // Natural cadence — slight pull-back from default 1.0 sounds less robotic on most voices,
+  // pitch nudged a touch lower for warmth, volume just under max so it sits behind any key audio.
+  u.rate   = opts.rate   ?? 0.98;
+  u.pitch  = opts.pitch  ?? 0.95;
+  u.volume = opts.volume ?? 0.95;
   speechSynthesis.speak(u);
 };
 const PAIRS = { "(": ")", "[": "]", "{": "}", '"': '"', "'": "'" }; // editor-style auto-close
@@ -1138,7 +1180,7 @@ function KeyboardDiagram({target,wrongKey}){
           </div>
         ))}
         <div className="kf-krow" style={{paddingLeft:120}}>
-          <div className="kf-key spc"><span className="kf-base" style={{fontSize:8,letterSpacing:2}}>SPACE</span></div>
+          <div className={"kf-key spc"+(tKey===" "?" target":wrongKey===" "?" wrong":"")}><span className="kf-base" style={{fontSize:8,letterSpacing:2}}>SPACE</span></div>
         </div>
       </div>
     </div>
@@ -1199,7 +1241,8 @@ function Drill({stats,record,addProgress,addGrowth,onBreathe,focusKeys,clearFocu
   const streak=useRef(0);
   const report=useRelaxCue(useCallback(()=>onBreathe(3),[onBreathe]));
   // speak the key name when target changes
-  useEffect(()=>{if(target.ch!==prevTarget.current){prevTarget.current=target.ch;speak(target.name,0.88);}},[target]);
+  // Speak the key name when target changes — slightly slower for clarity on single words like "asterisk"
+  useEffect(()=>{if(target.ch!==prevTarget.current){prevTarget.current=target.ch;speak(target.name,{rate:0.95});}},[target]);
   const next=useCallback(()=>{setLesson(advance());shownAt.current=performance.now();},[advance]);
   useEffect(()=>{
     shownAt.current=performance.now();
@@ -1219,7 +1262,7 @@ function Drill({stats,record,addProgress,addGrowth,onBreathe,focusKeys,clearFocu
       }
       else{
         const h=diagnose(target.ch,e.key);setHint(h);
-        if(h)speak(h,0.9);  // voice coaching: "you hit A — colon is up and to the right"
+        if(h)speak(h);  // voice coaching  // voice coaching: "you hit A — colon is up and to the right" — uses natural defaults
         const wrongPhys=(SYM_BY_CH[e.key]?SYM_BY_CH[e.key].physKey:e.key.toLowerCase());
         setWrongKey(wrongPhys);setTimeout(()=>setWrongKey(null),700);
         streak.current=0;
@@ -1270,13 +1313,14 @@ function Snippet({record,addProgress,addGrowth,onBreathe,voiceOn,sketch,onSave,o
   const [pos,setPos]=useState(0);
   const [wrong,setWrong]=useState(false);
   const [hint,setHint]=useState(null);
+  const [wrongKey,setWrongKey]=useState(null);   // physical key lit red on the on-screen keyboard
   const [cel,setCel]=useState(0);
   const [celLvl,setCelLvl]=useState(1);
   const [ks,setKs]=useState(0);
   const lastAt=useRef(performance.now());
   const errs=useRef(0);
   const report=useRelaxCue(useCallback(()=>onBreathe(3),[onBreathe]));
-  const loadNext=useCallback(p=>{const list=p||pool;setSnip(list[Math.floor(Math.random()*list.length)]);setPos(0);setWrong(false);setHint(null);errs.current=0;lastAt.current=performance.now();},[pool]);
+  const loadNext=useCallback(p=>{const list=p||pool;setSnip(list[Math.floor(Math.random()*list.length)]);setPos(0);setWrong(false);setHint(null);setWrongKey(null);errs.current=0;lastAt.current=performance.now();},[pool]);
   useEffect(()=>{loadNext(pool);},[track,level]); // eslint-disable-line
   useEffect(()=>{
     const onKey=e=>{
@@ -1289,19 +1333,32 @@ function Snippet({record,addProgress,addGrowth,onBreathe,voiceOn,sketch,onSave,o
       if(SYMBOL_SET.has(want))record(want,ok,lat);
       report(ok,lat);audio.playKey(ok);addProgress(ok);setKs(k=>k+1);
       if(ok){
-        setWrong(false);setHint(null);lastAt.current=performance.now();
+        setWrong(false);setHint(null);setWrongKey(null);lastAt.current=performance.now();
         const np=pos+1; setPos(np); // you type every character — closers included
         if(np>=snip.text.length){if(errs.current===0){audio.milestone();setCelLvl(snip.text.length>=24?3:snip.text.length>=16?2:1);setCel(c=>c+1);addGrowth(1);}setTimeout(()=>loadNext(),420);}
       }else{
         errs.current+=1;setWrong(true);
         const h=diagnose(want,e.key);setHint(h);
-        if(h)speak(h,0.9);
+        if(h)speak(h);  // voice coaching uses natural defaults
+        // Light up the wrong physical key on the keyboard diagram
+        const wrongPhys=POS[e.key]?POS[e.key].base:e.key.toLowerCase();
+        setWrongKey(wrongPhys);setTimeout(()=>setWrongKey(null),700);
         setTimeout(()=>setWrong(false),200);
       }
     };
     window.addEventListener("keydown",onKey);
     return ()=>window.removeEventListener("keydown",onKey);
   },[snip,pos,record,loadNext,report,addProgress]);
+  // Build a `target`-shaped object for the current character so KeyboardDiagram can highlight it.
+  // POS maps every printable char → { base, shift }. Space gets a special physKey so the spacebar lights up.
+  const wantCh = snip.text[pos];
+  const snipTarget = useMemo(()=>{
+    if(wantCh==null)return null;
+    if(wantCh===" ")return {ch:" ",physKey:" ",shift:false};
+    const p=POS[wantCh];
+    if(p)return {ch:wantCh,physKey:p.base,shift:p.shift};
+    return {ch:wantCh,physKey:wantCh.toLowerCase(),shift:false};
+  },[wantCh]);
   return (
     <section className="kf-card kf-fade">
       <Celebrate trigger={cel} level={celLvl}/>
@@ -1317,13 +1374,14 @@ function Snippet({record,addProgress,addGrowth,onBreathe,voiceOn,sketch,onSave,o
         <p className="kf-dim" style={{margin:0}}>Type every character including closers — like a real terminal. <code>{snip.track}</code></p>
         <p className="kf-counter" style={{margin:0}}><b>{ks}</b> keys this session</p>
       </div>
+      <div className={"kf-snip "+(wrong?"wrong":"")} style={{margin:".25rem 0 .5rem"}}>
+        {snip.text.split("").map((c,i)=><span key={i} className={i<pos?"done":i===pos?"cur":"pending"}>{c===" "?"\u00A0":c}</span>)}
+      </div>
+      {hint&&<p className="kf-hint" key={hint} style={{marginBottom:".4rem"}}>{hint}</p>}
       <div className="kf-kbdrow">
-        <div className={"kf-snip "+(wrong?"wrong":"")} style={{flex:"1 1 auto",margin:0}}>
-          {snip.text.split("").map((c,i)=><span key={i} className={i<pos?"done":i===pos?"cur":"pending"}>{c===" "?"\u00A0":c}</span>)}
-        </div>
+        <div className="kf-kbd"><KeyboardDiagram target={snipTarget} wrongKey={wrongKey}/></div>
         <LiveSketch sketch={sketch} onSave={onSave} onDiscard={onDiscard} inline/>
       </div>
-      {hint&&<p className="kf-hint" key={hint}>{hint}</p>}
     </section>
   );
 }
