@@ -946,6 +946,44 @@ function App(){
   const [breathe,setBreathe]=useState(0);        // >0 = breathing overlay open with this many cycles
   const [voiceOn,setVoiceOn]=useState(()=>!!store.load().voiceOn); // spoken coaching toggle
   const [garden,setGarden]=useState(loadGarden);
+  // Progression state: lifted to App so the tier-effect can drive auto-advance + tier badge.
+  // Defaults applied on read; existing saves with no progression fields load clean.
+  const [level,setLevel]=useState(()=>store.load().level||"Words");
+  const [diff,setDiff]=useState(loadDiff);
+  const [autoAdvance,setAutoAdvance]=useState(loadAutoAdvance);
+  const [tier,setTier]=useState(()=>loadTierFor(tplId||"data"));
+  const [mastered,setMastered]=useState(()=>loadMasteredFor(tplId||"data"));
+  useEffect(()=>{store.save({level});},[level]);
+  useEffect(()=>{store.save({diff});},[diff]);
+  useEffect(()=>{store.save({autoAdvance});},[autoAdvance]);
+  // When stats / diff / field change → recompute mastery + tier; auto-advance on upward crossings.
+  // tier.best never decreases (handoff guardrail: "no regression, no scolding").
+  useEffect(()=>{
+    if(!tplId)return;
+    const result = computeTier(stats, diff, SYMBOLS);
+    setMastered(prev=>{
+      // Only persist if changed (avoid write churn)
+      const a = Object.keys(prev||{}).sort().join(",");
+      const b = Object.keys(result.masteredSet).sort().join(",");
+      if(a===b) return prev;
+      saveMasteredFor(tplId, result.masteredSet);
+      return result.masteredSet;
+    });
+    setTier(prev=>{
+      const nextCurrent = result.tier;
+      const nextBest = Math.max(prev.best||1, nextCurrent);
+      if(prev.current===nextCurrent && prev.best===nextBest) return prev;
+      const next = { current: nextCurrent, best: nextBest };
+      saveTierFor(tplId, next);
+      // Auto-advance: upward crossing only, manual choices always win (so this only ever
+      // *increases* the level, never overrides a user who picked a higher level themselves).
+      if(autoAdvance && nextCurrent > (prev.current||1)){
+        if(nextCurrent>=3 && (level==="Words"||level==="Phrases")) setLevel("Lines");
+        else if(nextCurrent>=2 && level==="Words") setLevel("Phrases");
+      }
+      return next;
+    });
+  },[stats, diff, tplId, autoAdvance, level]);
   const [newUnlock,setNewUnlock]=useState(null); // set to a GARDEN_LADDER step when it just unlocked
   useEffect(()=>{store.save({garden});},[garden]);
   // detect newly-unlocked steps after addGrowth fires → show toast
@@ -1012,7 +1050,9 @@ function App(){
     if(!TPL_BY_ID[id])return;
     applyTemplate(id);
     setStats(loadStatsFor(id));
-    setFocusKeys(null);            // a focus list from another field doesn't apply here
+    setTier(loadTierFor(id));            // each field has its own tier progression
+    setMastered(loadMasteredFor(id));
+    setFocusKeys(null);                  // a focus list from another field doesn't apply here
     setMode("drill");
     setShowSet(false);
     setTplId(id);
@@ -1038,7 +1078,7 @@ function App(){
   const toggleWelcome=useCallback(()=>setWelcome(w=>{const nx=!w;if(!nx)store.save({welcomeSeen:true});return nx;}),[]);
   const startApp=useCallback(()=>{store.save({welcomeSeen:true});setWelcome(false);setMode("drill");},[]);
   const toggleMute=()=>setMuted(m=>!m);
-  const resetAll=()=>{store.clear();setStats(blankStatsFor(ACTIVE_TPL));setSketch(blankSketch());setStreak(blankStreak());setGarden(blankGarden());setSens(0.4);setRelaxOn(true);setMuted(true);setWelcome(true);setBreathe(0);setShowSet(false);setTplId(null);};
+  const resetAll=()=>{store.clear();setStats(blankStatsFor(ACTIVE_TPL));setSketch(blankSketch());setStreak(blankStreak());setGarden(blankGarden());setTier(blankTier());setMastered({});setLevel("Words");setDiff("normal");setAutoAdvance(true);setSens(0.4);setRelaxOn(true);setMuted(true);setWelcome(true);setBreathe(0);setShowSet(false);setTplId(null);};
   const sensLabel=sens<0.25?"Rarely":sens<0.55?"Calm":sens<0.8?"Attentive":"Eager";
   const total=useMemo(()=>Object.values(stats).reduce((s,x)=>s+x.attempts,0),[stats]);
 
@@ -1125,7 +1165,7 @@ function App(){
           {mode==="garden"
             ? <Garden garden={garden}/>
             : mode==="snippet"
-              ? <Snippet record={record} addProgress={addProgress} addGrowth={addGrowth} onBreathe={triggerBreathe} voiceOn={voiceOn} sketch={sketch} onSave={saveSketch} onDiscard={discardSketch}/>
+              ? <Snippet record={record} addProgress={addProgress} addGrowth={addGrowth} onBreathe={triggerBreathe} voiceOn={voiceOn} sketch={sketch} onSave={saveSketch} onDiscard={discardSketch} level={level} setLevel={setLevel} tier={tier} autoAdvance={autoAdvance}/>
               : <Drill stats={stats} record={record} addProgress={addProgress} addGrowth={addGrowth} onBreathe={triggerBreathe} focusKeys={focusKeys} clearFocus={clearFocus} voiceOn={voiceOn} sketch={sketch} onSave={saveSketch} onDiscard={discardSketch}/>}
         </main>
       </div>
@@ -1373,16 +1413,17 @@ function Drill({stats,record,addProgress,addGrowth,onBreathe,focusKeys,clearFocu
   );
 }
 
-function Snippet({record,addProgress,addGrowth,onBreathe,voiceOn,sketch,onSave,onDiscard}){
+function Snippet({record,addProgress,addGrowth,onBreathe,voiceOn,sketch,onSave,onDiscard,level,setLevel,tier,autoAdvance}){
   const [track,setTrack]=useState("Mixed");
-  const [level,setLevel]=useState(()=>store.load().level||"Words"); // start beginners on Words
+  // `level` is lifted to App so the tier-effect can auto-advance it (T2→Phrases, T3→Lines).
+  // Auto-advance is non-destructive: a manual pick here always wins.
   const lvl=LEVEL_TO_SINGULAR[level];
   const pool=useMemo(()=>{
     let p=SNIPPETS.filter(s=>s.level===lvl);
     if(track!=="Mixed")p=p.filter(s=>s.track===track);
     return p.length?p:SNIPPETS.filter(s=>s.level===lvl); // fallback if track has no entries at this level
   },[track,lvl]);
-  useEffect(()=>{store.save({level});},[level]);
+  // level persistence is owned by App now (lifted for auto-advance)
   const [snip,setSnip]=useState(()=>pool[0]);
   const [pos,setPos]=useState(0);
   const [wrong,setWrong]=useState(false);
