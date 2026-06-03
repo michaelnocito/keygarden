@@ -199,19 +199,17 @@ ok("returning streak/session is tracked", streakTracked);
 // 9b. the always-visible progress rail greets you with the return-streak banner
 ok("rail shows the return-streak banner", !!$(".kf-streak")[0]);
 
-// 9c. art-style packs: the picker offers the styles and the choice persists
-const gear9 = $("button").find((b) => b.textContent.trim() === "⚙");
-if (!$(".kf-artpick-row button")[0]) { // open settings only if it isn't already
-  gear9 && gear9.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-  await new Promise((r) => setTimeout(r, 20));
-}
-ok("art-style picker offers the packs", $(".kf-artpick-row button").length >= 4);
-const wcBtn = $(".kf-artpick-row button").find((b) => /Watercolor/.test(b.textContent));
-wcBtn && wcBtn.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+// 9c. rail cards are collapsible; the most-missed one opens by default
+ok("rail uses collapsible cards", $(".kf-coll").length >= 1);
+const openBefore = $(".kf-coll.open").length;
+ok("most-missed card is open by default", openBefore >= 1);
+const firstHead = $(".kf-coll .kf-coll-head")[0];
+firstHead && firstHead.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
 await new Promise((r) => setTimeout(r, 30));
-let packSaved = false;
-try { packSaved = JSON.parse(window.localStorage.getItem("keygarden.v1") || "{}").pack === "watercolor"; } catch (e) {}
-ok("chosen art pack persists to keygarden.v1", packSaved);
+const openAfter = $(".kf-coll.open").length;
+ok("clicking a card header toggles its open state", openAfter !== openBefore);
+firstHead && firstHead.dispatchEvent(new window.MouseEvent("click", { bubbles: true })); // reopen for next checks
+await new Promise((r) => setTimeout(r, 30));
 
 // 9d. finishing a drawing offers Save / Delete; Save adds it to the collection
 clickBtn("Type snippets");
@@ -254,6 +252,9 @@ if (!$(".kf-toggle")[0]) { const g = $("button").find((b) => b.textContent.trim(
 ok("breathing-break on/off toggle exists in settings", !!$(".kf-toggle input")[0]);
 
 // 9g. the rail reports the most-missed keys, and "Drill just these" starts a focused drill
+// Ensure the most-missed card is open so we can read its rows
+const missedHead = $(".kf-coll .kf-coll-head").find((b) => /most-missed/i.test(b.textContent));
+if (missedHead && !$(".kf-coll.open .kf-missed-row")[0]) { missedHead.dispatchEvent(new window.MouseEvent("click", { bubbles: true })); await new Promise((r) => setTimeout(r, 30)); }
 ok("rail reports most-missed keys", !!$(".kf-missed-row")[0]);
 const drillThese = $(".kf-drillthese")[0];
 ok("a 'Drill just these' button is offered", !!drillThese);
