@@ -697,7 +697,7 @@ function App(){
     <div className="kf-root">
       <SketchDefs/>
       <header className="kf-topbar">
-        <div className="kf-brand"><span className="kf-glyph">{"{ }"}</span><span className="kf-brandname">Keygarden</span></div>
+        <div className="kf-brand"><a href="https://michaelnocito.github.io/" title="Back to Michael Nocito's portfolio" style={{display:"inline-flex",alignItems:"center",textDecoration:"none",fontSize:"13px",fontWeight:700,color:"#5b6470",marginRight:"10px",whiteSpace:"nowrap"}}>← Home</a><span className="kf-glyph">{"{ }"}</span><span className="kf-brandname">Keygarden</span></div>
         <nav className="kf-nav">
           <button className={mode==="drill"?"on":""} onClick={()=>setMode("drill")}>Drill keys</button>
           <button className={mode==="snippet"?"on":""} onClick={()=>setMode("snippet")}>Type code</button>
