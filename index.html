@@ -1823,10 +1823,30 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
 <script>
   // Register the service worker so Keygarden installs as a PWA and works offline once cached.
-  // Only registers on https or localhost (browser requirement); silently no-ops on file:// (offline build).
+  // Only registers on https or localhost; silently no-ops on file:// (offline build).
+  // When a new SW is detected, tell it to skipWaiting and reload the page so users
+  // pick up new deploys on the next visit without manual cache-clearing.
   if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./sw.js").catch(() => {});
+      navigator.serviceWorker.register("./sw.js").then((reg) => {
+        // If a new worker is waiting (deploy happened), activate it now.
+        if (reg.waiting) reg.waiting.postMessage("SKIP_WAITING");
+        // Auto-activate any new SW that installs while this page is open.
+        reg.addEventListener("updatefound", () => {
+          const sw = reg.installing;
+          if (!sw) return;
+          sw.addEventListener("statechange", () => {
+            if (sw.state === "installed" && navigator.serviceWorker.controller) sw.postMessage("SKIP_WAITING");
+          });
+        });
+      }).catch(() => {});
+      // Reload once when the active SW changes (the freshly-activated one will serve the new HTML).
+      let reloaded = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (reloaded) return;
+        reloaded = true;
+        location.reload();
+      });
     });
   }
 </script>
