@@ -347,6 +347,153 @@ backBtn && backBtn.dispatchEvent(new window.MouseEvent("click", { bubbles: true 
 await new Promise(r => setTimeout(r, 30));
 ok("cancel returns to the chosen field's drill", !!$(".kf-bigkey")[0] || !!$(".kf-rail")[0]);
 
+// 12. PROGRESSION LAYER — DOM + localStorage checks
+//
+// Make sure the settings panel is open (some prior tests toggled it). Idempotent helper.
+const openSettings = async () => {
+  if ($(".kf-diffgrid")[0]) return; // already open
+  const g = $("button").find(b => b.textContent.trim() === "⚙");
+  g && g.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+  await new Promise(r => setTimeout(r, 30));
+};
+
+// 12a. Tier badge renders in the rail
+ok("skill tier badge renders in the rail", !!$(".kf-tier-badge")[0]);
+ok("tier badge shows a tier number (T1-T4)", /T[1-4]/.test(($(".kf-tier-num")[0]||{}).textContent || ""));
+ok("tier badge shows mastered count", /\d+\/\d+ symbols mastered/.test(($(".kf-tier-badge")[0]||{}).textContent || ""));
+
+// 12b. Settings — difficulty picker (3 presets, Normal default) + auto-advance toggle (default on)
+await openSettings();
+const diffBtns = $(".kf-diffbtn");
+ok("difficulty picker has 3 presets", diffBtns.length === 3);
+ok("Fast/Normal/Stone labels render", /Fast Track/.test(root.textContent) && /Set in Stone/.test(root.textContent));
+ok("Normal is the default selection", !!$(".kf-diffbtn.on")[0] && /Normal/.test($(".kf-diffbtn.on")[0].textContent));
+const autoAdvanceCb = $(".kf-toggle input").find(i => /auto-advance/i.test(i.parentElement?.textContent || ""));
+ok("auto-advance toggle exists in settings", !!autoAdvanceCb);
+ok("auto-advance defaults on", !!autoAdvanceCb && autoAdvanceCb.checked === true);
+
+// 12c. Switching difficulty persists
+const fastBtn = diffBtns.find(b => /Fast Track/.test(b.textContent));
+fastBtn && fastBtn.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+await new Promise(r => setTimeout(r, 60));
+let diffPersist = false, autoAdvancePersist = false;
+try {
+  const s = JSON.parse(window.localStorage.getItem("keygarden.v1") || "{}");
+  diffPersist = s.diff === "fast";
+  autoAdvancePersist = typeof s.autoAdvance === "boolean";
+} catch (e) {}
+ok("difficulty preset persists to localStorage", diffPersist);
+ok("autoAdvance flag persists to localStorage", autoAdvancePersist);
+
+// 12d–i. The remaining checks need clean remounts with curated localStorage blobs.
+// Helper: nuke the root element + create a fresh #root, write the blob, re-execute the
+// compiled bundle. This avoids React state crossover between assertions.
+function remount(blob){
+  // Replace #root with a brand-new element so React's previous tree is gone.
+  const old = window.document.getElementById("root");
+  if (old) old.remove();
+  const fresh = window.document.createElement("div");
+  fresh.id = "root";
+  window.document.body.appendChild(fresh);
+  window.localStorage.setItem("keygarden.v1", JSON.stringify(blob));
+  new Function("React","ReactDOM","window","document","performance","navigator", out)(
+    global.React, global.ReactDOM, window, window.document, window.performance, window.navigator
+  );
+}
+// Re-bind `root` + `$` for the fresh tree the remount helper creates.
+const Q = () => window.document.getElementById("root");
+const QS = (sel) => [...Q().querySelectorAll(sel)];
+
+// 12d. Threshold differences — same stats master at Fast, do NOT master at Stone.
+// Loose run: 10 attempts, 1 miss (10% err > 4% Stone limit; 10 < 20 Stone-attempts).
+const looseLat = [400,420,460,490,500,520,540,560,580,600];
+const looseStats = { "=": { attempts: 10, errors: 1, lat: looseLat } };
+remount({
+  template: "data", diff: "fast", welcomeSeen: true, muted: true, sens: 0, relaxOn: false,
+  templates: { data: { stats: looseStats } }
+});
+await new Promise(r => setTimeout(r, 120));
+let fastSaved = {};
+try { fastSaved = JSON.parse(window.localStorage.getItem("keygarden.v1") || "{}"); } catch (e) {}
+ok("Fast Track: a moderate run is mastered (templates.data.mastered['='] true)",
+   !!(fastSaved.templates && fastSaved.templates.data && fastSaved.templates.data.mastered && fastSaved.templates.data.mastered["="]));
+
+remount({
+  template: "data", diff: "stone", welcomeSeen: true, muted: true, sens: 0, relaxOn: false,
+  templates: { data: { stats: looseStats } }
+});
+await new Promise(r => setTimeout(r, 120));
+let stoneSaved = {};
+try { stoneSaved = JSON.parse(window.localStorage.getItem("keygarden.v1") || "{}"); } catch (e) {}
+const stoneMasteredObj = (stoneSaved.templates && stoneSaved.templates.data && stoneSaved.templates.data.mastered) || {};
+ok("Set in Stone: the SAME run is NOT mastered", !stoneMasteredObj["="]);
+
+// 12e. Tier at exactly 40% (Normal) → T2. Build clean stats for 40% of Data's 16 symbols.
+const masterShape = { attempts: 12, errors: 0, lat: [400,420,440,460,480,500,520,540,560,580,400,420] };
+const dataSyms = ["=",";","[",":","_","\"","(","{","*","<",">","#","%","&","@","|"]; // matches data template order
+const needFor40 = Math.ceil(dataSyms.length * 0.40); // 7 of 16 → 43.75%
+const stats40 = {};
+for (let i = 0; i < needFor40; i++) stats40[dataSyms[i]] = masterShape;
+remount({
+  template: "data", diff: "normal", autoAdvance: true, level: "Words", welcomeSeen: true,
+  muted: true, sens: 0, relaxOn: false,
+  templates: { data: { stats: stats40 } }
+});
+await new Promise(r => setTimeout(r, 150));
+const t2Badge = (QS(".kf-tier-num")[0] || {}).textContent || "";
+ok(`tier at ${needFor40}/${dataSyms.length} mastered (≥40%) shows T2+ (got "${t2Badge}")`, /T[2-4]/.test(t2Badge));
+
+// 12f. tier.best persisted; remount with no stats and a saved best:3 → badge displays T3 (no scolding).
+let bestSaved = {};
+try { bestSaved = JSON.parse(window.localStorage.getItem("keygarden.v1") || "{}"); } catch (e) {}
+ok("tier.current saved at T2+ after crossing", bestSaved.templates && bestSaved.templates.data && bestSaved.templates.data.tier && (bestSaved.templates.data.tier.current||1) >= 2);
+remount({
+  template: "data", diff: "normal", welcomeSeen: true, muted: true, sens: 0, relaxOn: false,
+  templates: { data: { stats: {}, tier: { current: 1, best: 3 } } }
+});
+await new Promise(r => setTimeout(r, 120));
+const bestBadge = (QS(".kf-tier-num")[0] || {}).textContent || "";
+ok("tier badge displays best even when current would be lower (no scolding)", /T[3-4]/.test(bestBadge));
+
+// 12g. Auto-advance ON: at T2 with level=Words, level becomes Phrases (or Lines if T3).
+remount({
+  template: "data", diff: "normal", autoAdvance: true, level: "Words", welcomeSeen: true,
+  muted: true, sens: 0, relaxOn: false,
+  templates: { data: { stats: stats40 } }
+});
+await new Promise(r => setTimeout(r, 200));
+let advanced = "";
+try { advanced = JSON.parse(window.localStorage.getItem("keygarden.v1") || "{}").level; } catch (e) {}
+ok(`auto-advance moved Words → Phrases/Lines at T2 (got "${advanced}")`,
+   advanced === "Phrases" || advanced === "Lines");
+
+// 12h. Auto-advance OFF: the saved level is respected even at T2.
+remount({
+  template: "data", diff: "normal", autoAdvance: false, level: "Words", welcomeSeen: true,
+  muted: true, sens: 0, relaxOn: false,
+  templates: { data: { stats: stats40 } }
+});
+await new Promise(r => setTimeout(r, 200));
+let stayed = "";
+try { stayed = JSON.parse(window.localStorage.getItem("keygarden.v1") || "{}").level; } catch (e) {}
+ok("auto-advance off respects the saved level", stayed === "Words");
+
+// 12i. OLD v1 BLOB (no progression fields) — must load with safe defaults, no throw.
+let staleLoadOk = true;
+try {
+  remount({
+    template: "data",
+    templates: { data: { stats: { "=": { attempts: 5, errors: 0, lat: [400,420,440,460,480] } } } },
+    muted: true, sens: 0.4, welcomeSeen: true
+  });
+  await new Promise(r => setTimeout(r, 120));
+  if (!QS(".kf-tier-badge")[0]) staleLoadOk = false;
+} catch (e) {
+  staleLoadOk = false;
+  console.error("STALE LOAD ERROR:", e.message);
+}
+ok("old v1 blob (no progression fields) loads with safe defaults, no throw", staleLoadOk);
+
 console.log("FIRST DRILL TARGET:", JSON.stringify(firstTarget));
 console.log("FIRST SNIPPET TEXT:", JSON.stringify(snipText));
 console.log("");
