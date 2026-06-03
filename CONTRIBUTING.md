@@ -6,8 +6,15 @@ Thanks for your interest in Keygarden. It's a deliberately small, single-file ap
 
 ```
 index.html             # published app (React via CDN; persists progress)
-keygarden-offline.html    # generated — React inlined, fully offline (do not hand-edit)
+keygarden-offline.html # generated — React inlined, fully offline (do not hand-edit)
+manifest.json          # PWA manifest (name, icons, theme color)
+sw.js                  # service worker — caches the shell so installed PWA works offline
+icon-192.png           # PWA icon (192x192) — used by installed-app shortcut
+icon-512.png           # PWA icon (512x512) — used by splash screens on Android/iOS
+apple-touch-icon.png   # iOS home-screen icon (180x180)
+favicon-32.png         # browser tab favicon (32x32)
 README.md
+PRIVACY.md             # plain-English data + permissions explainer
 DISCLAIMERS.md
 LICENSE
 /tools                 # build + test scripts (Node)
@@ -15,6 +22,8 @@ LICENSE
   smoke.mjs            # headless test of the source (CDN) build
   smoke-offline.mjs    # headless test of the generated offline build
 ```
+
+**PWA notes.** The published site is installable: when a visitor opens `index.html` in Chrome or Edge, the address bar offers an "install" button that creates a Start Menu shortcut and caches the page for offline use. The cache lives in `sw.js`. **Bump `CACHE` in `sw.js`** to a new value (`keygarden-v2`, `v3`...) whenever you ship a change you need users to see immediately — otherwise the old cached version may persist.
 
 **Edit `index.html` only.** `keygarden-offline.html` is built from it — never edit the offline file by hand, or your change will be lost on the next build.
 

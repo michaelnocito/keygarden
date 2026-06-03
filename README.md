@@ -6,6 +6,8 @@ Most typing tutors drill prose. But if you write queries and scripts all day, th
 
 → **[Open Keygarden](https://michaelnocito.github.io/keygarden/)** (no install, runs in your browser)
 
+Want it as an app on your taskbar? Open the link in **Chrome or Edge**, then click the small **install icon** that appears at the right side of the address bar (or *⋯ menu → Apps → Install Keygarden*). It will get a Start Menu shortcut, run in its own window, and work offline. No download, no antivirus warnings, no GitHub navigation. Works on Windows, Mac, Linux, and Chromebook the same way.
+
 ---
 
 ## What it does
@@ -69,9 +71,13 @@ Two builds are included:
 
 > **Note on the offline file:** some browsers block local storage for files opened directly from disk (`file://`), so the offline build may not *save* your progress between reloads even though it runs perfectly. For progress that sticks, use the hosted `index.html`. The app fails safe either way — it never errors, it just forgets.
 
+## Privacy
+
+No accounts, no telemetry, no server. The app does not send any keystroke or any other data over the network. The full technical explanation is in **[PRIVACY.md](PRIVACY.md)** — short read.
+
 ## Tech
 
-Single-file React (no build step, no dependencies to install). All audio is synthesized in the browser with the Web Audio API — no sound files. The sketch is inline SVG, no images. No accounts, no tracking, no data leaves your machine; "progress" is just a value in your own browser's local storage.
+Single-file React (no build step, no dependencies to install). All audio is synthesized in the browser with the Web Audio API — no sound files. The sketch is inline SVG, no images. Installable as a Progressive Web App (PWA) for offline use and a Start Menu shortcut, with no native download required.
 
 The visual design follows the **calm-analyst design system** shared across the analyst prep kits (Tableau Archaeology, the Analyst Prep Kit, and friends) — the same light theme, soft cards, blue accent, and system typography.
 

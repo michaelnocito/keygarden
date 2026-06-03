@@ -4,6 +4,15 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Keygarden — symbol typing trainer</title>
+<meta name="description" content="A calm typing trainer for the brackets, braces, and operators that slow data analysts down in SQL, Python, Excel, Tableau, and Power BI. No timer, no score, nothing to fail." />
+<meta name="theme-color" content="#2f6df0" />
+<link rel="manifest" href="./manifest.json" />
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+<link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Keygarden" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <style>
   /* ── Nocito calm-analyst design system (canonical: spreadsheet-archaeology/DESIGN_SYSTEM.md) ──
      Light theme, soft shadows, restrained color. System-ui for chrome; monospace only for code/keys. */
@@ -1182,6 +1191,15 @@ function LiveSketch({sketch,onSave,onDiscard,inline}){
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+<script>
+  // Register the service worker so Keygarden installs as a PWA and works offline once cached.
+  // Only registers on https or localhost (browser requirement); silently no-ops on file:// (offline build).
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
+  }
 </script>
 </body>
 </html>
