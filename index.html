@@ -41,6 +41,16 @@
   .kf-nav button:hover{color:var(--accent-d);border-color:var(--accent-bd);}
   .kf-nav button.on{color:#fff;background:var(--accent);border-color:var(--accent);box-shadow:0 2px 8px rgba(47,109,240,.3);}
   .kf-controls{margin-left:auto;display:flex;gap:.4rem;align-items:center;}
+  /* PWA install pill — surfaces the browser's install action in a place users actually see */
+  .kf-install{display:inline-flex;align-items:center;gap:.3rem;font-family:inherit;font-size:.7rem;font-weight:700;color:var(--accent-d);background:var(--accent-bg);border:1px solid var(--accent-bd);padding:.25rem .35rem .25rem .6rem;border-radius:999px;cursor:pointer;transition:background .15s,color .15s,transform .12s;user-select:none;}
+  .kf-install:hover{background:var(--accent);color:#fff;border-color:var(--accent);transform:translateY(-1px);}
+  .kf-install-arrow{font-size:.78rem;line-height:1;}
+  .kf-install-label{white-space:nowrap;}
+  .kf-install-x{display:inline-flex;align-items:center;justify-content:center;width:1rem;height:1rem;border-radius:50%;color:var(--dim);font-size:.92rem;line-height:1;margin-left:.1rem;transition:background .12s,color .12s;}
+  .kf-install:hover .kf-install-x{color:rgba(255,255,255,.85);}
+  .kf-install-x:hover{background:rgba(0,0,0,.12);color:var(--ink);}
+  .kf-install:hover .kf-install-x:hover{background:rgba(255,255,255,.25);color:#fff;}
+  @media (max-width:520px){ .kf-install-label{display:none;} }
   .kf-mute{width:1.65rem;height:1.65rem;padding:0!important;border-radius:50%!important;font-size:.78rem;font-family:inherit;font-weight:700;color:var(--dim);background:var(--sheet-head);border:1px solid var(--line);cursor:pointer;transition:.18s;}
   .kf-mute:hover{color:var(--accent-d);border-color:var(--accent-bd);}
   .kf-mute.on{color:#fff;background:var(--accent);border-color:var(--accent);}
@@ -594,6 +604,24 @@ function App(){
   const [focusKeys,setFocusKeys]=useState(null); // when set, Drill practices only these (the most-missed) keys
   const [breathe,setBreathe]=useState(0);        // >0 = breathing overlay open with this many cycles
   const [voiceOn,setVoiceOn]=useState(()=>!!store.load().voiceOn); // spoken coaching toggle
+  // PWA install prompt — captured from `beforeinstallprompt`; pill button in topbar lets the user trigger it
+  const [installPrompt,setInstallPrompt]=useState(null);
+  const [installDismissed,setInstallDismissed]=useState(()=>!!store.load().installDismissed);
+  const isStandalone=useMemo(()=>{try{return window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone;}catch(e){return false;}},[]);
+  useEffect(()=>{
+    const onPrompt=e=>{e.preventDefault();setInstallPrompt(e);};
+    const onInstalled=()=>{setInstallPrompt(null);};
+    window.addEventListener("beforeinstallprompt",onPrompt);
+    window.addEventListener("appinstalled",onInstalled);
+    return ()=>{window.removeEventListener("beforeinstallprompt",onPrompt);window.removeEventListener("appinstalled",onInstalled);};
+  },[]);
+  const triggerInstall=useCallback(async()=>{
+    if(!installPrompt)return;
+    installPrompt.prompt();
+    const c=await installPrompt.userChoice;
+    if(c&&c.outcome==="accepted"){setInstallPrompt(null);}
+  },[installPrompt]);
+  const dismissInstall=useCallback(()=>{setInstallDismissed(true);store.save({installDismissed:true});},[]);
   useEffect(()=>{RELAX_SENS=sens;store.save({sens});},[sens]);
   useEffect(()=>{RELAX_ON=relaxOn;store.save({relaxOn});},[relaxOn]);
   useEffect(()=>{audio.setMuted(muted);store.save({muted});},[muted]);
@@ -654,6 +682,13 @@ function App(){
           <button className={mode==="snippet"?"on":""} onClick={()=>setMode("snippet")}>Type code</button>
         </nav>
         <div className="kf-controls">
+          {installPrompt&&!installDismissed&&!isStandalone&&(
+            <span className="kf-install kf-fade" onClick={triggerInstall} title="Install Keygarden as a desktop app — works offline and gets a Start Menu shortcut">
+              <span className="kf-install-arrow" aria-hidden="true">⬇</span>
+              <span className="kf-install-label">Install app</span>
+              <span className="kf-install-x" onClick={e=>{e.stopPropagation();dismissInstall();}} title="Not now" role="button" aria-label="Dismiss">×</span>
+            </span>
+          )}
           <button className={"kf-mute"+(welcome?" on":"")} onClick={toggleWelcome} title="welcome &amp; how it works">?</button>
           <button className={"kf-mute speech"+(voiceOn?" on":"")} onClick={()=>setVoiceOn(v=>!v)} title={voiceOn?"voice coaching on — click to mute":"voice coaching off — click to enable"}>🔊</button>
           <button className={"kf-mute"+(muted?" off":"")} onClick={toggleMute} title={muted?"sound off":"sound on"}>♪</button>
@@ -1101,6 +1136,7 @@ const FEATURES=[
   { ic:"✎",  name:"Watch a sketch appear", body:<>Each clean line quietly draws a little picture below the keys. Finish one in ~5 minutes, then save it or delete it; pick a style (charcoal, watercolor, abstract, celestial) in <code>⚙</code>. <span className="kf-feat-step">You get:</span> a calm, growing reward for showing up.</> },
   { ic:"♪",  name:"Optional gentle sound", body:<>Soft, musical key feedback and a low flow pad that swells as you find a rhythm. <span className="kf-feat-step">Off by default</span> — tap <code>♪</code> anytime to turn it on.</> },
   { ic:"~",  name:"Breathing breaks", body:<>If it senses tension or hesitation (never speed), it offers <b>three slow breaths</b> to loosen your shoulders. On by default; tune it or switch it off in <code>⚙</code>.</> },
+  { ic:"⬇",  name:"Install it on your desktop", body:<>Want it on your taskbar? In Chrome or Edge, click the <b>Install app</b> pill in the top bar (or the install icon at the right side of your address bar). Keygarden becomes a real Start Menu shortcut, runs in its own window, and works offline. <span className="kf-feat-step">No download, no warnings — pure browser install.</span></> },
 ];
 function Welcome({onStart,onClose,muted}){
   return (

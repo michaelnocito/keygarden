@@ -1,6 +1,6 @@
 /* Keygarden service worker — caches the shell + CDN deps so it works offline once installed.
    Bump CACHE when index.html or the manifest changes; old caches are pruned on activate. */
-const CACHE = "keygarden-v1";
+const CACHE = "keygarden-v2";
 const SHELL = [
   "./",
   "./index.html",
