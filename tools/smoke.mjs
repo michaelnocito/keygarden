@@ -91,7 +91,7 @@ ok("drill shows the keyboard diagram", !!$(".kf-kbd-wrap")[0]);
 try { key("a"); key("a"); key("a"); } catch (e) { console.error("KEYDOWN ERROR:", e.message); }
 await new Promise((r) => setTimeout(r, 30));
 ok("wrong key shows a hint", !!$(".kf-hint")[0]);
-ok("terminal echo shows what you typed", (($(".kf-term")[0] || {}).textContent || "").includes("a"));
+ok("typed-slots show what you pressed", $(".kf-slot").length >= 1 && (($(".kf-slot")[0] || {}).textContent || "") === "a");
 
 // 4. Snippet — type through a pair-heavy line; closers must auto-fill
 ok("Snippet button exists", clickBtn("Type snippets"));

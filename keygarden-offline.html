@@ -71,13 +71,18 @@
   .kf-particle{position:absolute;width:9px;height:9px;border-radius:50%;animation:burst .85s cubic-bezier(.25,.6,.3,1) forwards;}
   @keyframes burst{0%{transform:translate(0,0) scale(1);opacity:1;}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0;}}
   .kf-center{text-align:center;}
-  /* terminal echo: see what you actually typed, like a console */
-  .kf-term{font-family:var(--mono);font-size:1.5rem;line-height:1.6;background:#10161f;color:#dfe7f2;border:1px solid #2a3442;border-radius:10px;padding:.7rem 1rem;margin:1.2rem auto 0;max-width:560px;text-align:left;min-height:3rem;word-break:break-all;box-shadow:inset 0 1px 6px rgba(0,0,0,.3);}
-  .kf-term-prompt{color:#5fb98b;margin-right:.5rem;user-select:none;}
-  .kf-term .ok{color:#9fe0b6;}
-  .kf-term .bad{color:#ff8a8a;text-decoration:underline wavy rgba(255,120,120,.6);}
-  .kf-term-caret{display:inline-block;width:.6ch;background:#dfe7f2;color:#dfe7f2;margin-left:1px;animation:caret 1.05s step-end infinite;}
-  @keyframes caret{0%,55%{opacity:1;}56%,100%{opacity:0;}}
+  /* Typed history: a clean row of slot-boxes (matches the kf-bigkey guide aesthetic).
+     Each keystroke fills the next box with the character — correct = blue, wrong = red. */
+  .kf-term{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:.7rem .9rem;margin:1rem auto 0;max-width:580px;min-height:3.6rem;box-shadow:inset 0 1px 3px rgba(20,30,50,.04);}
+  .kf-term-label{font-family:inherit;font-size:.66rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--accent-d);margin-right:.4rem;user-select:none;}
+  .kf-slot{font-family:var(--mono);font-size:1.4rem;font-weight:700;line-height:1;width:2.2rem;height:2.2rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;background:var(--accent-bg);color:var(--accent-d);border:1px solid var(--accent-bd);box-shadow:0 1px 0 rgba(47,109,240,.08);animation:slotpop .35s cubic-bezier(.2,1.6,.4,1);position:relative;}
+  .kf-slot.bad{background:var(--bad-bg);color:var(--bad);border-color:rgba(207,34,46,.3);}
+  .kf-slot::after{content:"";position:absolute;left:50%;top:50%;width:130%;height:130%;border-radius:50%;border:2px solid var(--accent);opacity:0;transform:translate(-50%,-50%) scale(.5);animation:slotring .5s ease-out forwards;}
+  .kf-slot.bad::after{border-color:var(--bad);}
+  @keyframes slotpop{0%{transform:scale(0);opacity:0;}55%{transform:scale(1.18);opacity:1;}100%{transform:scale(1);opacity:1;}}
+  @keyframes slotring{0%{opacity:.55;transform:translate(-50%,-50%) scale(.6);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.7);}}
+  .kf-slot-empty{width:2.2rem;height:2.2rem;border-radius:8px;border:1.5px dashed var(--accent-bd);background:transparent;animation:caret 1.15s ease-in-out infinite;}
+  @keyframes caret{0%,100%{opacity:.5;}50%{opacity:.85;}}
   .kf-newkey{display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--good);border-radius:999px;padding:.2rem .6rem;margin-bottom:.6rem;animation:fade .3s ease;}
   .kf-fade{animation:fade .4s ease;}
   @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
@@ -2005,6 +2010,30 @@ function KeyboardDiagram({
     }
   }, "SPACE")))));
 }
+
+/* TypedSlots: each keystroke "draws into" the next slot — same visual language as the kf-bigkey guide,
+   but smaller and in a row. Correct = blue (accent), wrong = red. A blinking dashed slot waits next. */
+function TypedSlots({
+  typed
+}) {
+  const recent = typed.slice(-14);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "kf-term"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "kf-term-label"
+  }, "Typed"), recent.length === 0 ? /*#__PURE__*/React.createElement("span", {
+    className: "kf-dim",
+    style: {
+      fontSize: ".82rem"
+    }
+  }, "The keys you press will appear here.") : recent.map((t, i) => /*#__PURE__*/React.createElement("span", {
+    key: typed.length - recent.length + i,
+    className: "kf-slot" + (t.ok ? "" : " bad")
+  }, t.ch === " " ? "␣" : t.ch)), /*#__PURE__*/React.createElement("span", {
+    className: "kf-slot-empty",
+    "aria-hidden": "true"
+  }));
+}
 function Drill({
   stats,
   record,
@@ -2206,16 +2235,9 @@ function Drill({
   }, /*#__PURE__*/React.createElement(KeyboardDiagram, {
     target: target,
     wrongKey: wrongKey
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "kf-term"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "kf-term-prompt"
-  }, ">"), typed.map((t, i) => /*#__PURE__*/React.createElement("span", {
-    key: i,
-    className: t.ok ? "ok" : "bad"
-  }, t.ch === " " ? " " : t.ch)), /*#__PURE__*/React.createElement("span", {
-    className: "kf-term-caret"
-  }, "\xA0")));
+  })), /*#__PURE__*/React.createElement(TypedSlots, {
+    typed: typed
+  }));
 }
 function Snippet({
   record,
