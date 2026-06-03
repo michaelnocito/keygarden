@@ -354,6 +354,25 @@
   .kf-pickbtn-label{font-weight:700;font-size:.98rem;color:var(--ink);margin:0 0 .15rem;}
   .kf-pickbtn-blurb{font-size:.72rem;color:var(--dim);line-height:1.4;margin:0 0 .45rem;}
   .kf-pickbtn-syms{font-family:var(--mono);font-size:.78rem;font-weight:700;color:var(--accent-d);letter-spacing:.18em;margin-top:auto;}
+  /* ── Skill-tier badge (top of progress rail) — calm, no failure framing ── */
+  .kf-tier-badge{background:linear-gradient(135deg,#eef4ff,#e6f0ff);border:1px solid var(--accent-bd);border-radius:10px;padding:.5rem .7rem;box-shadow:var(--shadow);}
+  .kf-tier-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;}
+  .kf-tier-eyebrow{font-size:.62rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-d);}
+  .kf-tier-num{font-family:var(--mono);font-size:.92rem;font-weight:800;color:#fff;background:var(--accent);border-radius:5px;padding:.05rem .35rem;letter-spacing:.04em;}
+  .kf-tier-name{font-weight:700;font-size:.92rem;color:var(--ink);margin:.18rem 0 .12rem;}
+  .kf-tier-meta{font-size:.66rem;color:var(--dim);margin-bottom:.3rem;}
+  .kf-tier-bar{height:5px;border-radius:999px;background:#fff;border:1px solid var(--accent-bd);overflow:hidden;}
+  .kf-tier-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#5b85e8);border-radius:999px;transition:width 1s ease;}
+  .kf-tier-next{font-size:.62rem;color:var(--dim);margin-top:.22rem;}
+  .kf-tier-next b{color:var(--accent-d);font-weight:700;}
+  /* ── Difficulty picker + auto-advance toggle inside settings ── */
+  .kf-diffgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.3rem;margin-top:.3rem;}
+  .kf-diffbtn{font-family:inherit;background:var(--sheet-head);border:1px solid var(--line);border-radius:8px;padding:.4rem .35rem;cursor:pointer;transition:.12s;display:flex;flex-direction:column;align-items:center;gap:.1rem;}
+  .kf-diffbtn:hover{background:var(--accent-bg);border-color:var(--accent-bd);}
+  .kf-diffbtn.on{background:var(--accent);border-color:var(--accent);box-shadow:0 2px 6px rgba(47,109,240,.25);}
+  .kf-diffbtn.on .kf-diffbtn-label,.kf-diffbtn.on .kf-diffbtn-blurb{color:#fff;}
+  .kf-diffbtn-label{font-weight:700;font-size:.72rem;color:var(--ink);}
+  .kf-diffbtn-blurb{font-size:.58rem;color:var(--dim);text-align:center;line-height:1.2;}
   /* ── Field switcher inside settings ── */
   .kf-fieldgrid{display:grid;grid-template-columns:1fr;gap:.3rem;margin-top:.35rem;}
   .kf-fieldbtn{display:flex;flex-direction:column;align-items:flex-start;text-align:left;font-family:inherit;background:var(--sheet-head);border:1px solid var(--line);border-radius:9px;padding:.5rem .7rem;cursor:pointer;transition:.12s;}
@@ -362,6 +381,10 @@
   .kf-fieldbtn.on .kf-fieldbtn-label,.kf-fieldbtn.on .kf-fieldbtn-blurb{color:#fff;}
   .kf-fieldbtn-label{font-weight:700;font-size:.82rem;color:var(--ink);}
   .kf-fieldbtn-blurb{font-size:.66rem;color:var(--dim);margin-top:.1rem;}
+  /* ── Quiet portfolio footer ── */
+  .kf-footer{max-width:var(--stage-max);margin:0 auto;padding:.6rem .9rem 1.2rem;text-align:center;}
+  .kf-footer-link{font-size:.72rem;font-weight:600;color:var(--dim);text-decoration:none;border-bottom:1px solid transparent;transition:.15s;}
+  .kf-footer-link:hover{color:var(--accent-d);border-bottom-color:var(--accent-bd);}
 </style>
 </head>
 <body>
@@ -2130,6 +2153,148 @@ const pick = stats => {
   return SYMBOLS[SYMBOLS.length - 1];
 };
 
+/* ── PROGRESSION LAYER (additive — closes the §6 depth gap) ──
+   Three difficulty presets gate when a symbol counts as "mastered." A 4-tier
+   skill ladder is computed per field from the % of symbols mastered under the
+   active preset. tier.best never decreases (no scolding). Auto-advance crosses
+   from Words → Phrases at T2, Phrases → Lines at T3. Manual level pick always
+   wins. All schema fields default safely on read; existing saves load clean. */
+const DIFF_PRESETS = {
+  fast: {
+    label: "Fast Track",
+    blurb: "Lower bar — gets you moving",
+    attempts: 8,
+    errorRate: 0.12,
+    latMedian: 750
+  },
+  normal: {
+    label: "Normal",
+    blurb: "The default · balanced",
+    attempts: 12,
+    errorRate: 0.08,
+    latMedian: 600
+  },
+  stone: {
+    label: "Set in Stone",
+    blurb: "Strict — proves it's locked in",
+    attempts: 20,
+    errorRate: 0.04,
+    latMedian: 500
+  }
+};
+const DIFF_KEYS = Object.keys(DIFF_PRESETS);
+const isDiff = k => DIFF_KEYS.indexOf(k) >= 0;
+
+// Skill ladder — 4 tiers gated on % of the field's symbols mastered under current diff.
+// Threshold is the MINIMUM % to enter that tier.
+const TIERS = [{
+  id: 1,
+  name: "Foundation",
+  threshold: 0.00,
+  blurb: "Getting comfortable with the symbols"
+}, {
+  id: 2,
+  name: "Combinations",
+  threshold: 0.40,
+  blurb: "Putting symbols together in phrases"
+}, {
+  id: 3,
+  name: "Fluency",
+  threshold: 0.70,
+  blurb: "Full lines without thinking about it"
+}, {
+  id: 4,
+  name: "Specialist",
+  threshold: 0.95,
+  blurb: "Mastered the field's full set"
+}];
+const TIER_BY_ID = Object.fromEntries(TIERS.map(t => [t.id, t]));
+
+// A symbol is "mastered" when ALL three of (attempts ≥ N, error rate ≤ X%, median latency ≤ Yms) hold.
+function isMastered(stat, diffKey) {
+  if (!stat || !stat.attempts) return false;
+  const p = DIFF_PRESETS[diffKey] || DIFF_PRESETS.normal;
+  const errorRate = stat.errors / stat.attempts;
+  const lm = median(stat.lat || []);
+  return stat.attempts >= p.attempts && errorRate <= p.errorRate && lm > 0 && lm <= p.latMedian;
+}
+// Compute { tier, masteredCount, total, pct, masteredSet } for a stats blob against the active SYMBOLS.
+function computeTier(stats, diffKey, symbols) {
+  const syms = symbols || SYMBOLS;
+  const total = syms.length || 1;
+  const masteredSet = {};
+  let count = 0;
+  for (const s of syms) {
+    if (isMastered(stats[s.ch], diffKey)) {
+      masteredSet[s.ch] = true;
+      count++;
+    }
+  }
+  const pct = count / total;
+  let tier = 1;
+  for (const t of TIERS) if (pct >= t.threshold) tier = t.id;
+  return {
+    tier,
+    masteredCount: count,
+    total,
+    pct,
+    masteredSet
+  };
+}
+
+// Per-template tier persistence (additive — defaults safely, no key bump)
+const blankTier = () => ({
+  current: 1,
+  best: 1
+});
+const loadTierFor = id => {
+  const t = (store.load().templates || {})[id] && (store.load().templates || {})[id].tier;
+  if (!t || typeof t !== "object") return blankTier();
+  return {
+    current: Math.max(1, t.current | 0 || 1),
+    best: Math.max(1, t.best | 0 || 1)
+  };
+};
+const saveTierFor = (id, tier) => {
+  const cur = store.load();
+  const templates = {
+    ...(cur.templates || {})
+  };
+  templates[id] = {
+    ...(templates[id] || {}),
+    tier
+  };
+  store.save({
+    templates
+  });
+};
+const loadMasteredFor = id => {
+  const m = (store.load().templates || {})[id] && (store.load().templates || {})[id].mastered;
+  return m && typeof m === "object" ? m : {};
+};
+const saveMasteredFor = (id, mastered) => {
+  const cur = store.load();
+  const templates = {
+    ...(cur.templates || {})
+  };
+  templates[id] = {
+    ...(templates[id] || {}),
+    mastered
+  };
+  store.save({
+    templates
+  });
+};
+// Top-level: difficulty preset + auto-advance flag (defaults applied at read).
+const loadAutoAdvance = () => {
+  const v = store.load().autoAdvance;
+  return typeof v === "boolean" ? v : true;
+};
+const loadDiff = () => {
+  const v = store.load().diff;
+  return isDiff(v) ? v : "normal";
+};
+
 /* ── Sketch: every keystroke unfolds a single continuous line a little — MORE when correct,
    a little when you miss — so it draws live as you type. Faster typing → faster drawing.
    One drawing fills over ~STROKES_GOAL key-units (≈ a 5-minute session). pathLength="100"
@@ -2305,6 +2470,58 @@ function App() {
   const [breathe, setBreathe] = useState(0); // >0 = breathing overlay open with this many cycles
   const [voiceOn, setVoiceOn] = useState(() => !!store.load().voiceOn); // spoken coaching toggle
   const [garden, setGarden] = useState(loadGarden);
+  // Progression state: lifted to App so the tier-effect can drive auto-advance + tier badge.
+  // Defaults applied on read; existing saves with no progression fields load clean.
+  const [level, setLevel] = useState(() => store.load().level || "Words");
+  const [diff, setDiff] = useState(loadDiff);
+  const [autoAdvance, setAutoAdvance] = useState(loadAutoAdvance);
+  const [tier, setTier] = useState(() => loadTierFor(tplId || "data"));
+  const [mastered, setMastered] = useState(() => loadMasteredFor(tplId || "data"));
+  useEffect(() => {
+    store.save({
+      level
+    });
+  }, [level]);
+  useEffect(() => {
+    store.save({
+      diff
+    });
+  }, [diff]);
+  useEffect(() => {
+    store.save({
+      autoAdvance
+    });
+  }, [autoAdvance]);
+  // When stats / diff / field change → recompute mastery + tier; auto-advance on upward crossings.
+  // tier.best never decreases (handoff guardrail: "no regression, no scolding").
+  useEffect(() => {
+    if (!tplId) return;
+    const result = computeTier(stats, diff, SYMBOLS);
+    setMastered(prev => {
+      // Only persist if changed (avoid write churn)
+      const a = Object.keys(prev || {}).sort().join(",");
+      const b = Object.keys(result.masteredSet).sort().join(",");
+      if (a === b) return prev;
+      saveMasteredFor(tplId, result.masteredSet);
+      return result.masteredSet;
+    });
+    setTier(prev => {
+      const nextCurrent = result.tier;
+      const nextBest = Math.max(prev.best || 1, nextCurrent);
+      if (prev.current === nextCurrent && prev.best === nextBest) return prev;
+      const next = {
+        current: nextCurrent,
+        best: nextBest
+      };
+      saveTierFor(tplId, next);
+      // Auto-advance: upward crossing only, manual choices always win (so this only ever
+      // *increases* the level, never overrides a user who picked a higher level themselves).
+      if (autoAdvance && nextCurrent > (prev.current || 1)) {
+        if (nextCurrent >= 3 && (level === "Words" || level === "Phrases")) setLevel("Lines");else if (nextCurrent >= 2 && level === "Words") setLevel("Phrases");
+      }
+      return next;
+    });
+  }, [stats, diff, tplId, autoAdvance, level]);
   const [newUnlock, setNewUnlock] = useState(null); // set to a GARDEN_LADDER step when it just unlocked
   useEffect(() => {
     store.save({
@@ -2450,6 +2667,8 @@ function App() {
     if (!TPL_BY_ID[id]) return;
     applyTemplate(id);
     setStats(loadStatsFor(id));
+    setTier(loadTierFor(id)); // each field has its own tier progression
+    setMastered(loadMasteredFor(id));
     setFocusKeys(null); // a focus list from another field doesn't apply here
     setMode("drill");
     setShowSet(false);
@@ -2525,6 +2744,11 @@ function App() {
     setSketch(blankSketch());
     setStreak(blankStreak());
     setGarden(blankGarden());
+    setTier(blankTier());
+    setMastered({});
+    setLevel("Words");
+    setDiff("normal");
+    setAutoAdvance(true);
     setSens(0.4);
     setRelaxOn(true);
     setMuted(true);
@@ -2718,6 +2942,41 @@ function App() {
       margin: ".4rem 0 .9rem"
     }
   }, "Switching keeps each field's progress separate. Your garden and sketches stay shared."), /*#__PURE__*/React.createElement("label", {
+    style: {
+      display: "block",
+      marginBottom: ".15rem"
+    }
+  }, "Mastery bar"), /*#__PURE__*/React.createElement("div", {
+    className: "kf-diffgrid"
+  }, DIFF_KEYS.map(k => {
+    const p = DIFF_PRESETS[k];
+    return /*#__PURE__*/React.createElement("button", {
+      key: k,
+      className: "kf-diffbtn" + (diff === k ? " on" : ""),
+      onClick: () => setDiff(k),
+      title: `${p.attempts}+ attempts, ≤${Math.round(p.errorRate * 100)}% errors, ≤${p.latMedian}ms median`
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "kf-diffbtn-label"
+    }, p.label), /*#__PURE__*/React.createElement("span", {
+      className: "kf-diffbtn-blurb"
+    }, p.blurb));
+  })), /*#__PURE__*/React.createElement("p", {
+    className: "kf-dim",
+    style: {
+      margin: ".35rem 0 .9rem"
+    }
+  }, "How strict the \"mastered\" gate is for each symbol. Changing this re-evaluates your tier instantly \u2014 no progress lost."), /*#__PURE__*/React.createElement("label", {
+    className: "kf-toggle"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: autoAdvance,
+    onChange: e => setAutoAdvance(e.target.checked)
+  }), " Auto-advance level ", /*#__PURE__*/React.createElement("strong", null, autoAdvance ? "on" : "off")), /*#__PURE__*/React.createElement("p", {
+    className: "kf-dim",
+    style: {
+      margin: ".25rem 0 .9rem"
+    }
+  }, "When you cross T2 you graduate Words \u2192 Phrases; T3 graduates to Lines. You can always pick the level yourself \u2014 manual choice wins."), /*#__PURE__*/React.createElement("label", {
     className: "kf-toggle"
   }, /*#__PURE__*/React.createElement("input", {
     type: "checkbox",
@@ -2756,7 +3015,11 @@ function App() {
     streak: streak,
     onFocus: startFocus,
     onSave: saveSketch,
-    onDiscard: discardSketch
+    onDiscard: discardSketch,
+    tier: tier,
+    mastered: mastered,
+    diff: diff,
+    fieldLabel: ACTIVE_TPL.label
   })), /*#__PURE__*/React.createElement("main", {
     className: "kf-work"
   }, mode === "garden" ? /*#__PURE__*/React.createElement(Garden, {
@@ -2769,7 +3032,11 @@ function App() {
     voiceOn: voiceOn,
     sketch: sketch,
     onSave: saveSketch,
-    onDiscard: discardSketch
+    onDiscard: discardSketch,
+    level: level,
+    setLevel: setLevel,
+    tier: tier,
+    autoAdvance: autoAdvance
   }) : /*#__PURE__*/React.createElement(Drill, {
     stats: stats,
     record: record,
@@ -2782,7 +3049,14 @@ function App() {
     sketch: sketch,
     onSave: saveSketch,
     onDiscard: discardSketch
-  }))));
+  }))), /*#__PURE__*/React.createElement("footer", {
+    className: "kf-footer"
+  }, /*#__PURE__*/React.createElement("a", {
+    className: "kf-footer-link",
+    href: "https://michaelnocito.github.io/",
+    target: "_blank",
+    rel: "noopener"
+  }, "More tools by Michael Nocito \u2192")));
 }
 
 // The always-visible progress rail: streak, most-missed report, the live sketch, accuracy, collection.
@@ -2823,7 +3097,11 @@ function ProgressRail({
   streak,
   onFocus,
   onSave,
-  onDiscard
+  onDiscard,
+  tier,
+  mastered,
+  diff,
+  fieldLabel
 }) {
   const finished = sketch ? sketch.finished : [];
   const recent = [...finished].reverse().slice(0, 9);
@@ -2837,13 +3115,51 @@ function ProgressRail({
     miss: s.st.errors / s.st.attempts
   })).sort((a, b) => b.miss - a.miss).slice(0, 5);
   const focusSet = missed.map(s => s.ch);
+  // Tier badge: uses `best` for display (never decreases — handoff guardrail), and shows
+  // progress to the next tier so users see what's coming without any failure framing.
+  const tierObj = tier || {
+    current: 1,
+    best: 1
+  };
+  const tierShown = TIER_BY_ID[Math.max(tierObj.current || 1, tierObj.best || 1)] || TIERS[0];
+  const masteredCount = mastered ? Object.keys(mastered).length : 0;
+  const totalSyms = SYMBOLS.length || 1;
+  const pct = masteredCount / totalSyms;
+  const nextTier = TIERS.find(t => t.threshold > pct);
+  const toNextPct = nextTier ? Math.max(0, Math.min(1, (pct - (TIERS[nextTier.id - 2]?.threshold || 0)) / (nextTier.threshold - (TIERS[nextTier.id - 2]?.threshold || 0)))) : 1;
   return /*#__PURE__*/React.createElement(React.Fragment, null, streak && streak.sessions > 0 && /*#__PURE__*/React.createElement("div", {
     className: "kf-streak"
   }, /*#__PURE__*/React.createElement("span", {
     className: "kf-streak-num"
   }, streak.streak || 1), /*#__PURE__*/React.createElement("span", {
     className: "kf-streak-txt"
-  }, streak.streak > 1 ? /*#__PURE__*/React.createElement(React.Fragment, null, "Welcome back \u2014 ", /*#__PURE__*/React.createElement("b", null, streakWord), ".") : /*#__PURE__*/React.createElement(React.Fragment, null, "Good to see you. Showing up is the whole game."), streak.days > 1 && /*#__PURE__*/React.createElement(React.Fragment, null, " ", streak.days, " days \xB7 ", streak.sessions, " sessions", finished.length > 0 ? ` · ${finished.length} ${finished.length === 1 ? "sketch" : "sketches"}` : "", "."))), /*#__PURE__*/React.createElement(Collapsible, {
+  }, streak.streak > 1 ? /*#__PURE__*/React.createElement(React.Fragment, null, "Welcome back \u2014 ", /*#__PURE__*/React.createElement("b", null, streakWord), ".") : /*#__PURE__*/React.createElement(React.Fragment, null, "Good to see you. Showing up is the whole game."), streak.days > 1 && /*#__PURE__*/React.createElement(React.Fragment, null, " ", streak.days, " days \xB7 ", streak.sessions, " sessions", finished.length > 0 ? ` · ${finished.length} ${finished.length === 1 ? "sketch" : "sketches"}` : "", "."))), /*#__PURE__*/React.createElement("div", {
+    className: "kf-tier-badge",
+    title: `Tier ${tierShown.id} — ${tierShown.blurb}`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "kf-tier-head"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "kf-tier-eyebrow"
+  }, "Your skill tier", fieldLabel ? ` · ${fieldLabel}` : ""), /*#__PURE__*/React.createElement("span", {
+    className: "kf-tier-num"
+  }, "T", tierShown.id)), /*#__PURE__*/React.createElement("div", {
+    className: "kf-tier-name"
+  }, tierShown.name), /*#__PURE__*/React.createElement("div", {
+    className: "kf-tier-meta"
+  }, masteredCount, "/", totalSyms, " symbols mastered", diff && diff !== "normal" ? ` · ${DIFF_PRESETS[diff].label}` : ""), nextTier && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "kf-tier-bar"
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      width: Math.round(toNextPct * 100) + "%"
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "kf-tier-next"
+  }, "\u2192 ", /*#__PURE__*/React.createElement("b", null, "T", nextTier.id, " ", nextTier.name), " at ", Math.round(nextTier.threshold * 100), "% mastered")), !nextTier && /*#__PURE__*/React.createElement("div", {
+    className: "kf-tier-next",
+    style: {
+      color: "var(--good)"
+    }
+  }, "\u2713 Full set mastered for this field.")), /*#__PURE__*/React.createElement(Collapsible, {
     title: "Your most-missed keys",
     defaultOpen: true,
     subtitle: attempts === 0 ? null : missed.length > 0 ? `${missed.length} ${missed.length === 1 ? "key" : "keys"} fumbled` : "clean so far"
@@ -3255,21 +3571,22 @@ function Snippet({
   voiceOn,
   sketch,
   onSave,
-  onDiscard
+  onDiscard,
+  level,
+  setLevel,
+  tier,
+  autoAdvance
 }) {
   const [track, setTrack] = useState("Mixed");
-  const [level, setLevel] = useState(() => store.load().level || "Words"); // start beginners on Words
+  // `level` is lifted to App so the tier-effect can auto-advance it (T2→Phrases, T3→Lines).
+  // Auto-advance is non-destructive: a manual pick here always wins.
   const lvl = LEVEL_TO_SINGULAR[level];
   const pool = useMemo(() => {
     let p = SNIPPETS.filter(s => s.level === lvl);
     if (track !== "Mixed") p = p.filter(s => s.track === track);
     return p.length ? p : SNIPPETS.filter(s => s.level === lvl); // fallback if track has no entries at this level
   }, [track, lvl]);
-  useEffect(() => {
-    store.save({
-      level
-    });
-  }, [level]);
+  // level persistence is owned by App now (lifted for auto-advance)
   const [snip, setSnip] = useState(() => pool[0]);
   const [pos, setPos] = useState(0);
   const [wrong, setWrong] = useState(false);
