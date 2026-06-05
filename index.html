@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Keygarden — symbol typing trainer</title>
 <meta name="description" content="A calm typing trainer for the brackets, braces, and operators that slow data analysts down in SQL, Python, Excel, Tableau, and Power BI. No timer, no score, nothing to fail." />
+<meta property="og:title" content="Keygarden — symbol typing trainer" />
+<meta property="og:description" content="A calm typing trainer for the symbols your field runs on. No timer, no score, nothing to fail." />
+<meta property="og:image" content="https://michaelnocito.github.io/keygarden/icon-192.png" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://michaelnocito.github.io/keygarden/" />
+<meta name="twitter:card" content="summary" />
 <meta name="theme-color" content="#2f6df0" />
 <link rel="manifest" href="./manifest.json" />
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
@@ -342,8 +348,16 @@
   @keyframes flutter{0%,100%{transform:scaleX(1);}50%{transform:scaleX(.2)scaleY(1.1);}}
   @keyframes glow{0%,100%{opacity:.18;}50%{opacity:.9;}}
   @keyframes batflight{0%{transform:translate(0,0)scaleX(1);}40%{transform:translate(36px,-12px)scaleX(-1);}100%{transform:translate(0,0)scaleX(1);}}
+  /* Interactive garden click animations */
+  @keyframes flowersway{0%{transform:translate(0,0);}25%{transform:translate(5px,-3px);}55%{transform:translate(-4px,-1px);}80%{transform:translate(3px,-2px);}100%{transform:translate(0,0);}}
+  .kf-flower-sway{animation:flowersway .65s ease-out;}
+  @keyframes beedart{0%{transform:translate(0,0);}30%{transform:translate(10px,-10px);}60%{transform:translate(-8px,-16px);}100%{transform:translate(0,0);}}
+  .kf-bee-dart{animation:beedart .55s ease-in-out;}
+  @keyframes birdhop{0%{transform:translate(0,0);}30%{transform:translate(-4px,-7px);}65%{transform:translate(3px,-3px);}100%{transform:translate(0,0);}}
+  .kf-bird-hop{animation:birdhop .45s ease-out;}
   @media(prefers-reduced-motion:reduce){
     .kf-bee,.kf-butterfly,.kf-dragonfly,.kf-bird,.kf-bat,.kf-firefly{animation:none!important;opacity:.7!important;}
+    .kf-bee-dart,.kf-bird-hop,.kf-flower-sway{animation:none!important;}
     .kf-garden-progbar i{transition:none!important;}
   }
 
@@ -713,11 +727,24 @@ function rewardVoice(sr){
   return fade(norm(mix,0.6),sr);
 }
 
+// bee buzz: amplitude-modulated carrier gives that characteristic wing-beat buzz
+function buzzVoice(sr){
+  const dur=0.16,n=Math.floor(sr*dur),buf=new Float32Array(n);
+  for(let i=0;i<n;i++){const t=i/sr;buf[i]=Math.sin(2*Math.PI*240*t)*(0.5+0.5*Math.sin(2*Math.PI*190*t))*Math.exp(-t/0.045)*0.5;}
+  return fade(norm(buf,0.55),sr);
+}
+// bird chirp: ascending frequency sweep
+function chirpVoice(sr){
+  const dur=0.2,n=Math.floor(sr*dur),buf=new Float32Array(n);let ph=0;
+  for(let i=0;i<n;i++){const t=i/sr;const f=900+1300*(t/dur);ph+=2*Math.PI*f/sr;buf[i]=Math.sin(ph)*Math.exp(-t/0.07)*0.4;}
+  return fade(norm(buf,0.6),sr);
+}
+
 // gentle pentatonic phrase — an unbroken run plays it as a melody
 const PHRASE=[0,2,4,5,4,2,3,5,7,5,4,3,2,4,5,7];
 
 class AudioEngine{
-  constructor(){this.ctx=null;this.master=null;this.notes=new Map();this.miss=null;this.reward=null;this.muted=false;this.flow=0;this.pad=null;}
+  constructor(){this.ctx=null;this.master=null;this.notes=new Map();this.miss=null;this.reward=null;this.buzz=null;this.chirp=null;this.muted=false;this.flow=0;this.pad=null;}
   ensure(){
     if(this.ctx)return;
     const AC=window.AudioContext||window.webkitAudioContext;
@@ -733,6 +760,8 @@ class AudioEngine{
     pg.connect(lp).connect(this.master);
     [110,164.81].forEach(f=>{const o=this.ctx.createOscillator();o.type="sine";o.frequency.value=f;o.connect(pg);o.start();});
     this.pad=pg;
+    this.buzz=this._buf(buzzVoice(this.ctx.sampleRate));
+    this.chirp=this._buf(chirpVoice(this.ctx.sampleRate));
   }
   _buf(a){const b=this.ctx.createBuffer(1,a.length,this.ctx.sampleRate);b.copyToChannel(a,0);return b;}
   _note(idx){
@@ -748,6 +777,8 @@ class AudioEngine{
   milestone(){if(this.ctx)this._play(this.reward);}
   setMuted(m){this.muted=m;if(this.master)this.master.gain.linearRampToValueAtTime(m?0:0.5,this.ctx.currentTime+0.05);}
   duck(on){if(this.master&&!this.muted)this.master.gain.linearRampToValueAtTime(on?0.12:0.5,this.ctx.currentTime+0.15);}
+  playBuzz(){this.ensure();if(this.ctx.state==="suspended")this.ctx.resume();this._play(this.buzz,0.4);}
+  playChirp(){this.ensure();if(this.ctx.state==="suspended")this.ctx.resume();this._play(this.chirp,0.35);}
 }
 const audio=new AudioEngine();
 
@@ -959,6 +990,8 @@ const loadStreak=()=>{
   return {lastVisit:typeof s.lastVisit==="string"?s.lastVisit:null,streak:s.streak|0,days:s.days|0,sessions:s.sessions|0};
 };
 
+const NO_PHYSICAL_KB=(()=>{try{return window.matchMedia("(pointer:coarse)").matches&&!window.matchMedia("(pointer:fine)").matches;}catch(e){return false;}})();
+
 /* ── App ── */
 function App(){
   const [tplId,setTplId]=useState(initialTemplateId); // null => show first-run field picker
@@ -967,7 +1000,7 @@ function App(){
   const [stats,setStats]=useState(()=>loadStatsFor(tplId||"data"));
   const [sketch,setSketch]=useState(loadSketch);
   const [muted,setMuted]=useState(()=>{const m=store.load().muted;return typeof m==="boolean"?m:true;}); // sound OFF by default
-  const [relaxOn,setRelaxOn]=useState(()=>{const v=store.load().relaxOn;return typeof v==="boolean"?v:true;}); // breathing prompt ON by default
+  const [relaxOn,setRelaxOn]=useState(()=>{const v=store.load().relaxOn;return typeof v==="boolean"?v:false;}); // breathing prompt OFF by default
   const [sens,setSens]=useState(()=>{const s=store.load().sens;return typeof s==="number"?s:0.4;});
   const [showSet,setShowSet]=useState(false);
   const [welcome,setWelcome]=useState(()=>!store.load().welcomeSeen); // shown first visit, reopen via ?
@@ -1108,9 +1141,16 @@ function App(){
   const toggleWelcome=useCallback(()=>setWelcome(w=>{const nx=!w;if(!nx)store.save({welcomeSeen:true});return nx;}),[]);
   const startApp=useCallback(()=>{store.save({welcomeSeen:true});setWelcome(false);setMode("drill");},[]);
   const toggleMute=()=>setMuted(m=>!m);
-  const resetAll=()=>{store.clear();setStats(blankStatsFor(ACTIVE_TPL));setSketch(blankSketch());setStreak(blankStreak());setGarden(blankGarden());setTier(blankTier());setMastered({});setLevel("Words");setDiff("normal");setAutoAdvance(true);setSens(0.4);setRelaxOn(true);setMuted(true);setWelcome(true);setBreathe(0);setShowSet(false);setTplId(null);};
+  const resetAll=()=>{store.clear();setStats(blankStatsFor(ACTIVE_TPL));setSketch(blankSketch());setStreak(blankStreak());setGarden(blankGarden());setTier(blankTier());setMastered({});setLevel("Words");setDiff("normal");setAutoAdvance(true);setSens(0.4);setRelaxOn(false);setMuted(true);setWelcome(true);setBreathe(0);setShowSet(false);setTplId(null);};
   const sensLabel=sens<0.25?"Rarely":sens<0.55?"Calm":sens<0.8?"Attentive":"Eager";
   const total=useMemo(()=>Object.values(stats).reduce((s,x)=>s+x.attempts,0),[stats]);
+  if(NO_PHYSICAL_KB)return(
+    <div className="kf-root" style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:"2rem",textAlign:"center"}}>
+      <div style={{fontSize:"2.5rem",marginBottom:"1rem"}}>{"{ }"}</div>
+      <h2 style={{margin:"0 0 .6rem",fontSize:"1.3rem"}}>Keygarden needs a physical keyboard</h2>
+      <p style={{color:"var(--dim)",fontSize:".95rem",maxWidth:"30ch",margin:"0 auto",lineHeight:1.55}}>This is a typing trainer for real keys — it doesn't work on touch-only screens. Open it on a laptop or desktop.</p>
+    </div>
+  );
 
   // Field picker view — shown on true first run OR when the user clicks the topbar field-pill.
   // If they already have a saved field, the picker lets them cancel back to it.
@@ -1123,9 +1163,11 @@ function App(){
     return (
       <div className="kf-root">
         {welcome&&<Welcome onStart={dismissWelcomeAndStay} onClose={toggleWelcome} muted={muted} hasField={false} fieldLabel="" tpl={null}/>}
+        {breathe>0&&<BreatheOverlay cycles={breathe} onClose={closeBreathe}/>}
         <header className="kf-topbar">
           <div className="kf-brand"><a href="https://michaelnocito.github.io/" title="Back to Michael Nocito's portfolio" style={{display:"inline-flex",alignItems:"center",textDecoration:"none",fontSize:"13px",fontWeight:700,color:"#5b6470",marginRight:"10px",whiteSpace:"nowrap"}}>← Home</a><span className="kf-glyph">{"{ }"}</span><span className="kf-brandname">Keygarden</span></div>
           <div className="kf-controls">
+            <button className="kf-mute" onClick={()=>setBreathe(3)} title="take 3 slow breaths — settle your shoulders">~</button>
             <button className={"kf-mute"+(welcome?" on":"")} onClick={toggleWelcome} title="welcome &amp; how it works">?</button>
           </div>
         </header>
@@ -1157,6 +1199,7 @@ function App(){
           <button className={"kf-mute"+(welcome?" on":"")} onClick={toggleWelcome} title="welcome &amp; how it works">?</button>
           <button className={"kf-mute speech"+(voiceOn?" on":"")} onClick={()=>setVoiceOn(v=>!v)} title={voiceOn?"voice coaching on — click to mute":"voice coaching off — click to enable"}>🔊</button>
           <button className={"kf-mute"+(muted?" off":"")} onClick={toggleMute} title={muted?"sound off":"sound on"}>♪</button>
+          <button className="kf-mute" onClick={()=>setBreathe(3)} title="take 3 slow breaths — settle your shoulders">~</button>
           <button className="kf-mute" onClick={()=>setShowSet(s=>!s)} title="settings">⚙</button>
         </div>
       </header>
@@ -1794,14 +1837,16 @@ function GardenUnlockToast({step,onClose}){
 }
 
 // Single flower: stem + 5 petals + yellow center
-function GFlower({x,y,color,h=24,size=1}){
+function GFlower({x,y,color,h=24,size=1,onClick,animKey=0}){
   const r=4*size,cr=2.5*size;
   const pts=Array.from({length:5},(_,i)=>{const a=(i/5)*Math.PI*2-Math.PI/2;return[Math.cos(a)*r*1.25,Math.sin(a)*r*1.25];});
   return(
-    <g transform={`translate(${x},${y})`}>
-      <line y1="0" y2={h} stroke="#4a7a3c" strokeWidth={1.5*size}/>
-      {pts.map(([px,py],i)=><circle key={i} cx={px} cy={-h+py} r={r} fill={color}/>)}
-      <circle cy={-h} r={cr} fill="#ffeb3b"/>
+    <g transform={`translate(${x},${y})`} onClick={onClick} style={{cursor:onClick?"pointer":"default"}}>
+      <g key={animKey} className={animKey?"kf-flower-sway":""}>
+        <line y1="0" y2={h} stroke="#4a7a3c" strokeWidth={1.5*size}/>
+        {pts.map(([px,py],i)=><circle key={i} cx={px} cy={-h+py} r={r} fill={color}/>)}
+        <circle cy={-h} r={cr} fill="#ffeb3b"/>
+      </g>
     </g>
   );
 }
@@ -1827,8 +1872,14 @@ function GardenGhost({unlocked}){
 function GardenScene({unlocked}){
   const has=id=>unlocked.includes(id);
   const night=has("bat");
+  const [fk,setFk]=useState(Array(5).fill(0));
+  const [bk,setBk]=useState(Array(2).fill(0));
+  const [rk,setRk]=useState(Array(4).fill(0));
+  const bumpF=i=>setFk(a=>{const n=[...a];n[i]++;return n;});
+  const bumpB=i=>{setBk(a=>{const n=[...a];n[i]++;return n;});audio.playBuzz();};
+  const bumpR=i=>{setRk(a=>{const n=[...a];n[i]++;return n;});audio.playChirp();};
   return(
-    <svg className="kf-garden-svg" viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <svg className="kf-garden-svg" viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Your biodiversity garden">
       <defs>
         <linearGradient id="gsky" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor={night?"#1a2744":"#b8d4f0"}/>
@@ -1848,16 +1899,18 @@ function GardenScene({unlocked}){
 
       {/* 1 — Native wildflowers → bees + butterflies */}
       {has("wf")&&<g>
-        <GFlower x={60} y={200} color="#e8709a" h={22}/>
-        <GFlower x={78} y={195} color="#a855f7" h={26}/>
-        <GFlower x={95} y={200} color="#f59e42" h={21}/>
-        <GFlower x={115} y={196} color="#e8709a" h={24}/>
-        <GFlower x={133} y={201} color="#a855f7" h={19} size={0.82}/>
-        <g className="kf-bee" style={{animation:"beefloat 3.2s ease-in-out infinite"}} transform="translate(73,174)">
-          <ellipse rx="5.5" ry="3.8" fill="#f9d71c"/>
-          <ellipse cx="2.5" ry="3.5" rx="2.5" fill="#1a1a1a" opacity="0.7"/>
-          <ellipse cx="-3" cy="-4" rx="5" ry="2.2" fill="rgba(255,255,255,.62)" transform="rotate(-32)"/>
-          <ellipse cx="3" cy="-4" rx="5" ry="2.2" fill="rgba(255,255,255,.62)" transform="rotate(32)"/>
+        <GFlower x={60} y={200} color="#e8709a" h={22} onClick={()=>bumpF(0)} animKey={fk[0]}/>
+        <GFlower x={78} y={195} color="#a855f7" h={26} onClick={()=>bumpF(1)} animKey={fk[1]}/>
+        <GFlower x={95} y={200} color="#f59e42" h={21} onClick={()=>bumpF(2)} animKey={fk[2]}/>
+        <GFlower x={115} y={196} color="#e8709a" h={24} onClick={()=>bumpF(3)} animKey={fk[3]}/>
+        <GFlower x={133} y={201} color="#a855f7" h={19} size={0.82} onClick={()=>bumpF(4)} animKey={fk[4]}/>
+        <g className="kf-bee" style={{animation:"beefloat 3.2s ease-in-out infinite",cursor:"pointer"}} transform="translate(73,174)" onClick={()=>bumpB(0)}>
+          <g key={"b0-"+bk[0]} className={bk[0]?"kf-bee-dart":""}>
+            <ellipse rx="5.5" ry="3.8" fill="#f9d71c"/>
+            <ellipse cx="2.5" ry="3.5" rx="2.5" fill="#1a1a1a" opacity="0.7"/>
+            <ellipse cx="-3" cy="-4" rx="5" ry="2.2" fill="rgba(255,255,255,.62)" transform="rotate(-32)"/>
+            <ellipse cx="3" cy="-4" rx="5" ry="2.2" fill="rgba(255,255,255,.62)" transform="rotate(32)"/>
+          </g>
         </g>
         <g className="kf-butterfly" style={{animation:"beefloat 5.1s ease-in-out infinite .9s"}} transform="translate(120,157)">
           <g style={{animation:"flutter 1.4s ease-in-out infinite"}}>
@@ -1886,8 +1939,10 @@ function GardenScene({unlocked}){
           <ellipse cx="-3" cy="-2.5" rx="6.5" ry="2" fill="rgba(186,230,253,.78)" transform="rotate(-38)"/>
           <ellipse cx="2" cy="-2.5" rx="6.5" ry="2" fill="rgba(186,230,253,.78)" transform="rotate(38)"/>
         </g>
-        <g className="kf-bird" style={{animation:"beefloat 7s ease-in-out infinite 2s"}} transform="translate(226,155)">
-          <path d="M0,0 L-8,4 M0,0 L8,4" fill="none" stroke="#5b6470" strokeWidth="2" strokeLinecap="round"/>
+        <g className="kf-bird" style={{animation:"beefloat 7s ease-in-out infinite 2s",cursor:"pointer"}} transform="translate(226,155)" onClick={()=>bumpR(0)}>
+          <g key={"r0-"+rk[0]} className={rk[0]?"kf-bird-hop":""}>
+            <path d="M0,0 L-8,4 M0,0 L8,4" fill="none" stroke="#5b6470" strokeWidth="2" strokeLinecap="round"/>
+          </g>
         </g>
       </g>}
 
@@ -1899,11 +1954,13 @@ function GardenScene({unlocked}){
         <circle cx="161" cy="163" r="2.2" fill="#4a2f0e"/>
         <circle cx="167" cy="163" r="2.2" fill="#4a2f0e"/>
         <circle cx="164" cy="169" r="1.8" fill="#4a2f0e"/>
-        <g className="kf-bee" style={{animation:"beefloat 2.8s ease-in-out infinite .5s"}} transform="translate(148,150)">
-          <ellipse rx="4.5" ry="3.2" fill="#f9d71c"/>
-          <ellipse cx="2" ry="3" rx="2" fill="#1a1a1a" opacity="0.65"/>
-          <ellipse cx="-2.5" cy="-3.5" rx="4" ry="1.8" fill="rgba(255,255,255,.6)" transform="rotate(-28)"/>
-          <ellipse cx="2.5" cy="-3.5" rx="4" ry="1.8" fill="rgba(255,255,255,.6)" transform="rotate(28)"/>
+        <g className="kf-bee" style={{animation:"beefloat 2.8s ease-in-out infinite .5s",cursor:"pointer"}} transform="translate(148,150)" onClick={()=>bumpB(1)}>
+          <g key={"b1-"+bk[1]} className={bk[1]?"kf-bee-dart":""}>
+            <ellipse rx="4.5" ry="3.2" fill="#f9d71c"/>
+            <ellipse cx="2" ry="3" rx="2" fill="#1a1a1a" opacity="0.65"/>
+            <ellipse cx="-2.5" cy="-3.5" rx="4" ry="1.8" fill="rgba(255,255,255,.6)" transform="rotate(-28)"/>
+            <ellipse cx="2.5" cy="-3.5" rx="4" ry="1.8" fill="rgba(255,255,255,.6)" transform="rotate(28)"/>
+          </g>
         </g>
       </g>}
 
@@ -1938,12 +1995,14 @@ function GardenScene({unlocked}){
         {[[-6,-3],[6,-8],[9,-1],[-9,-1],[1,4]].map(([bx,by],i)=>(
           <circle key={i} cx={447+bx} cy={195+by} r="3" fill={i%2?"#5d2080":"#8b34b5"}/>
         ))}
-        <g className="kf-bird" style={{animation:"beefloat 6s ease-in-out infinite 1.2s"}} transform="translate(415,172)">
-          <ellipse rx="7" ry="4.5" fill="#c4763a"/>
-          <circle cx="-4" cy="-1.5" r="4.5" fill="#c4763a"/>
-          <path d="M-8.5,-2 L-15,-3 L-8.5,-.5 Z" fill="#c4763a"/>
-          <circle cx="-5" cy="-2" r="1.2" fill="#fff"/>
-          <circle cx="-5" cy="-2" r="0.7" fill="#111"/>
+        <g className="kf-bird" style={{animation:"beefloat 6s ease-in-out infinite 1.2s",cursor:"pointer"}} transform="translate(415,172)" onClick={()=>bumpR(1)}>
+          <g key={"r1-"+rk[1]} className={rk[1]?"kf-bird-hop":""}>
+            <ellipse rx="7" ry="4.5" fill="#c4763a"/>
+            <circle cx="-4" cy="-1.5" r="4.5" fill="#c4763a"/>
+            <path d="M-8.5,-2 L-15,-3 L-8.5,-.5 Z" fill="#c4763a"/>
+            <circle cx="-5" cy="-2" r="1.2" fill="#fff"/>
+            <circle cx="-5" cy="-2" r="0.7" fill="#111"/>
+          </g>
         </g>
       </g>}
 
@@ -1957,12 +2016,14 @@ function GardenScene({unlocked}){
         <rect x="512" y="143" width="4" height="5" fill="#5c3d1e" rx="1"/>
         <rect x="537" y="150" width="15" height="13" fill="#c8a558" rx="2"/>
         <circle cx="544" cy="154" r="3.2" fill="#5c3d1e"/>
-        <g className="kf-bird" style={{animation:"beefloat 7.5s ease-in-out infinite .5s"}} transform="translate(543,143)">
-          <ellipse rx="5" ry="4" fill="#d4d0c8"/>
-          <circle cx="-3.5" cy="-1.5" r="4" fill="#111"/>
-          <path d="M-7.5,-2 L-13,-3 L-7.5,-.5 Z" fill="#666"/>
-          <circle cx="-4" cy="-2.5" r="1.2" fill="#fff"/>
-          <circle cx="-4" cy="-2.5" r="0.6" fill="#111"/>
+        <g className="kf-bird" style={{animation:"beefloat 7.5s ease-in-out infinite .5s",cursor:"pointer"}} transform="translate(543,143)" onClick={()=>bumpR(2)}>
+          <g key={"r2-"+rk[2]} className={rk[2]?"kf-bird-hop":""}>
+            <ellipse rx="5" ry="4" fill="#d4d0c8"/>
+            <circle cx="-3.5" cy="-1.5" r="4" fill="#111"/>
+            <path d="M-7.5,-2 L-13,-3 L-7.5,-.5 Z" fill="#666"/>
+            <circle cx="-4" cy="-2.5" r="1.2" fill="#fff"/>
+            <circle cx="-4" cy="-2.5" r="0.6" fill="#111"/>
+          </g>
         </g>
       </g>}
 
@@ -1991,14 +2052,16 @@ function GardenScene({unlocked}){
         <rect x="619" y="174" width="26" height="18" fill="#fff" rx="3" stroke="#1a7f37" strokeWidth="1.5"/>
         <text x="632" y="184" textAnchor="middle" fontSize="6" fill="#1a7f37" fontWeight="700" fontFamily="system-ui,sans-serif">CERTIFIED</text>
         <text x="632" y="190" textAnchor="middle" fontSize="5.5" fill="#5b6470" fontFamily="system-ui,sans-serif">HABITAT ✓</text>
-        <g className="kf-bird" style={{animation:"beefloat 3.8s ease-in-out infinite .6s"}} transform="translate(608,151)">
-          <ellipse rx="6.5" ry="3" fill="#059669"/>
-          <ellipse cx="-4.5" cy="0" rx="5" ry="3" fill="#047857"/>
-          <path d="M-9,0 L-17,-.5" stroke="#333" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
-          <circle cx="-5" cy="-.5" r="1.2" fill="#ecfdf5"/>
-          <circle cx="-5" cy="-.5" r=".65" fill="#111"/>
-          <ellipse cx="1" cy="-3" rx="5" ry="1.8" fill="rgba(16,185,129,.45)" transform="rotate(-15)"/>
-          <ellipse cx="1" cy="3" rx="5" ry="1.8" fill="rgba(16,185,129,.45)" transform="rotate(15)"/>
+        <g className="kf-bird" style={{animation:"beefloat 3.8s ease-in-out infinite .6s",cursor:"pointer"}} transform="translate(608,151)" onClick={()=>bumpR(3)}>
+          <g key={"r3-"+rk[3]} className={rk[3]?"kf-bird-hop":""}>
+            <ellipse rx="6.5" ry="3" fill="#059669"/>
+            <ellipse cx="-4.5" cy="0" rx="5" ry="3" fill="#047857"/>
+            <path d="M-9,0 L-17,-.5" stroke="#333" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+            <circle cx="-5" cy="-.5" r="1.2" fill="#ecfdf5"/>
+            <circle cx="-5" cy="-.5" r=".65" fill="#111"/>
+            <ellipse cx="1" cy="-3" rx="5" ry="1.8" fill="rgba(16,185,129,.45)" transform="rotate(-15)"/>
+            <ellipse cx="1" cy="3" rx="5" ry="1.8" fill="rgba(16,185,129,.45)" transform="rotate(15)"/>
+          </g>
         </g>
       </g>}
 

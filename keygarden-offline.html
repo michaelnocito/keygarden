@@ -333,8 +333,16 @@
   @keyframes flutter{0%,100%{transform:scaleX(1);}50%{transform:scaleX(.2)scaleY(1.1);}}
   @keyframes glow{0%,100%{opacity:.18;}50%{opacity:.9;}}
   @keyframes batflight{0%{transform:translate(0,0)scaleX(1);}40%{transform:translate(36px,-12px)scaleX(-1);}100%{transform:translate(0,0)scaleX(1);}}
+  /* Interactive garden click animations */
+  @keyframes flowersway{0%{transform:translate(0,0);}25%{transform:translate(5px,-3px);}55%{transform:translate(-4px,-1px);}80%{transform:translate(3px,-2px);}100%{transform:translate(0,0);}}
+  .kf-flower-sway{animation:flowersway .65s ease-out;}
+  @keyframes beedart{0%{transform:translate(0,0);}30%{transform:translate(10px,-10px);}60%{transform:translate(-8px,-16px);}100%{transform:translate(0,0);}}
+  .kf-bee-dart{animation:beedart .55s ease-in-out;}
+  @keyframes birdhop{0%{transform:translate(0,0);}30%{transform:translate(-4px,-7px);}65%{transform:translate(3px,-3px);}100%{transform:translate(0,0);}}
+  .kf-bird-hop{animation:birdhop .45s ease-out;}
   @media(prefers-reduced-motion:reduce){
     .kf-bee,.kf-butterfly,.kf-dragonfly,.kf-bird,.kf-bat,.kf-firefly{animation:none!important;opacity:.7!important;}
+    .kf-bee-dart,.kf-bird-hop,.kf-flower-sway{animation:none!important;}
     .kf-garden-progbar i{transition:none!important;}
   }
 
@@ -1905,6 +1913,32 @@ function rewardVoice(sr) {
   return fade(norm(mix, 0.6), sr);
 }
 
+// bee buzz: amplitude-modulated carrier gives that characteristic wing-beat buzz
+function buzzVoice(sr) {
+  const dur = 0.16,
+    n = Math.floor(sr * dur),
+    buf = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const t = i / sr;
+    buf[i] = Math.sin(2 * Math.PI * 240 * t) * (0.5 + 0.5 * Math.sin(2 * Math.PI * 190 * t)) * Math.exp(-t / 0.045) * 0.5;
+  }
+  return fade(norm(buf, 0.55), sr);
+}
+// bird chirp: ascending frequency sweep
+function chirpVoice(sr) {
+  const dur = 0.2,
+    n = Math.floor(sr * dur),
+    buf = new Float32Array(n);
+  let ph = 0;
+  for (let i = 0; i < n; i++) {
+    const t = i / sr;
+    const f = 900 + 1300 * (t / dur);
+    ph += 2 * Math.PI * f / sr;
+    buf[i] = Math.sin(ph) * Math.exp(-t / 0.07) * 0.4;
+  }
+  return fade(norm(buf, 0.6), sr);
+}
+
 // gentle pentatonic phrase — an unbroken run plays it as a melody
 const PHRASE = [0, 2, 4, 5, 4, 2, 3, 5, 7, 5, 4, 3, 2, 4, 5, 7];
 class AudioEngine {
@@ -1914,6 +1948,8 @@ class AudioEngine {
     this.notes = new Map();
     this.miss = null;
     this.reward = null;
+    this.buzz = null;
+    this.chirp = null;
     this.muted = false;
     this.flow = 0;
     this.pad = null;
@@ -1942,6 +1978,8 @@ class AudioEngine {
       o.start();
     });
     this.pad = pg;
+    this.buzz = this._buf(buzzVoice(this.ctx.sampleRate));
+    this.chirp = this._buf(chirpVoice(this.ctx.sampleRate));
   }
   _buf(a) {
     const b = this.ctx.createBuffer(1, a.length, this.ctx.sampleRate);
@@ -1986,6 +2024,16 @@ class AudioEngine {
   }
   duck(on) {
     if (this.master && !this.muted) this.master.gain.linearRampToValueAtTime(on ? 0.12 : 0.5, this.ctx.currentTime + 0.15);
+  }
+  playBuzz() {
+    this.ensure();
+    if (this.ctx.state === "suspended") this.ctx.resume();
+    this._play(this.buzz, 0.4);
+  }
+  playChirp() {
+    this.ensure();
+    if (this.ctx.state === "suspended") this.ctx.resume();
+    this._play(this.chirp, 0.35);
   }
 }
 const audio = new AudioEngine();
@@ -2450,6 +2498,13 @@ const loadStreak = () => {
     sessions: s.sessions | 0
   };
 };
+const NO_PHYSICAL_KB = (() => {
+  try {
+    return window.matchMedia("(pointer:coarse)").matches && !window.matchMedia("(pointer:fine)").matches;
+  } catch (e) {
+    return false;
+  }
+})();
 
 /* ── App ── */
 function App() {
@@ -2464,8 +2519,8 @@ function App() {
   }); // sound OFF by default
   const [relaxOn, setRelaxOn] = useState(() => {
     const v = store.load().relaxOn;
-    return typeof v === "boolean" ? v : true;
-  }); // breathing prompt ON by default
+    return typeof v === "boolean" ? v : false;
+  }); // breathing prompt OFF by default
   const [sens, setSens] = useState(() => {
     const s = store.load().sens;
     return typeof s === "number" ? s : 0.4;
@@ -2757,7 +2812,7 @@ function App() {
     setDiff("normal");
     setAutoAdvance(true);
     setSens(0.4);
-    setRelaxOn(true);
+    setRelaxOn(false);
     setMuted(true);
     setWelcome(true);
     setBreathe(0);
@@ -2766,6 +2821,36 @@ function App() {
   };
   const sensLabel = sens < 0.25 ? "Rarely" : sens < 0.55 ? "Calm" : sens < 0.8 ? "Attentive" : "Eager";
   const total = useMemo(() => Object.values(stats).reduce((s, x) => s + x.attempts, 0), [stats]);
+  if (NO_PHYSICAL_KB) return /*#__PURE__*/React.createElement("div", {
+    className: "kf-root",
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      minHeight: "100vh",
+      padding: "2rem",
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: "2.5rem",
+      marginBottom: "1rem"
+    }
+  }, "{ }"), /*#__PURE__*/React.createElement("h2", {
+    style: {
+      margin: "0 0 .6rem",
+      fontSize: "1.3rem"
+    }
+  }, "Keygarden needs a physical keyboard"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: "var(--dim)",
+      fontSize: ".95rem",
+      maxWidth: "30ch",
+      margin: "0 auto",
+      lineHeight: 1.55
+    }
+  }, "This is a typing trainer for real keys \u2014 it doesn't work on touch-only screens. Open it on a laptop or desktop."));
 
   // Field picker view — shown on true first run OR when the user clicks the topbar field-pill.
   // If they already have a saved field, the picker lets them cancel back to it.
@@ -2789,6 +2874,9 @@ function App() {
       hasField: false,
       fieldLabel: "",
       tpl: null
+    }), breathe > 0 && /*#__PURE__*/React.createElement(BreatheOverlay, {
+      cycles: breathe,
+      onClose: closeBreathe
     }), /*#__PURE__*/React.createElement("header", {
       className: "kf-topbar"
     }, /*#__PURE__*/React.createElement("div", {
@@ -2813,6 +2901,10 @@ function App() {
     }, "Keygarden")), /*#__PURE__*/React.createElement("div", {
       className: "kf-controls"
     }, /*#__PURE__*/React.createElement("button", {
+      className: "kf-mute",
+      onClick: () => setBreathe(3),
+      title: "take 3 slow breaths \u2014 settle your shoulders"
+    }, "~"), /*#__PURE__*/React.createElement("button", {
       className: "kf-mute" + (welcome ? " on" : ""),
       onClick: toggleWelcome,
       title: "welcome & how it works"
@@ -2905,6 +2997,10 @@ function App() {
     onClick: toggleMute,
     title: muted ? "sound off" : "sound on"
   }, "\u266A"), /*#__PURE__*/React.createElement("button", {
+    className: "kf-mute",
+    onClick: () => setBreathe(3),
+    title: "take 3 slow breaths \u2014 settle your shoulders"
+  }, "~"), /*#__PURE__*/React.createElement("button", {
     className: "kf-mute",
     onClick: () => setShowSet(s => !s),
     title: "settings"
@@ -4183,7 +4279,9 @@ function GFlower({
   y,
   color,
   h = 24,
-  size = 1
+  size = 1,
+  onClick,
+  animKey = 0
 }) {
   const r = 4 * size,
     cr = 2.5 * size;
@@ -4194,7 +4292,14 @@ function GFlower({
     return [Math.cos(a) * r * 1.25, Math.sin(a) * r * 1.25];
   });
   return /*#__PURE__*/React.createElement("g", {
-    transform: `translate(${x},${y})`
+    transform: `translate(${x},${y})`,
+    onClick: onClick,
+    style: {
+      cursor: onClick ? "pointer" : "default"
+    }
+  }, /*#__PURE__*/React.createElement("g", {
+    key: animKey,
+    className: animKey ? "kf-flower-sway" : ""
   }, /*#__PURE__*/React.createElement("line", {
     y1: "0",
     y2: h,
@@ -4210,7 +4315,7 @@ function GFlower({
     cy: -h,
     r: cr,
     fill: "#ffeb3b"
-  }));
+  })));
 }
 
 // Grey silhouette of the next unlockable element so the user can see what's coming
@@ -4338,11 +4443,36 @@ function GardenScene({
 }) {
   const has = id => unlocked.includes(id);
   const night = has("bat");
+  const [fk, setFk] = useState(Array(5).fill(0));
+  const [bk, setBk] = useState(Array(2).fill(0));
+  const [rk, setRk] = useState(Array(4).fill(0));
+  const bumpF = i => setFk(a => {
+    const n = [...a];
+    n[i]++;
+    return n;
+  });
+  const bumpB = i => {
+    setBk(a => {
+      const n = [...a];
+      n[i]++;
+      return n;
+    });
+    audio.playBuzz();
+  };
+  const bumpR = i => {
+    setRk(a => {
+      const n = [...a];
+      n[i]++;
+      return n;
+    });
+    audio.playChirp();
+  };
   return /*#__PURE__*/React.createElement("svg", {
     className: "kf-garden-svg",
     viewBox: "0 0 700 240",
     xmlns: "http://www.w3.org/2000/svg",
-    "aria-hidden": "true"
+    role: "img",
+    "aria-label": "Your biodiversity garden"
   }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("linearGradient", {
     id: "gsky",
     x1: "0",
@@ -4394,34 +4524,49 @@ function GardenScene({
     x: 60,
     y: 200,
     color: "#e8709a",
-    h: 22
+    h: 22,
+    onClick: () => bumpF(0),
+    animKey: fk[0]
   }), /*#__PURE__*/React.createElement(GFlower, {
     x: 78,
     y: 195,
     color: "#a855f7",
-    h: 26
+    h: 26,
+    onClick: () => bumpF(1),
+    animKey: fk[1]
   }), /*#__PURE__*/React.createElement(GFlower, {
     x: 95,
     y: 200,
     color: "#f59e42",
-    h: 21
+    h: 21,
+    onClick: () => bumpF(2),
+    animKey: fk[2]
   }), /*#__PURE__*/React.createElement(GFlower, {
     x: 115,
     y: 196,
     color: "#e8709a",
-    h: 24
+    h: 24,
+    onClick: () => bumpF(3),
+    animKey: fk[3]
   }), /*#__PURE__*/React.createElement(GFlower, {
     x: 133,
     y: 201,
     color: "#a855f7",
     h: 19,
-    size: 0.82
+    size: 0.82,
+    onClick: () => bumpF(4),
+    animKey: fk[4]
   }), /*#__PURE__*/React.createElement("g", {
     className: "kf-bee",
     style: {
-      animation: "beefloat 3.2s ease-in-out infinite"
+      animation: "beefloat 3.2s ease-in-out infinite",
+      cursor: "pointer"
     },
-    transform: "translate(73,174)"
+    transform: "translate(73,174)",
+    onClick: () => bumpB(0)
+  }, /*#__PURE__*/React.createElement("g", {
+    key: "b0-" + bk[0],
+    className: bk[0] ? "kf-bee-dart" : ""
   }, /*#__PURE__*/React.createElement("ellipse", {
     rx: "5.5",
     ry: "3.8",
@@ -4446,7 +4591,7 @@ function GardenScene({
     ry: "2.2",
     fill: "rgba(255,255,255,.62)",
     transform: "rotate(32)"
-  })), /*#__PURE__*/React.createElement("g", {
+  }))), /*#__PURE__*/React.createElement("g", {
     className: "kf-butterfly",
     style: {
       animation: "beefloat 5.1s ease-in-out infinite .9s"
@@ -4551,16 +4696,21 @@ function GardenScene({
   })), /*#__PURE__*/React.createElement("g", {
     className: "kf-bird",
     style: {
-      animation: "beefloat 7s ease-in-out infinite 2s"
+      animation: "beefloat 7s ease-in-out infinite 2s",
+      cursor: "pointer"
     },
-    transform: "translate(226,155)"
+    transform: "translate(226,155)",
+    onClick: () => bumpR(0)
+  }, /*#__PURE__*/React.createElement("g", {
+    key: "r0-" + rk[0],
+    className: rk[0] ? "kf-bird-hop" : ""
   }, /*#__PURE__*/React.createElement("path", {
     d: "M0,0 L-8,4 M0,0 L8,4",
     fill: "none",
     stroke: "#5b6470",
     strokeWidth: "2",
     strokeLinecap: "round"
-  }))), has("bh") && /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("rect", {
+  })))), has("bh") && /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("rect", {
     x: "162",
     y: "173",
     width: "3.5",
@@ -4595,9 +4745,14 @@ function GardenScene({
   }), /*#__PURE__*/React.createElement("g", {
     className: "kf-bee",
     style: {
-      animation: "beefloat 2.8s ease-in-out infinite .5s"
+      animation: "beefloat 2.8s ease-in-out infinite .5s",
+      cursor: "pointer"
     },
-    transform: "translate(148,150)"
+    transform: "translate(148,150)",
+    onClick: () => bumpB(1)
+  }, /*#__PURE__*/React.createElement("g", {
+    key: "b1-" + bk[1],
+    className: bk[1] ? "kf-bee-dart" : ""
   }, /*#__PURE__*/React.createElement("ellipse", {
     rx: "4.5",
     ry: "3.2",
@@ -4622,7 +4777,7 @@ function GardenScene({
     ry: "1.8",
     fill: "rgba(255,255,255,.6)",
     transform: "rotate(28)"
-  }))), has("bug") && /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("rect", {
+  })))), has("bug") && /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("rect", {
     x: "318",
     y: "163",
     width: "32",
@@ -4733,9 +4888,14 @@ function GardenScene({
   })), /*#__PURE__*/React.createElement("g", {
     className: "kf-bird",
     style: {
-      animation: "beefloat 6s ease-in-out infinite 1.2s"
+      animation: "beefloat 6s ease-in-out infinite 1.2s",
+      cursor: "pointer"
     },
-    transform: "translate(415,172)"
+    transform: "translate(415,172)",
+    onClick: () => bumpR(1)
+  }, /*#__PURE__*/React.createElement("g", {
+    key: "r1-" + rk[1],
+    className: rk[1] ? "kf-bird-hop" : ""
   }, /*#__PURE__*/React.createElement("ellipse", {
     rx: "7",
     ry: "4.5",
@@ -4758,7 +4918,7 @@ function GardenScene({
     cy: "-2",
     r: "0.7",
     fill: "#111"
-  }))), has("oak") && /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("path", {
+  })))), has("oak") && /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("path", {
     d: "M524 205 L520 130 L532 130 L538 205 Z",
     fill: "#7a4f20"
   }), /*#__PURE__*/React.createElement("ellipse", {
@@ -4806,9 +4966,14 @@ function GardenScene({
   }), /*#__PURE__*/React.createElement("g", {
     className: "kf-bird",
     style: {
-      animation: "beefloat 7.5s ease-in-out infinite .5s"
+      animation: "beefloat 7.5s ease-in-out infinite .5s",
+      cursor: "pointer"
     },
-    transform: "translate(543,143)"
+    transform: "translate(543,143)",
+    onClick: () => bumpR(2)
+  }, /*#__PURE__*/React.createElement("g", {
+    key: "r2-" + rk[2],
+    className: rk[2] ? "kf-bird-hop" : ""
   }, /*#__PURE__*/React.createElement("ellipse", {
     rx: "5",
     ry: "4",
@@ -4831,7 +4996,7 @@ function GardenScene({
     cy: "-2.5",
     r: "0.6",
     fill: "#111"
-  }))), has("bat") && /*#__PURE__*/React.createElement("g", null, has("oak") ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
+  })))), has("bat") && /*#__PURE__*/React.createElement("g", null, has("oak") ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
     x: "519",
     y: "134",
     width: "11",
@@ -4939,9 +5104,14 @@ function GardenScene({
   }, "HABITAT \u2713"), /*#__PURE__*/React.createElement("g", {
     className: "kf-bird",
     style: {
-      animation: "beefloat 3.8s ease-in-out infinite .6s"
+      animation: "beefloat 3.8s ease-in-out infinite .6s",
+      cursor: "pointer"
     },
-    transform: "translate(608,151)"
+    transform: "translate(608,151)",
+    onClick: () => bumpR(3)
+  }, /*#__PURE__*/React.createElement("g", {
+    key: "r3-" + rk[3],
+    className: rk[3] ? "kf-bird-hop" : ""
   }, /*#__PURE__*/React.createElement("ellipse", {
     rx: "6.5",
     ry: "3",
@@ -4982,7 +5152,7 @@ function GardenScene({
     ry: "1.8",
     fill: "rgba(16,185,129,.45)",
     transform: "rotate(15)"
-  }))), /*#__PURE__*/React.createElement(GardenGhost, {
+  })))), /*#__PURE__*/React.createElement(GardenGhost, {
     unlocked: unlocked
   }));
 }

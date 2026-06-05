@@ -140,13 +140,22 @@ while (steps < 60) {
 ok("no auto-fill — the user types the closers themselves", typedCloser && !$(".kf-snip .auto")[0]);
 ok("clean line triggers celebration", sawCelebrate);
 
-// 5. settings: gear opens a sensitivity slider
+// 5. settings: gear opens panel; enable breathing to reveal the sensitivity slider
 const gear = $("button").find((b) => b.textContent.trim() === "⚙");
 ok("settings gear exists", !!gear);
 gear && gear.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
 await new Promise((r) => setTimeout(r, 20));
+// breathing is OFF by default — toggle it on so the slider becomes visible
+const breathCb = $('input[type="checkbox"]').find((c) => {
+  const lbl = c.closest && c.closest("label");
+  return lbl && lbl.textContent.includes("Breathing");
+});
+if (breathCb && !breathCb.checked) {
+  breathCb.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+  await new Promise((r) => setTimeout(r, 20));
+}
 const slider = $('input[type="range"]')[0];
-ok("sensitivity slider renders", !!slider);
+ok("sensitivity slider renders when breathing enabled", !!slider);
 ok("slider defaults to calm range", slider && Math.abs(parseFloat(slider.value) - 0.4) < 0.001);
 
 // 6. less twitchy: at min sensitivity, clean typing must NOT trip the relax overlay
