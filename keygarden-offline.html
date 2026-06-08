@@ -2758,16 +2758,16 @@ function App() {
   useEffect(() => {
     audio.duck(breathe > 0);
   }, [breathe]);
-  // when a drawing finishes (~5 min in), a breathing break pops up for 5 cycles
+  // when a drawing finishes (~5 min in), offer a breathing break — only if breathing is on
   const justFinished = useRef(false);
   useEffect(() => {
     if (sketch.pending != null) {
       if (!justFinished.current) {
         justFinished.current = true;
-        setBreathe(5);
+        if (relaxOn) setBreathe(5);
       }
     } else justFinished.current = false;
-  }, [sketch.pending]);
+  }, [sketch.pending, relaxOn]);
   const saveSketch = useCallback(() => setSketch(s => s.pending == null ? s : {
     current: randomSketch(s.current),
     strokes: 0,
@@ -3873,7 +3873,7 @@ function Snippet({
 
 // shared sensitivity, 0 (rarely) .. 1 (eager); default calm. RELAX_ON gates the breathing prompt entirely.
 let RELAX_SENS = 0.4;
-let RELAX_ON = true;
+let RELAX_ON = false;
 // returns a report(ok,lat) fn; on detected tension it calls onTrigger() (App opens a 3-breath break)
 function useRelaxCue(onTrigger) {
   const recent = useRef([]);
